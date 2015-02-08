@@ -2,3 +2,6 @@
 # Ignoring executable files:
 *.ex5
 experts.dat
+
+# Ignore the log files:
+Logs/*

@@ -1,3 +1,4 @@
 02/08/15-10:44:23: Initial commit
 02/08/15-10:46:19: Added changelog file.
 02/08/15-16:48:03: Removed experts.dat file from repository
+02/08/15-17:06:11: Adding TickReader and ignoring log files.
