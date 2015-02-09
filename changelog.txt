@@ -5,3 +5,4 @@
 02/08/15-23:58:38: Updated syntax for TickReader.mq5
 02/09/15-17:34:37: Added file generation support for TickReader.
 02/09/15-21:12:43: Adding initial implementation for LogManager.
+02/10/15-00:16:25: Started implementation of unit test library.

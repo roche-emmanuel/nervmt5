@@ -9,16 +9,23 @@
 class nvLogManager
 {
 protected:
-	// Protected constructor and destructor:
-  nvLogManager(void) {};
-  ~nvLogManager(void) {};
+  // Protected constructor and destructor:
+  nvLogManager(void)
+  {
+    Print("Creating LogManager.");
+  };
+  
+  ~nvLogManager(void)
+  {
+    Print("Destroying LogManager.");
+  };
 
 public:
   // Retrieve the instance of this log manager:
-  nvLogManager &instance()
+  static nvLogManager* instance()
   {
     static nvLogManager singleton;
-    return singleton;
+    return GetPointer(singleton);
   }
 
 };
