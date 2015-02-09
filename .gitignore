@@ -5,3 +5,6 @@ experts.dat
 
 # Ignore the log files:
 Logs/*
+
+# Ignore the generated files:
+Files/*

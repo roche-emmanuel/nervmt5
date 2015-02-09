@@ -3,3 +3,4 @@
 02/08/15-16:48:03: Removed experts.dat file from repository
 02/08/15-17:06:11: Adding TickReader and ignoring log files.
 02/08/15-23:58:38: Updated syntax for TickReader.mq5
+02/09/15-17:34:37: Added file generation support for TickReader.
