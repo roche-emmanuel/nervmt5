@@ -77,5 +77,4 @@ else
   Print("Invalid LogManager instance.");
 }
 
-return (INIT_SUCCEEDED);
 END_TEST_SESSION
