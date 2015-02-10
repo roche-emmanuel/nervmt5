@@ -23,4 +23,10 @@ public:
     static nvTestManager singleton;
     return GetPointer(singleton);
   }
+
+  void run()
+  {
+    int npass, nfail;
+    run(npass,nfail);
+  }
 };

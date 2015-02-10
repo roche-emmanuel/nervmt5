@@ -13,12 +13,7 @@
     nvTestSuite* suite = nvTestManager::instance(); \
      
 #define END_TEST_SESSION(arg) nvTestManager::instance().run(); \
-  Print("Will now finish this."); \
   }
-
-//ExpertRemove(); \
-//return (INIT_SUCCEEDED); \
-//}
 
 #define BEGIN_TEST_SUITE(sname) suite = suite.getOrCreateTestSuite(sname);
 

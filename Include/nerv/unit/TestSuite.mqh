@@ -93,15 +93,22 @@ public:
   }
 
   // Run the current test suite:
-  void run()
+  void run(int& numPassed, int& numFailed)
   {
     Print("Entering Test Suite ", _name);
+    numPassed = 0;
+    numFailed = 0;
 
     // Execute all the children test suites:
     int num = ArraySize(_suites);
+    int npass, nfail;
     for (int i = 0; i < num; ++i)
     {
-      _suites[i].run();
+      _suites[i].run(npass,nfail);
+
+      // increment our own counters:
+      numPassed += npass;
+      numFailed += nfail;
     }
 
     // Execute all the test cases:
@@ -112,14 +119,18 @@ public:
       int res = _cases[i].doTest();
       if (res == TEST_PASSED)
       {
+        numPassed++;
         Print("=> Test PASSED");
       }
       else
       {
+        numFailed++;
         Print("=> Test FAILED");
       }
     }
 
-    Print("Leaving Test Suite ", _name);
+    int total = numPassed+numFailed;
+
+    Print("Leaving Test Suite ", _name, ": Success ratio: ",numPassed,"/",total);
   }
 };
