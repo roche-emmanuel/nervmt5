@@ -12,3 +12,4 @@
 02/10/15-17:38:25: Cut Testing header in multiple parts.
 02/10/15-22:24:04: Added minimal support to retrieve passed and failed tests.
 02/10/15-23:22:37: Added CList usage for TestCases
+02/10/15-23:29:15: Added list usage for TestSuites.

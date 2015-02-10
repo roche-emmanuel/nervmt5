@@ -12,7 +12,7 @@ protected:
   CList _cases;
 
   // List of children suites contained in this suite:
-  nvTestSuite *_suites[];
+  CList _suites;
 
   // Parent test suite:
   nvTestSuite *_parent;
@@ -23,7 +23,6 @@ public:
     _name = name;
     _parent = parent;
     Print("Creating test suite ", _name);
-    ArrayResize(_suites, 0); // Set the array size to zero
   }
 
   virtual ~nvTestSuite()
@@ -31,16 +30,7 @@ public:
     Print("Deleting test suite ", _name);
     // delete all the registered test cases:
     _cases.Clear();
-
-    // delete all the registered test suites:
-    int num = ArraySize(_suites);
-    for (int i = 0; i < num; ++i)
-    {
-      delete _suites[i];
-    }
-
-    // Clear the buffer:
-    ArrayFree(_suites);
+    _suites.Clear();
   }
 
   // Add a new test case to this test suite:
@@ -62,22 +52,21 @@ public:
   nvTestSuite *getOrCreateTestSuite(string sname)
   {
     // Check if we already have this suite in the list:
-    int num = ArraySize(_suites);
-    for (int i = 0; i < num; ++i)
-    {
-      if (_suites[i].getName() == sname)
+    nvTestSuite* suite = (nvTestSuite*)_suites.GetFirstNode();
+    while(suite) {
+      if (suite.getName() == sname)
       {
         Print("Retrieved existing test suite with name ", sname);
-        return GetPointer(_suites[i]);
+        return suite;
       }
+      suite = (nvTestSuite*)_suites.GetNextNode();      
     }
 
     // Create the new test suite:
-    nvTestSuite *suite = new nvTestSuite(sname,GetPointer(this));
+    suite = new nvTestSuite(sname,GetPointer(this));
 
     // Add the new suite to the list:
-    ArrayResize(_suites, num + 1); //
-    _suites[num] = suite;
+    _suites.Add(suite);
 
     // return the newly created test suite:
     return suite;
@@ -91,15 +80,14 @@ public:
     numFailed = 0;
 
     // Execute all the children test suites:
-    int num = ArraySize(_suites);
     int npass, nfail;
-    for (int i = 0; i < num; ++i)
-    {
-      _suites[i].run(npass,nfail);
-
+    nvTestSuite* suite = (nvTestSuite*)_suites.GetFirstNode();
+    while(suite) {
+      suite.run(npass,nfail);
       // increment our own counters:
       numPassed += npass;
       numFailed += nfail;
+      suite = (nvTestSuite*)_suites.GetNextNode();            
     }
 
     // Execute all the test cases:
