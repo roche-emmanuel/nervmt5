@@ -6,11 +6,11 @@
 #property copyright "Copyright 2015, NervTech"
 #property link      "https://wiki.singularityworld.net"
 
-#define BEGIN_TEST_SESSION int OnInit() \
+#define BEGIN_TEST_SESSION(arg) int OnInit() \
   { \
     nvTestSuite* suite = nvTestManager::instance(); \
      
-#define END_TEST_SESSION nvTestManager::instance().run(); \
+#define END_TEST_SESSION(arg) nvTestManager::instance().run(); \
   Print("Will now finish this."); \
   ExpertRemove(); \
   return (INIT_SUCCEEDED); \
@@ -18,7 +18,7 @@
 
 #define BEGIN_TEST_SUITE(sname) suite = suite.getOrCreateTestSuite(sname);
 
-#define END_TEST_SUITE suite = suite.getParent();
+#define END_TEST_SUITE(arg) suite = suite.getParent();
 
 #define BEGIN_TEST_CASE(tname) { \
     class TestClass : public nvTestCase { \
@@ -29,17 +29,22 @@
       ~TestClass() {}; \
       int doTest() { \
          
-#define END_TEST_CASE  return TEST_PASSED; } \
+#define END_TEST_CASE(arg)  return TEST_PASSED; } \
   }; \
   TestClass* test = new TestClass(); \
   suite.addTestCase(test); \
   }
 
-#define ASSERT_EQUAL_MSG(v1,v2,msg) if(v1!=v2) { \
+#define TOSTR(x) #x
+#define SHOWERROR(msg) { \
     Print(__FILE__,"(",__LINE__,"): ",msg); \
     return TEST_FAILED; \
   }
 
+#define ASSERT_MSG(val,msg) if(!(val)) SHOWERROR(msg)
+#define ASSERT_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWERROR(msg)
+
+#define ASSERT(val) ASSERT_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)
 
 //#import "shell32.dll"
@@ -72,7 +77,8 @@ public:
     return _name;
   }
 
-  virtual int doTest() {
+  virtual int doTest()
+  {
     // method should be overriden by test implementations.
     Print("ERROR: this should never be displayed!");
     return TEST_FAILED;

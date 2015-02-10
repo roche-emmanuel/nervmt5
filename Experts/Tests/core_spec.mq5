@@ -10,71 +10,23 @@
 #include <nerv/core/LogManager.mqh>
 
 
-BEGIN_TEST_SESSION
+BEGIN_TEST_SESSION()
 
-BEGIN_TEST_SUITE("My test suite")
+BEGIN_TEST_SUITE("Sanity tests")
 
-BEGIN_TEST_CASE("should know how to add 1 and 1")
-	ASSERT_EQUAL(1,1)	
-END_TEST_CASE
+BEGIN_TEST_CASE("should failed on 1==0")
+	ASSERT_EQUAL(1,0);
+END_TEST_CASE()
 
-END_TEST_SUITE
+BEGIN_TEST_CASE("should display message if applicable")
+	ASSERT_EQUAL_MSG(1,0,"The values are not equal: "+(string)1+"!="+(string)0);	
+END_TEST_CASE()
 
-Print("Initializing Core tests.");
+BEGIN_TEST_CASE("should have a valid log manage pointer")
+	nvLogManager* lm = nvLogManager::instance();
+	ASSERT(lm==NULL);
+END_TEST_CASE()
 
-	string my = "my";
-	int code = 42;
-	bool val = true;
-	string msg = "Here is "+my+" code: "+(string)42+" and this is "+(string)val;
-	Print(msg);
-	
-{
-  class MyClass
-  {
-  public:
-    MyClass()
-    {
-      Print("Creating my class.");
-    }
-    ~MyClass()
-    {
-      Print("Deleting my class.");
-    }
-  };
+END_TEST_SUITE()
 
-  MyClass *obj = new MyClass();
-
-  delete obj;
-}
-
-{
-  class MyClass
-  {
-  public:
-    MyClass()
-    {
-      Print("Creating my class 2.");
-    }
-    ~MyClass()
-    {
-      Print("Deleting my class 2.");
-    }
-  };
-
-  MyClass *obj = new MyClass();
-
-  delete obj;
-}
-
-// Retrieve instance of LogManager:
-nvLogManager *lm = nvLogManager::instance();
-if (lm != NULL)
-{
-  Print("LogManager instance is OK");
-}
-else
-{
-  Print("Invalid LogManager instance.");
-}
-
-END_TEST_SESSION
+END_TEST_SESSION()

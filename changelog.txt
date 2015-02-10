@@ -7,3 +7,4 @@
 02/09/15-21:12:43: Adding initial implementation for LogManager.
 02/10/15-00:16:25: Started implementation of unit test library.
 02/10/15-10:46:11: Refactored Test Suite for recursion support.
+02/10/15-11:39:01: Added support for ASSERT macro.
