@@ -35,6 +35,13 @@
   suite.addTestCase(test); \
   }
 
+#define BEGIN_TEST_PACKAGE(pname) void test_package_##pname(nvTestSuite* parent) { \
+  nvTestSuite* suite = parent;
+
+#define END_TEST_PACKAGE(arg) }
+
+#define LOAD_TEST_PACKAGE(pname) test_package_##pname(suite);
+
 #define TOSTR(x) #x
 #define SHOWERROR(msg) { \
     Print(__FILE__,"(",__LINE__,"): ",msg); \
@@ -167,7 +174,7 @@ public:
     }
 
     // Create the new test suite:
-    nvTestSuite *suite = new nvTestSuite(sname);
+    nvTestSuite *suite = new nvTestSuite(sname,GetPointer(this));
 
     // Add the new suite to the list:
     ArrayResize(_suites, num + 1); //
