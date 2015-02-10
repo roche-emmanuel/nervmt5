@@ -1,14 +1,15 @@
 
 #include "TestCase.mqh"
+#include <Arrays/List.mqh>
 
-class nvTestSuite
+class nvTestSuite : public CObject
 {
 protected:
   // Name of this test suite:
   string _name;
 
   // List of test cases contained in this suite:
-  nvTestCase *_cases[];
+  CList _cases;
 
   // List of children suites contained in this suite:
   nvTestSuite *_suites[];
@@ -22,7 +23,6 @@ public:
     _name = name;
     _parent = parent;
     Print("Creating test suite ", _name);
-    ArrayResize(_cases, 0); // Set the array size to zero
     ArrayResize(_suites, 0); // Set the array size to zero
   }
 
@@ -30,17 +30,10 @@ public:
   {
     Print("Deleting test suite ", _name);
     // delete all the registered test cases:
-    int num = ArraySize(_cases);
-    for (int i = 0; i < num; ++i)
-    {
-      delete _cases[i];
-    }
-
-    // Clear the buffer:
-    ArrayFree(_cases);
+    _cases.Clear();
 
     // delete all the registered test suites:
-    num = ArraySize(_suites);
+    int num = ArraySize(_suites);
     for (int i = 0; i < num; ++i)
     {
       delete _suites[i];
@@ -53,9 +46,7 @@ public:
   // Add a new test case to this test suite:
   void addTestCase(nvTestCase *test)
   {
-    int num = ArraySize(_cases);
-    ArrayResize(_cases, num + 1); //
-    _cases[num] = test;
+    _cases.Add(test);
   }
 
   string getName() const
@@ -112,11 +103,10 @@ public:
     }
 
     // Execute all the test cases:
-    num = ArraySize(_cases);
-    for (int i = 0; i < num; ++i)
-    {
-      Print(_name, ": ", _cases[i].getName());
-      int res = _cases[i].doTest();
+    nvTestCase* tcase = (nvTestCase*)_cases.GetFirstNode();
+    while(tcase!=NULL) {
+      Print(_name, ": ", tcase.getName());
+      int res = tcase.doTest();
       if (res == TEST_PASSED)
       {
         numPassed++;
@@ -127,6 +117,7 @@ public:
         numFailed++;
         Print("=> Test FAILED");
       }
+      tcase = (nvTestCase*)_cases.GetNextNode();
     }
 
     int total = numPassed+numFailed;

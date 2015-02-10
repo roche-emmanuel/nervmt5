@@ -1,11 +1,13 @@
 
+#include <Object.mqh>
+
 enum nvTestStatusCode
 {
   TEST_PASSED,
   TEST_FAILED
 };
 
-class nvTestCase
+class nvTestCase : public CObject
 {
 protected:
   string _name;
