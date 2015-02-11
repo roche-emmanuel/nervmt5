@@ -1,5 +1,7 @@
 
 #include "TestCase.mqh"
+#include "TestSessionResult.mqh"
+
 #include <Arrays/List.mqh>
 
 class nvTestSuite : public CObject
@@ -73,17 +75,20 @@ public:
   }
 
   // Run the current test suite:
-  void run(int& numPassed, int& numFailed)
+  void run(nvTestSessionResult* result, int& numPassed, int& numFailed)
   {
     Print("Entering Test Suite ", _name);
     numPassed = 0;
     numFailed = 0;
 
+    // Resgiter this test suite:
+    result.addTestSuite(GetPointer(this));
+    
     // Execute all the children test suites:
     int npass, nfail;
     nvTestSuite* suite = (nvTestSuite*)_suites.GetFirstNode();
     while(suite) {
-      suite.run(npass,nfail);
+      suite.run(result,npass,nfail);
       // increment our own counters:
       numPassed += npass;
       numFailed += nfail;
@@ -91,10 +96,13 @@ public:
     }
 
     // Execute all the test cases:
+    nvTestResult* tresult;
     nvTestCase* tcase = (nvTestCase*)_cases.GetFirstNode();
     while(tcase!=NULL) {
       Print(_name, ": ", tcase.getName());
-      int res = tcase.doTest();
+      tresult = tcase.run(GetPointer(this));
+      result.addTestResult(tresult);
+      int res = tresult.getStatus();
       if (res == TEST_PASSED)
       {
         numPassed++;

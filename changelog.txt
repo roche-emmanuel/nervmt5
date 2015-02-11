@@ -13,3 +13,4 @@
 02/10/15-22:24:04: Added minimal support to retrieve passed and failed tests.
 02/10/15-23:22:37: Added CList usage for TestCases
 02/10/15-23:29:15: Added list usage for TestSuites.
+02/11/15-09:08:21: Retrieve all test data in TestSessionResult.

@@ -26,7 +26,8 @@ public:
 
   void run()
   {
+    nvTestSessionResult sessionResult;
     int npass, nfail;
-    run(npass,nfail);
+    run(GetPointer(sessionResult),npass,nfail);
   }
 };
