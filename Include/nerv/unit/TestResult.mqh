@@ -51,8 +51,9 @@ public:
     return _name;
   }
 
-  void addMessage(nvTestMessage* msg)
+  void addMessage(datetime time, int severity, const string &content, const string &filename, int lineNum)
   {
+    nvTestMessage* msg = new nvTestMessage(time,severity,content,filename,lineNum);
     _messages.Add(msg);
   }
 

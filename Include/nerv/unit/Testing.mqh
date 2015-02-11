@@ -27,30 +27,44 @@
       }; \
       ~TestClass() {}; \
       int doTest() { \
-         
-#define END_TEST_CASE(arg)  return TEST_PASSED; } \
+        int __test_result__ = TEST_PASSED;
+
+#define END_TEST_CASE(arg)  return __test_result__; } \
   }; \
   TestClass* test = new TestClass(); \
   suite.addTestCase(test); \
   }
 
 #define BEGIN_TEST_PACKAGE(pname) void test_package_##pname(nvTestSuite* parent) { \
-  nvTestSuite* suite = parent;
+    nvTestSuite* suite = parent;
 
 #define END_TEST_PACKAGE(arg) }
 
 #define LOAD_TEST_PACKAGE(pname) test_package_##pname(suite);
 
 #define TOSTR(x) #x
+#define SHOWINFO(msg) writeMessage(TimeLocal(), SEV_INFO, msg, __FILE__, __LINE__);
 #define SHOWERROR(msg) { \
-    Print(__FILE__,"(",__LINE__,"): ",msg); \
+    writeMessage(TimeLocal(), SEV_ERROR, msg, __FILE__, __LINE__); \
+    __test_result__ = TEST_FAILED; \
+  }
+
+#define SHOWFATAL(msg) { \
+    writeMessage(TimeLocal(), SEV_FATAL, msg, __FILE__, __LINE__); \
     return TEST_FAILED; \
   }
 
+#define MESSAGE(msg) SHOWINFO(msg)
+#define DISPLAY(val) MESSAGE(TOSTR(val) +" = "+(string)(val))
+
+#define ASSUME_MSG(val,msg) if(!(val)) SHOWINFO(msg)
 #define ASSERT_MSG(val,msg) if(!(val)) SHOWERROR(msg)
+#define REQUIRE_MSG(val,msg) if(!(val)) SHOWFATAL(msg)
 #define ASSERT_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWERROR(msg)
 
+#define ASSUME(val) ASSUME_MSG(val,"Assumption "+ TOSTR(val) + " is invalid.")
 #define ASSERT(val) ASSERT_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
+#define REQUIRE(val) REQUIRE_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)
 
 //#import "shell32.dll"

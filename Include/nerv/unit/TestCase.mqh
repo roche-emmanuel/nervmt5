@@ -13,10 +13,10 @@ class nvTestCase : public CObject
 {
 protected:
   string _name;
-
+  nvTestResult* _currentResult;
 
 public:
-  nvTestCase() {};
+  nvTestCase() : _currentResult(NULL) {};
 
   ~nvTestCase() {};
 
@@ -25,15 +25,22 @@ public:
     return _name;
   }
 
-  nvTestResult* run(nvTestSuite* suite)
+  nvTestResult *run(nvTestSuite *suite)
   {
-    nvTestResult* result = new nvTestResult(_name,suite);
+    nvTestResult *result = new nvTestResult(_name, suite);
+
+    // Assign current result:
+    _currentResult = result;
+
     // Start a timer:
-    uint start=GetTickCount();
+    uint start = GetTickCount();
     int status = doTest();
-    uint end=GetTickCount();
+    uint end = GetTickCount();
+
+    _currentResult = NULL;
+
     result.setStatus(status);
-    result.setDuration(((double)(end-start))/1000.0);
+    result.setDuration(((double)(end - start)) / 1000.0);
     return result;
   }
 
@@ -42,5 +49,16 @@ public:
     // method should be overriden by test implementations.
     Print("ERROR: this should never be displayed!");
     return TEST_FAILED;
+  }
+
+  // Method used to write a message in the current test result:
+  void writeMessage(datetime time, int severity, string content, string filename, int lineNum)
+  {
+    if (_currentResult == NULL)
+    {
+      Print("ERROR: Invalid current result.");
+    }
+
+    _currentResult.addMessage(time,severity,content,filename,lineNum);
   }
 };

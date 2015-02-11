@@ -14,3 +14,4 @@
 02/10/15-23:22:37: Added CList usage for TestCases
 02/10/15-23:29:15: Added list usage for TestSuites.
 02/11/15-09:08:21: Retrieve all test data in TestSessionResult.
+02/11/15-13:56:46: Retrieving messages as part of the test data.
