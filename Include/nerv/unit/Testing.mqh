@@ -8,9 +8,11 @@
 
 #include "TestManager.mqh"
 
-#define BEGIN_TEST_SESSION(arg) void OnStart() \
+#define BEGIN_TEST_SESSION(location) void OnStart() \
   { \
-    nvTestSuite* suite = nvTestManager::instance(); \
+    nvTestManager* tman = nvTestManager::instance(); \
+    tman.setTargetLocation(location); \
+    nvTestSuite* suite = tman;
      
 #define END_TEST_SESSION(arg) nvTestManager::instance().run(); \
   }
@@ -66,12 +68,3 @@
 #define ASSERT(val) ASSERT_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define REQUIRE(val) REQUIRE_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)
-
-//#import "shell32.dll"
-//int ShellExecuteW(int hwnd,string Operation,string File,string Parameters,string Directory,int ShowCmd);
-//#import
-
-//void OnStart()
-//  {
-//   Shell32::ShellExecuteW(0,"open","http://mql5.com","","",3);
-//  }
