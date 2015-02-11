@@ -16,3 +16,4 @@
 02/11/15-09:08:21: Retrieve all test data in TestSessionResult.
 02/11/15-13:56:46: Retrieving messages as part of the test data.
 02/11/15-16:06:41: Working on test result report page.
+02/11/15-16:10:04: Added the html files on the repository.

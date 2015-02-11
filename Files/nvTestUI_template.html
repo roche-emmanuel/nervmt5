@@ -1,0 +1,215 @@
+<!doctype html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>My Test results</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap.no-icons.min.css" />
+    <!-- <link rel="stylesheet" href="css/bootstrap.no-icons.min.css" /> -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css" />
+    <!-- <link rel="stylesheet" href="css/font-awesome.css" /> -->
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css(.tmp) styles/main.css -->
+    <!-- <link rel="stylesheet" href="styles/main.css"> -->
+    <!-- endbuild -->
+  </head>
+  <body ng-app="myModule">
+
+    <div ng-controller="ctrlRead">
+     
+      <table class="table table-striped table-condensed table-hover">
+        <thead>
+          <tr>
+              <th class="id" custom-sort order="'sname'" sort="sort">Suite&nbsp;</th>
+              <th class="name" custom-sort order="'name'" sort="sort">Name&nbsp;</th>
+              <th class="description" custom-sort order="'duration'" sort="sort">Duration&nbsp;</th>
+              <th class="field3" custom-sort order="'status'" sort="sort">Status&nbsp;</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <td colspan="4">
+              <div class="pagination" align="center">
+                  <ul>
+                      <li ng-class="{disabled: currentPage == 0}">
+                          <a href ng-click="prevPage()">« Prev</a>
+                      </li>
+                  
+                      <li ng-repeat="n in range(pagedItems.length, currentPage, currentPage + gap) "
+                          ng-class="{active: n == currentPage}"
+                      ng-click="setPage()">
+                          <a href ng-bind="n + 1">1</a>
+                      </li>
+                   
+                      <li ng-class="{disabled: (currentPage) == pagedItems.length - 1}">
+                          <a href ng-click="nextPage()">Next »</a>
+                      </li>
+                  </ul>
+              </div>
+          </td>
+        </tfoot>
+        <pre>pagedItems.length: {{pagedItems.length|json}}</pre>
+        <pre>currentPage: {{currentPage|json}}</pre>
+        <pre>currentPage: {{sort|json}}</pre>
+        <tbody>
+          <tr ng-repeat="item in pagedItems[currentPage] | orderBy:sort.sortingOrder:sort.reverse">
+              <td>{{item.sname}}</td>
+              <td>{{item.name}}</td>
+              <td>{{item.duration}} s</td>
+              <td>{{item.status}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script src="http://code.angularjs.org/1.1.0/angular.min.js"></script>
+    <!-- // <script src="js/angular.min.js"></script> -->
+    <script>
+var fessmodule = angular.module('myModule', []);
+
+fessmodule.controller('ctrlRead', function ($scope, $filter) {
+
+    // init
+    $scope.sort = {       
+                sortingOrder : 'id',
+                reverse : false
+            };
+    
+    $scope.gap = 5;
+    
+    $scope.filteredItems = [];
+    $scope.groupedItems = [];
+    $scope.itemsPerPage = 5;
+    $scope.pagedItems = [];
+    $scope.currentPage = 0;
+    $scope.items = [
+        {"sname":"Sanity checks","name":"Should do something","duration":"11.009s","status":"PASSED"}, 
+        {"sname":"Sanity checks","name":"Should do something else","duration":"0.333s","status":"PASSED"}, 
+        {"sname":"Core specs","name":"Should not fail","duration":"0.432s","status":"FAILED"},  
+// ${TESTCASE_LIST}
+    ];
+
+    var searchMatch = function (haystack, needle) {
+        if (!needle) {
+            return true;
+        }
+        return haystack.toLowerCase().indexOf(needle.toLowerCase()) !== -1;
+    };
+
+    // init the filtered items
+    $scope.search = function () {
+        $scope.filteredItems = $filter('filter')($scope.items, function (item) {
+            for(var attr in item) {
+                if (searchMatch(item[attr], $scope.query))
+                    return true;
+            }
+            return false;
+        });
+        // take care of the sorting order
+        if ($scope.sort.sortingOrder !== '') {
+            $scope.filteredItems = $filter('orderBy')($scope.filteredItems, $scope.sort.sortingOrder, $scope.sort.reverse);
+        }
+        $scope.currentPage = 0;
+        // now group by pages
+        $scope.groupToPages();
+    };
+    
+  
+    // calculate page in place
+    $scope.groupToPages = function () {
+        $scope.pagedItems = [];
+        
+        for (var i = 0; i < $scope.filteredItems.length; i++) {
+            if (i % $scope.itemsPerPage === 0) {
+                $scope.pagedItems[Math.floor(i / $scope.itemsPerPage)] = [ $scope.filteredItems[i] ];
+            } else {
+                $scope.pagedItems[Math.floor(i / $scope.itemsPerPage)].push($scope.filteredItems[i]);
+            }
+        }
+    };
+    
+    $scope.range = function (size,start, end) {
+        var ret = [];        
+        console.log(size,start, end);
+                      
+        if (size < end) {
+            end = size;
+            start = size-$scope.gap;
+        }
+        for (var i = start; i < end; i++) {
+            ret.push(i);
+        }        
+         console.log(ret);        
+        return ret;
+    };
+    
+    $scope.prevPage = function () {
+        if ($scope.currentPage > 0) {
+            $scope.currentPage--;
+        }
+    };
+    
+    $scope.nextPage = function () {
+        if ($scope.currentPage < $scope.pagedItems.length - 1) {
+            $scope.currentPage++;
+        }
+    };
+    
+    $scope.setPage = function () {
+        $scope.currentPage = this.n;
+    };
+
+    // functions have been describe process the data for display
+    $scope.search();
+
+   
+
+});
+
+
+fessmodule.$inject = ['$scope', '$filter'];
+
+fessmodule.directive("customSort", function() {
+return {
+    restrict: 'A',
+    transclude: true,    
+    scope: {
+      order: '=',
+      sort: '='
+    },
+    template : 
+      ' <a ng-click="sort_by(order)" style="color: #555555;">'+
+      '    <span ng-transclude></span>'+
+      '    <i ng-class="selectedCls(order)"></i>'+
+      '</a>',
+    link: function(scope) {
+                
+    // change sorting order
+    scope.sort_by = function(newSortingOrder) {       
+        var sort = scope.sort;
+        
+        if (sort.sortingOrder == newSortingOrder){
+            sort.reverse = !sort.reverse;
+        }                    
+
+        sort.sortingOrder = newSortingOrder;        
+    };
+    
+   
+    scope.selectedCls = function(column) {
+        if(column == scope.sort.sortingOrder){
+            return ('icon-chevron-' + ((scope.sort.reverse) ? 'down' : 'up'));
+        }
+        else{            
+            return'icon-sort' 
+        } 
+    };      
+  }// end link
+}
+});
+    </script>
+  </body>
+</html>
