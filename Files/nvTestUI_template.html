@@ -8,7 +8,8 @@
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
-    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap.no-icons.min.css" />
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap.no-icons.min.css" /> -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
     <!-- <link rel="stylesheet" href="css/bootstrap.no-icons.min.css" /> -->
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css" />
     <!-- <link rel="stylesheet" href="css/font-awesome.css" /> -->
@@ -18,52 +19,67 @@
     <!-- <link rel="stylesheet" href="styles/main.css"> -->
     <!-- endbuild -->
   </head>
-  <body ng-app="myModule">
+  <body ng-app="myModule" class="container-fluid">
 
-    <div ng-controller="ctrlRead">
-     
-      <table class="table table-striped table-condensed table-hover">
-        <thead>
-          <tr>
-              <th class="id" custom-sort order="'sname'" sort="sort">Suite&nbsp;</th>
-              <th class="name" custom-sort order="'name'" sort="sort">Name&nbsp;</th>
-              <th class="description" custom-sort order="'duration'" sort="sort">Duration&nbsp;</th>
-              <th class="field3" custom-sort order="'status'" sort="sort">Status&nbsp;</th>
-          </tr>
-        </thead>
-        <tfoot>
-          <td colspan="4">
-              <div class="pagination" align="center">
-                  <ul>
-                      <li ng-class="{disabled: currentPage == 0}">
-                          <a href ng-click="prevPage()">« Prev</a>
-                      </li>
-                  
-                      <li ng-repeat="n in range(pagedItems.length, currentPage, currentPage + gap) "
-                          ng-class="{active: n == currentPage}"
-                      ng-click="setPage()">
-                          <a href ng-bind="n + 1">1</a>
-                      </li>
-                   
-                      <li ng-class="{disabled: (currentPage) == pagedItems.length - 1}">
-                          <a href ng-click="nextPage()">Next »</a>
-                      </li>
-                  </ul>
-              </div>
-          </td>
-        </tfoot>
-        <pre>pagedItems.length: {{pagedItems.length|json}}</pre>
+    <div ng-controller="ctrlRead" class="row">
+      <div class="row">
+
+        <h1 class="col-md-10 col-md-offset-1">Test results on 12/02/2015 at 09:04</h1>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4 col-md-offset-4 alert alert-success" role="alert">Passed {{numPassed}}/{{numTests}} tests ({{100*numPassed/numTests|number:2}}%).</div>
+      </div>
+
+      <div class="col-md-10 col-md-offset-1">
+      <!-- <div class="col-md-12"> -->
+<!--         <pre>pagedItems.length: {{pagedItems.length|json}}</pre>
         <pre>currentPage: {{currentPage|json}}</pre>
-        <pre>currentPage: {{sort|json}}</pre>
-        <tbody>
-          <tr ng-repeat="item in pagedItems[currentPage] | orderBy:sort.sortingOrder:sort.reverse">
-              <td>{{item.sname}}</td>
-              <td>{{item.name}}</td>
-              <td>{{item.duration}} s</td>
-              <td>{{item.status}}</td>
-          </tr>
-        </tbody>
-      </table>
+        <pre>currentPage: {{sort|json}}</pre> -->
+
+        <table class="table table-striped table-condensed table-hover">
+          <thead>
+            <tr>
+                <th class="id" custom-sort order="'id'" sort="sort">Id&nbsp;</th>
+                <th class="sname" custom-sort order="'sname'" sort="sort">Suite&nbsp;</th>
+                <th class="name" custom-sort order="'name'" sort="sort">Name&nbsp;</th>
+                <th class="duration" custom-sort order="'duration'" sort="sort">Duration&nbsp;</th>
+                <th class="status" custom-sort order="'status'" sort="sort">Status&nbsp;</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <td colspan="5">
+                <nav align="center">
+                    <ul class="pagination">
+                        <li ng-class="{disabled: currentPage == 0}">
+                            <a href ng-click="prevPage()">« Prev</a>
+                        </li>
+                    
+                        <li ng-repeat="n in range(pagedItems.length, currentPage, currentPage + gap) "
+                            ng-class="{active: n == currentPage}"
+                        ng-click="setPage()">
+                            <a href ng-bind="n + 1">1</a>
+                        </li>
+                     
+                        <li ng-class="{disabled: (currentPage) == pagedItems.length - 1}">
+                            <a href ng-click="nextPage()">Next »</a>
+                        </li>
+                    </ul>
+                </nav>
+            </td>
+          </tfoot>
+          <tbody>
+            <tr ng-repeat="item in pagedItems[currentPage] | orderBy:sort.sortingOrder:sort.reverse"
+                ng-class="{'success': item.status=='PASSED', 'danger': item.status=='FAILED'}">
+                <td>{{item.id}}</td>
+                <td>{{item.sname}}</td>
+                <td>{{item.name}}</td>
+                <td>{{item.duration}} s</td>
+                <td>{{item.status}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <script src="http://code.angularjs.org/1.1.0/angular.min.js"></script>
     <!-- // <script src="js/angular.min.js"></script> -->
@@ -86,11 +102,24 @@ fessmodule.controller('ctrlRead', function ($scope, $filter) {
     $scope.pagedItems = [];
     $scope.currentPage = 0;
     $scope.items = [
-        {"sname":"Sanity checks","name":"Should do something","duration":"11.009s","status":"PASSED"}, 
-        {"sname":"Sanity checks","name":"Should do something else","duration":"0.333s","status":"PASSED"}, 
-        {"sname":"Core specs","name":"Should not fail","duration":"0.432s","status":"FAILED"},  
-// ${TESTCASE_LIST}
+        // {"sname":"Sanity checks","name":"Should do something","duration":"11.009","status":"PASSED"}, 
+        // {"sname":"Sanity checks","name":"Should do something else","duration":"0.333","status":"PASSED"}, 
+        // {"sname":"Core specs","name":"Should not fail","duration":"0.432","status":"FAILED"},  
+${TESTCASE_LIST}
     ];
+
+    // Compute the number of passed/failed tests:
+    $scope.numTests = $scope.items.length;
+    $scope.numPassed = 0;
+
+    var count = $scope.items.length;
+    for (var i = 0; i < count; i++) {
+      if($scope.items[i].status=="PASSED") {
+        $scope.numPassed++;
+      }
+    }
+
+    $scope.numFailed = $scope.numTests - $scope.numPassed;
 
     var searchMatch = function (haystack, needle) {
         if (!needle) {
@@ -131,13 +160,13 @@ fessmodule.controller('ctrlRead', function ($scope, $filter) {
         }
     };
     
-    $scope.range = function (size,start, end) {
+    $scope.range = function (size, start, end) {
         var ret = [];        
         console.log(size,start, end);
                       
         if (size < end) {
             end = size;
-            start = size-$scope.gap;
+            start = Math.max(size-$scope.gap,0);
         }
         for (var i = start; i < end; i++) {
             ret.push(i);
