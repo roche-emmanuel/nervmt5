@@ -59,6 +59,13 @@ public:
       Print("ERROR: Invalid current result.");
     }
 
+    if(severity==SEV_INFO) {
+      Print(time,": ",content);
+    }
+    else {
+      Print(time,": ",filename,"(",lineNum,"): ",content);
+    }
+    
     _currentResult.addMessage(time,severity,content,filename,lineNum);
   }
 };

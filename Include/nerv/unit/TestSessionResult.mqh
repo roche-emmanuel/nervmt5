@@ -78,10 +78,16 @@ public:
     //--- close the file
     FileClose(src_handle);
 
+    // Retrieve the current date:
+    MqlDateTime date;
+    TimeLocal(date);
+    string datestr = StringFormat("%02d/%02d/%4d at %d:%02d:%02d",date.day,date.mon,date.year,date.hour,date.min,date.sec);
+    int count = StringReplace(content,"${TEST_DATE}",datestr);
+
     //         {"id":1,"name":"name 1","description":"description 1","field3":"field3 1","field4":"field4 1","field5 ":"field5 1"},
     string tdata = "";
     writeTestResultData(tdata);
-    int count = StringReplace(content,"${TESTCASE_LIST}",tdata);
+    count = StringReplace(content,"${TESTCASE_LIST}",tdata);
     // Count should be equal to 1.
 
     // Now write the complete content to the destination file:

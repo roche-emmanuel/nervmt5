@@ -24,11 +24,12 @@
     <div ng-controller="ctrlRead" class="row">
       <div class="row">
 
-        <h1 class="col-md-10 col-md-offset-1">Test results on 12/02/2015 at 09:04</h1>
+        <h1 class="col-md-10 col-md-offset-1">Test results on ${TEST_DATE}</h1>
       </div>
 
       <div class="row">
-        <div class="col-md-4 col-md-offset-4 alert alert-success" role="alert">Passed {{numPassed}}/{{numTests}} tests ({{100*numPassed/numTests|number:2}}%).</div>
+        <div class="col-xs-4 col-xs-offset-4 alert alert-success" role="alert"
+             ng-class="{'alert-warning' : passedRatio > 0.9 && passedRatio < 1.0, 'alert-success': passedRatio==1.0, 'alert-danger': passedRatio <= 0.9}">Passed {{numPassed}}/{{numTests}} tests ({{100*numPassed/numTests|number:2}}%).</div>
       </div>
 
       <div class="col-md-10 col-md-offset-1">
@@ -120,6 +121,8 @@ ${TESTCASE_LIST}
     }
 
     $scope.numFailed = $scope.numTests - $scope.numPassed;
+    $scope.passedRatio = $scope.numPassed/$scope.numTests;
+
 
     var searchMatch = function (haystack, needle) {
         if (!needle) {
