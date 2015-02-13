@@ -63,8 +63,10 @@
 #define ASSERT_MSG(val,msg) if(!(val)) SHOWERROR(msg)
 #define REQUIRE_MSG(val,msg) if(!(val)) SHOWFATAL(msg)
 #define ASSERT_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWERROR(msg)
+#define REQUIRE_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWFATAL(msg)
 
 #define ASSUME(val) ASSUME_MSG(val,"Assumption "+ TOSTR(val) + " is invalid.")
 #define ASSERT(val) ASSERT_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define REQUIRE(val) REQUIRE_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)
+#define REQUIRE_EQUAL(v1,v2) REQUIRE_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)

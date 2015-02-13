@@ -57,7 +57,7 @@ public:
     _messages.Add(msg);
   }
 
-  const CList* getMessages() const
+  CList* getMessages() const
   {
     return GetPointer(_messages);
   }

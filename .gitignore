@@ -8,3 +8,4 @@ Logs/*
 
 # Ignore the generated files:
 # Files/*
+Files/TestResults.html

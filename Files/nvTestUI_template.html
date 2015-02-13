@@ -19,9 +19,9 @@
     <!-- <link rel="stylesheet" href="styles/main.css"> -->
     <!-- endbuild -->
   </head>
-  <body ng-app="myModule" class="container-fluid">
+  <body ng-app="myModule">
 
-    <div ng-controller="ctrlRead" class="row">
+    <div ng-controller="ctrlRead" class="container-fluid">
       <div class="row">
 
         <h1 class="col-md-10 col-md-offset-1">Test results on ${TEST_DATE}</h1>
@@ -74,7 +74,15 @@
                 ng-class="{'success': item.status=='PASSED', 'danger': item.status=='FAILED'}">
                 <td>{{item.id}}</td>
                 <td>{{item.sname}}</td>
-                <td>{{item.name}}</td>
+                <td><h4>{{item.name}}</h4>
+                    <ul>
+                        <li ng-repeat="msg in item.messages">
+                            {{msg.time}} : {{msg.content}}
+                        </li>
+                    </ul>
+<!--                     <div>This is the message list.
+                    </div> -->
+                </td>
                 <td>{{item.duration}} s</td>
                 <td>{{item.status}}</td>
             </tr>
@@ -99,13 +107,10 @@ fessmodule.controller('ctrlRead', function ($scope, $filter) {
     
     $scope.filteredItems = [];
     $scope.groupedItems = [];
-    $scope.itemsPerPage = 5;
+    $scope.itemsPerPage = 20;
     $scope.pagedItems = [];
     $scope.currentPage = 0;
     $scope.items = [
-        // {"sname":"Sanity checks","name":"Should do something","duration":"11.009","status":"PASSED"}, 
-        // {"sname":"Sanity checks","name":"Should do something else","duration":"0.333","status":"PASSED"}, 
-        // {"sname":"Core specs","name":"Should not fail","duration":"0.432","status":"FAILED"},  
 ${TESTCASE_LIST}
     ];
 
