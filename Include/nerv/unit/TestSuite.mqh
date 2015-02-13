@@ -14,7 +14,7 @@ protected:
   CList _cases;
 
   // List of children suites contained in this suite:
-  CList _suites;
+  CList* _suites;
 
   // Parent test suite:
   nvTestSuite *_parent;
@@ -25,6 +25,7 @@ public:
     _name = name;
     _parent = parent;
     Print("Creating test suite ", _name);
+    _suites = new CList();
   }
 
   virtual ~nvTestSuite()
@@ -33,6 +34,7 @@ public:
     // delete all the registered test cases:
     _cases.Clear();
     _suites.Clear();
+    delete _suites;
   }
 
   // Add a new test case to this test suite:
@@ -65,6 +67,7 @@ public:
     }
 
     // Create the new test suite:
+    //MessageBox("Creating suite "+sname+" with parent "+getName());
     suite = new nvTestSuite(sname,GetPointer(this));
 
     // Add the new suite to the list:
@@ -86,13 +89,14 @@ public:
     
     // Execute all the children test suites:
     int npass, nfail;
-    nvTestSuite* suite = (nvTestSuite*)_suites.GetFirstNode();
+    nvTestSuite* suite = (nvTestSuite*)this._suites.GetFirstNode();
+    MessageBox("Found "+this._suites.Total()+" sub suites for "+getName());
     while(suite) {
       suite.run(result,npass,nfail);
       // increment our own counters:
       numPassed += npass;
       numFailed += nfail;
-      suite = (nvTestSuite*)_suites.GetNextNode();            
+      suite = (nvTestSuite*)this._suites.GetNextNode();            
     }
 
     // Execute all the test cases:

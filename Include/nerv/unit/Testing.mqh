@@ -13,23 +13,31 @@
     nvTestManager* tman = nvTestManager::instance(); \
     tman.setTargetLocation(location); \
     nvTestSuite* suite = tman;
-     
+
 #define END_TEST_SESSION(arg) nvTestManager::instance().run(); \
   }
 
-#define BEGIN_TEST_SUITE(sname) suite = suite.getOrCreateTestSuite(sname);
+#define BEGIN_TEST_SUITE(sname) if(true) { suite = suite.getOrCreateTestSuite(sname);
 
-#define END_TEST_SUITE(arg) suite = suite.getParent();
+#define XBEGIN_TEST_SUITE(sname) if(false) { suite = suite.getOrCreateTestSuite(sname);
 
-#define BEGIN_TEST_CASE(tname) { \
-    class TestClass : public nvTestCase { \
-    public: \
-      TestClass() { \
-        _name = tname; \
-      }; \
-      ~TestClass() {}; \
-      int doTest() { \
-        int __test_result__ = TEST_PASSED;
+#define END_TEST_SUITE(arg) suite = suite.getParent(); }
+
+#define BEGIN_TEST_CASE_BODY(tname) class TestClass : public nvTestCase { \
+  public: \
+    TestClass() { \
+      _name = tname; \
+    }; \
+    ~TestClass() {}; \
+    int doTest() { \
+      int __test_result__ = TEST_PASSED;
+
+
+#define BEGIN_TEST_CASE(tname) if(true) { \
+    BEGIN_TEST_CASE_BODY(tname)
+
+#define XBEGIN_TEST_CASE(tname) if(false) { \
+    BEGIN_TEST_CASE_BODY(tname)
 
 #define END_TEST_CASE(arg)  return __test_result__; } \
   }; \
@@ -42,7 +50,8 @@
 
 #define END_TEST_PACKAGE(arg) }
 
-#define LOAD_TEST_PACKAGE(pname) test_package_##pname(suite);
+#define LOAD_TEST_PACKAGE(pname) if(true) { test_package_##pname(suite); }
+#define XLOAD_TEST_PACKAGE(pname) if(false) { test_package_##pname(suite); }
 
 #define TOSTR(x) #x
 #define SHOWINFO(msg) writeMessage(TimeLocal(), SEV_INFO, msg, __FILE__, __LINE__);
