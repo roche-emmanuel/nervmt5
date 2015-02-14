@@ -39,7 +39,7 @@ public:
       _ss << "<" << trace << "> ";
     }
 
-    _ss << "\t";
+    _ss << "  ";
   }
 
   ~nvLogRecord()

@@ -23,19 +23,27 @@ BEGIN_TEST_CASE("should support logging messages")
   // Then retrieve the log file and ensure we find the entry we just wrote.
   nvLogManager* lm = nvLogManager::instance();
   string fname = "test.log";
-  lm.addSink(new nvFileLogger(fname));
+  nvFileLogger* logger = new nvFileLogger(fname);
+  lm.addSink(logger);
 
-  int level = nvLogSeverity::LOGSEV_DEBUG0;
-  if(level <= nvLogManager::instance().getNotifyLevel()) {
-    nvLogRecord rec(level,__FILE__,__LINE__,"");
-    rec.getStream() << "This is a message" ;
-  }
+  //int level = nvLogSeverity::LOGSEV_DEBUG0;
+  //if(level <= nvLogManager::instance().getNotifyLevel()) {
+  //  nvLogRecord rec(level,__FILE__,__LINE__,"");
+  //  rec.getStream() << "This is a message" ;
+  //}
 
   logDEBUG("This is a debug message.");
   
-  // Read the content of the file:
-  //string content = nvReadFile(fname);
+  logger.close();
 
+  // Read the content of the file:
+  string content = nvReadFile(fname);
+
+  string pred = "[DEBUG]   This is a debug message.\n";
+  //MESSAGE("Content: '"<<content<<"'");
+  //MESSAGE("Pred: '"<<pred<<"'");
+
+  REQUIRE_EQUAL(content,pred);
 END_TEST_CASE()
 
 END_TEST_SUITE()

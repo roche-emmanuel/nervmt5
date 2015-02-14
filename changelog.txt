@@ -24,3 +24,4 @@
 02/14/15-09:11:15: Using array list for test suites to avoid linked list pointer mixing.
 02/14/15-11:33:41: Added initial implementation for StringStream.
 02/14/15-14:41:55: Added initial implementation for logging system.
+02/14/15-15:05:56: Added support for FileLogger close.
