@@ -130,6 +130,39 @@ BEGIN_TEST_CASE("should have unary operator-")
   REQUIRE(-vec2==vec1);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support dot product")
+  int len = nv_random_int(1,100);
+  nvVecd vec1(len,2.0);
+  nvVecd vec2(len,3.0);
+
+  REQUIRE_EQUAL(vec1*vec2,(len*6.0));
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support norm computation")
+  int len = nv_random_int(1,100);
+  nvVecd vec1(len,2.0);
+
+  REQUIRE_EQUAL(vec1.norm2(),(len*4.0));
+  REQUIRE_EQUAL(vec1.norm(),MathSqrt(len*4.0));
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support operator/")
+  int len = nv_random_int(1,100);
+  nvVecd vec1(len,2.0);
+  nvVecd vec2(len,1.0);
+
+  nvVecd vec3 = vec1/2.0;
+  REQUIRE(vec3==vec2);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support renormalization")
+  int len = nv_random_int(1,100);
+  nvVecd vec1(len,2.0);
+
+  double val = vec1.normalize();
+  REQUIRE_CLOSE(vec1.norm(),1.0,1e-6);
+  REQUIRE_EQUAL(val,MathSqrt(len*4.0));
+END_TEST_CASE()
 
 END_TEST_SUITE()
 

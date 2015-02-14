@@ -8,7 +8,7 @@
 
 #include <nerv/core.mqh>
 
-class nvVecd
+class nvVecd : public nvObject
 {
 protected:
   double _data[];
@@ -159,6 +159,32 @@ public:
     return res;
   }
 
+  nvVecd* operator/=(double val)
+  {
+    CHECK(val!=0.0,"Cannot divide by zero.");
+    for(uint i=0;i<_len;++i) {
+      _data[i] /= val;
+    }
+    return GetPointer(this);
+  }
+
+  nvVecd operator/(double val) const
+  {
+    nvVecd res(this);
+    res/=val;
+    return res;
+  }
+
+  double operator*(const nvVecd& rhs) const
+  {
+    CHECK(_len==rhs._len,"Mismatch of lengths: "+STR(_len)+"!="+STR(rhs._len));
+    double res = 0.0;
+    for(uint i=0;i<_len;++i) {
+      res += _data[i]*rhs._data[i];
+    }
+    return res;
+  }
+
   double push_back(double val)
   {
     double res =_data[0];
@@ -187,5 +213,26 @@ public:
     }
     res += ")";
     return res;
+  }
+
+  double norm2() const
+  {
+    return this*this;
+  }
+
+  double norm() const
+  {
+    return MathSqrt(norm2());
+  }
+
+  double normalize()
+  {
+    // compute the current norm:
+    double n = norm();
+    if(n==0.0)
+      return n; // Do not try to divide by zero in that case.
+
+    this/=n;
+    return n;
   }
 };

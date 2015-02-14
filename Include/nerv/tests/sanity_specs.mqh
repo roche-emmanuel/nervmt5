@@ -10,7 +10,7 @@ BEGIN_TEST_CASE("should failed on 1==0")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should display message if applicable")
-  ASSERT_EQUAL_MSG(1,1,"The values are not equal: "+(string)1+"!="+(string)0);  
+  ASSERT_EQUAL_MSG(1,1,"The values are not equal: "<<1<<"!="<<0);  
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should take some time to perform long operation")

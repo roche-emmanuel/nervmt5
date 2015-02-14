@@ -55,28 +55,37 @@
 #define XLOAD_TEST_PACKAGE(pname) if(false) { test_package_##pname(suite); }
 
 #define TOSTR(x) #x
-#define SHOWINFO(msg) writeMessage(TimeLocal(), SEV_INFO, msg, __FILE__, __LINE__);
+#define WRITEMSG(sev,msg) { \
+  nvStringStream __ss__; \
+  __ss__ << msg; \
+  writeMessage(TimeLocal(), sev, __ss__.str(), __FILE__, __LINE__); \
+}
+
+#define SHOWINFO(msg) WRITEMSG(SEV_INFO,msg) 
+
 #define SHOWERROR(msg) { \
-    writeMessage(TimeLocal(), SEV_ERROR, msg, __FILE__, __LINE__); \
+    WRITEMSG(SEV_ERROR,msg); \
     __test_result__ = TEST_FAILED; \
   }
 
 #define SHOWFATAL(msg) { \
-    writeMessage(TimeLocal(), SEV_FATAL, msg, __FILE__, __LINE__); \
+    WRITEMSG(SEV_FATAL,msg); \
     return TEST_FAILED; \
   }
 
 #define MESSAGE(msg) SHOWINFO(msg)
-#define DISPLAY(val) MESSAGE(TOSTR(val) +" = "+(string)(val))
+#define DISPLAY(val) MESSAGE(TOSTR(val) << " = " << val)
 
 #define ASSUME_MSG(val,msg) if(!(val)) SHOWINFO(msg)
 #define ASSERT_MSG(val,msg) if(!(val)) SHOWERROR(msg)
 #define REQUIRE_MSG(val,msg) if(!(val)) SHOWFATAL(msg)
 #define ASSERT_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWERROR(msg)
 #define REQUIRE_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWFATAL(msg)
+#define REQUIRE_CLOSE_MSG(v1,v2,eps,msg) if(v1!=v2 && MathAbs(v1-v2)/(0.5*(MathAbs(v1)+MathAbs(v2))) > eps) SHOWFATAL(msg)
 
-#define ASSUME(val) ASSUME_MSG(val,"Assumption "+ TOSTR(val) + " is invalid.")
-#define ASSERT(val) ASSERT_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
-#define REQUIRE(val) REQUIRE_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
-#define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)(v1)+"!="+(string)(v2))
-#define REQUIRE_EQUAL(v1,v2) REQUIRE_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)(v1)+"!="+(string)(v2))
+#define ASSUME(val) ASSUME_MSG(val,"Assumption "<< TOSTR(val) << " is invalid.")
+#define ASSERT(val) ASSERT_MSG(val,"Assertion "<< TOSTR(val) << " failed.")
+#define REQUIRE(val) REQUIRE_MSG(val,"Assertion "<< TOSTR(val) << " failed.")
+#define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "<<(v1)<<"!="<<(v2))
+#define REQUIRE_EQUAL(v1,v2) REQUIRE_EQUAL_MSG(v1,v2,"Equality assertion failed: "<<(v1)<<"!="<<(v2))
+#define REQUIRE_CLOSE(v1,v2,eps) REQUIRE_CLOSE_MSG(v1,v2,eps,"Close value assertion failed: relative_change("<<(v1)<<","<<(v2)<<") > "<<eps)
