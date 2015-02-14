@@ -15,6 +15,7 @@
     nvTestSuite* suite = tman;
 
 #define END_TEST_SESSION(arg) nvTestManager::instance().run(); \
+  nvTestManager::instance().release(); \
   }
 
 #define BEGIN_TEST_SUITE(sname) if(true) { suite = suite.getOrCreateTestSuite(sname);
@@ -77,5 +78,5 @@
 #define ASSUME(val) ASSUME_MSG(val,"Assumption "+ TOSTR(val) + " is invalid.")
 #define ASSERT(val) ASSERT_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
 #define REQUIRE(val) REQUIRE_MSG(val,"Assertion "+ TOSTR(val) + " failed.")
-#define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)
-#define REQUIRE_EQUAL(v1,v2) REQUIRE_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)v1+"!="+(string)v2)
+#define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)(v1)+"!="+(string)(v2))
+#define REQUIRE_EQUAL(v1,v2) REQUIRE_EQUAL_MSG(v1,v2,"Equality assertion failed: "+(string)(v1)+"!="+(string)(v2))

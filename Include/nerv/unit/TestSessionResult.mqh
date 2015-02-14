@@ -14,6 +14,8 @@ public:
   nvTestSessionResult()
   {
     Print("Creating TestSessionResult.");
+    // This class should not delete the pointers on the suites!
+    _suites.FreeMode(false);
   };
 
   ~nvTestSessionResult()

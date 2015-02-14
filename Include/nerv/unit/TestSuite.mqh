@@ -14,7 +14,7 @@ protected:
   CList _cases;
 
   // List of children suites contained in this suite:
-  CList* _suites;
+  nvTestSuite* _suites[];
 
   // Parent test suite:
   nvTestSuite *_parent;
@@ -25,16 +25,32 @@ public:
     _name = name;
     _parent = parent;
     Print("Creating test suite ", _name);
-    _suites = new CList();
+    ArrayResize(_suites,0);
   }
 
   virtual ~nvTestSuite()
   {
     Print("Deleting test suite ", _name);
+    release();
+  }
+
+  void release()
+  {
+    //Print("Releasing test suite ",_name);
+    int num = ArraySize(_suites);
+    for(int i = 0;i<num;++i) {
+      //nvTestSuite* s = _suites[i];
+      //Print("Deleting test suite ",s.getName());
+      delete GetPointer(_suites[i]);
+      //Print("Done deleting test suite.");
+    }
+    //Print("Resizing array.");
+    ArrayResize(_suites,0);
+    //Print("Done resizing array.");
+    
     // delete all the registered test cases:
     _cases.Clear();
-    _suites.Clear();
-    delete _suites;
+    //Print("Done releasing test suite ",_name);
   }
 
   // Add a new test case to this test suite:
@@ -56,22 +72,21 @@ public:
   nvTestSuite *getOrCreateTestSuite(string sname)
   {
     // Check if we already have this suite in the list:
-    nvTestSuite* suite = (nvTestSuite*)_suites.GetFirstNode();
-    while(suite) {
-      if (suite.getName() == sname)
-      {
+    int num = ArraySize(_suites);
+    for(int i = 0;i<num;++i) {
+      if(_suites[i].getName() == sname) {
         Print("Retrieved existing test suite with name ", sname);
-        return suite;
+        return _suites[i];        
       }
-      suite = (nvTestSuite*)_suites.GetNextNode();      
     }
 
     // Create the new test suite:
     //MessageBox("Creating suite "+sname+" with parent "+getName());
-    suite = new nvTestSuite(sname,GetPointer(this));
+    nvTestSuite* suite = new nvTestSuite(sname,GetPointer(this));
 
     // Add the new suite to the list:
-    _suites.Add(suite);
+    ArrayResize(_suites,num+1);
+    _suites[num] = suite;
 
     // return the newly created test suite:
     return suite;
@@ -89,14 +104,12 @@ public:
     
     // Execute all the children test suites:
     int npass, nfail;
-    nvTestSuite* suite = (nvTestSuite*)this._suites.GetFirstNode();
-    MessageBox("Found "+this._suites.Total()+" sub suites for "+getName());
-    while(suite) {
-      suite.run(result,npass,nfail);
+    int num = ArraySize(_suites);
+    for(int i=0;i<num;++i) {
+      _suites[i].run(result,npass,nfail);
       // increment our own counters:
       numPassed += npass;
-      numFailed += nfail;
-      suite = (nvTestSuite*)this._suites.GetNextNode();            
+      numFailed += nfail;      
     }
 
     // Execute all the test cases:
