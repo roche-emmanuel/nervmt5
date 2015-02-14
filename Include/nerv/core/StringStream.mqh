@@ -30,12 +30,6 @@ public:
     return "[nvStringStream]";
   }
 
-  nvStringStream *operator<<(const string &rhs)
-  {
-    _buf += rhs;
-    return GetPointer(this);
-  }
-
   nvStringStream *operator<<(string rhs)
   {
     _buf += rhs;

@@ -1,6 +1,7 @@
 
 #include <nerv/unit/Testing.mqh>
 #include <nerv/core.mqh>
+#include <nerv/core/LogRecord.mqh>
 
 BEGIN_TEST_PACKAGE(core_specs)
 
@@ -9,6 +10,32 @@ BEGIN_TEST_SUITE("Log system")
 BEGIN_TEST_CASE("should have a valid log manager pointer")
   nvLogManager* lm = nvLogManager::instance();
   REQUIRE(lm!=NULL);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support creating a LogRecord")
+  int level = nvLogSeverity::LOGSEV_DEBUG0;
+  nvLogRecord rec(level,"myfile",1);
+  rec.getStream() << "Hello world.";
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support logging messages")
+
+  // Then retrieve the log file and ensure we find the entry we just wrote.
+  nvLogManager* lm = nvLogManager::instance();
+  string fname = "test.log";
+  lm.addSink(new nvFileLogger(fname));
+
+  int level = nvLogSeverity::LOGSEV_DEBUG0;
+  if(level <= nvLogManager::instance().getNotifyLevel()) {
+    nvLogRecord rec(level,__FILE__,__LINE__,"");
+    rec.getStream() << "This is a message" ;
+  }
+
+  logDEBUG("This is a debug message.");
+  
+  // Read the content of the file:
+  //string content = nvReadFile(fname);
+
 END_TEST_CASE()
 
 END_TEST_SUITE()

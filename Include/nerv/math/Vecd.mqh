@@ -33,7 +33,7 @@ public:
   {
     _len = rhs._len;
     int count = ArrayCopy(_data,rhs._data,0,0);
-    CHECK(count==_len,"Invalid array copy count: "+STR(count));
+    CHECK(count==_len,"Invalid array copy count: "<<count);
   }
 
   nvVecd(const double& arr[])
@@ -41,14 +41,14 @@ public:
     _len = ArraySize(arr);
     CHECK(_len > 0, "Invalid vector length.");    
     int count = ArrayCopy(_data,arr,0,0);    
-    CHECK(count==_len,"Invalid array copy count: "+STR(count));
+    CHECK(count==_len,"Invalid array copy count: "<<count);
   }
 
   nvVecd* operator=(const nvVecd& rhs)
   {
     CHECK(_len==rhs._len,"Mismatch in vector lengths");
     int count = ArrayCopy(_data,rhs._data,0,0);    
-    CHECK(count==_len,"Invalid array copy count: "+STR(count));
+    CHECK(count==_len,"Invalid array copy count: "<<count);
     return GetPointer(this);    
   }
 
@@ -63,7 +63,7 @@ public:
 
   double at(const uint index) const
   {
-    CHECK(index < _len, "Out of range index: " + STR(index))
+    CHECK(index < _len, "Out of range index: " <<index)
     return _data[index];
   }
 
@@ -79,7 +79,7 @@ public:
 
   void set(const uint index, double val)
   {
-    CHECK(index < _len, "Out of range index: " + STR(index))
+    CHECK(index < _len, "Out of range index: " <<index)
     _data[index] = val;
   }
 
@@ -103,7 +103,7 @@ public:
 
   nvVecd* operator+=(const nvVecd& rhs)
   {
-    CHECK(_len==rhs._len,"Mismatch of lengths: "+STR(_len)+"!="+STR(rhs._len));
+    CHECK(_len==rhs._len,"Mismatch of lengths: "<<_len<<"!="<<rhs._len);
 
     for(uint i=0;i<_len;++i) {
       _data[i] += rhs._data[i];
@@ -120,7 +120,7 @@ public:
 
   nvVecd* operator-=(const nvVecd& rhs)
   {
-    CHECK(_len==rhs._len,"Mismatch of lengths: "+STR(_len)+"!="+STR(rhs._len));
+    CHECK(_len==rhs._len,"Mismatch of lengths: "<<_len<<"!="<<rhs._len);
 
     for(uint i=0;i<_len;++i) {
       _data[i] -= rhs._data[i];
@@ -177,7 +177,7 @@ public:
 
   double operator*(const nvVecd& rhs) const
   {
-    CHECK(_len==rhs._len,"Mismatch of lengths: "+STR(_len)+"!="+STR(rhs._len));
+    CHECK(_len==rhs._len,"Mismatch of lengths: "<<_len<<"!="<<rhs._len);
     double res = 0.0;
     for(uint i=0;i<_len;++i) {
       res += _data[i]*rhs._data[i];
@@ -189,7 +189,7 @@ public:
   {
     double res =_data[0];
     int count = ArrayCopy(_data,_data,0,1,_len-1);
-    CHECK(count==_len-1,"Invalid array copy count: "+STR(count));
+    CHECK(count==_len-1,"Invalid array copy count: "<<count);
     _data[_len-1]=val;
     return res;
   }
@@ -198,7 +198,7 @@ public:
   {
     double res =_data[_len-1];
     int count = ArrayCopy(_data,_data,1,0,_len-1);
-    CHECK(count==_len-1,"Invalid array copy count: "+STR(count));
+    CHECK(count==_len-1,"Invalid array copy count: "<<count);
     _data[0]=val;
     return res;
   }

@@ -6,17 +6,27 @@
 #property copyright "Copyright 2015, NervTech"
 #property link      "https://wiki.singularityworld.net"
 
-#include <Object.mqh>
+#include "LogSink.mqh"
 
-// Base class for all NervTech elements.
-class nvObject : public CObject
+class nvFileLogger : public nvLogSink
 {
-public:
-  nvObject() {};
-  ~nvObject() {};
+protected:
+  int _handle;
 
-  virtual string toString() const
+public:
+  nvFileLogger(string filename, string name = "") : nvLogSink(name)
   {
-    return "[nvObject]";
+    _handle = FileOpen(filename, FILE_WRITE | FILE_ANSI);
+  }
+
+  ~nvFileLogger()
+  {
+    FileClose(_handle);
+  }
+
+  virtual void output(int level, const string &trace, const string &msg)
+  {
+    FileWriteString(_handle, msg + "\n");
+    FileFlush(_handle);
   }
 };

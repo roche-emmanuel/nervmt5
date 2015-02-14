@@ -98,6 +98,7 @@ BEGIN_TEST_CASE("should support toString method")
   nvVecd vec1(arr);
   
   REQUIRE_EQUAL(vec1.toString(),"Vecd(1,2,3,4,5)");
+  DISPLAY(vec1);
   //string str = vec1<<"Vec is: ";
   //REQUIRE_EQUAL(str,"Vec is: Vecd(1,2,3,4,5)");
 END_TEST_CASE()

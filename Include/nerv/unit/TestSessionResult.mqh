@@ -95,6 +95,7 @@ public:
     // Open the file containing the HTML code:
     ResetLastError();
 
+ #ifdef __NOTHING__
     int src_handle = FileOpen("nvTestUI_template.html", FILE_READ | FILE_ANSI);
     string content = "";
 
@@ -106,6 +107,9 @@ public:
     }
     //--- close the file
     FileClose(src_handle);
+#else
+    string content = nvReadFile("nvTestUI_template.html");
+#endif
 
     // Retrieve the current date:
     MqlDateTime date;
