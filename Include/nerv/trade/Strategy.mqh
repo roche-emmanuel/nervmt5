@@ -65,15 +65,15 @@ public:
     {
       CHECK(curTime[0] > _last_bar_time, "Going back in time " << curTime[0] << "<" << _last_bar_time);
       ulong diff = curTime[0] - _last_bar_time;
-      ulong delta = getBarDelta();
+      ulong tdelta = getBarDelta();
 
       // We have to update the last bar time anyway:
       _last_bar_time = curTime[0];
 
-      CHECK(diff > (delta - 1), "Unexpected bar delta difference, diff=" << diff);
-      if (diff > delta)
+      CHECK(diff > (tdelta - 1), "Unexpected bar delta difference, diff=" << diff);
+      if (diff > tdelta)
       {
-        logWARN("More than 1 delta elapsed, missing " << (diff / delta - 1.0) << " bar(s).");
+        logWARN("More than 1 delta elapsed, missing " << (diff / tdelta - 1.0) << " bar(s).");
         reset();
       }
       else
@@ -106,13 +106,13 @@ public:
       // Need to close the previous position if applicable:
       if (cur_pos != POSITION_NONE)
       {
-        CHECK(sendOrder(cur_pos == POSITION_LONG ? ORDER_TYPE_SELL : ORDER_TYPE_BUY), "Invalid result for sendOrder.");
+        sendOrder(cur_pos == POSITION_LONG ? ORDER_TYPE_SELL : ORDER_TYPE_BUY);
       }
 
       logDEBUG("Now entering position : " << pos);
       if (pos != POSITION_NONE)
       {
-        CHECK(sendOrder(pos == POSITION_LONG ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), "Invalid result for sendOrder.");
+        sendOrder(pos == POSITION_LONG ? ORDER_TYPE_BUY : ORDER_TYPE_SELL);
       }
     }
   }

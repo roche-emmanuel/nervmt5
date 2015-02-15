@@ -260,4 +260,22 @@ public:
       _data[i] = nv_random_real(mini,maxi);
     }
   }
+
+  double min() const
+  {
+    double val = _data[0];
+    for(uint i=1;i<_len;++i) {
+      val = MathMin(val,_data[i]);
+    }
+    return val;
+  }
+
+  double max() const
+  {
+    double val = _data[0];
+    for(uint i=1;i<_len;++i) {
+      val = MathMax(val,_data[i]);
+    }
+    return val;
+  }
 };

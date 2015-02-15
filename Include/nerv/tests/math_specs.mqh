@@ -197,6 +197,13 @@ BEGIN_TEST_CASE("should support sub vector setting")
   REQUIRE_EQUAL(vec1,vec3);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support retrieving min and max values")
+  double arr1[] = {3,2,1,4,5,6,7,8,10,9};
+  nvVecd vec1(arr1);
+
+  REQUIRE_EQUAL(vec1.min(),1);
+  REQUIRE_EQUAL(vec1.max(),10);
+END_TEST_CASE()
 
 END_TEST_SUITE()
 
