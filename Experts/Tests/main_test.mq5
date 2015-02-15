@@ -10,11 +10,13 @@
 #include <nerv/tests/sanity_specs.mqh>
 #include <nerv/tests/core_specs.mqh>
 #include <nerv/tests/math_specs.mqh>
+#include <nerv/tests/RRLStrategy_specs.mqh>
 
 BEGIN_TEST_SESSION("TestResults")
 
 LOAD_TEST_PACKAGE(sanity_specs)
 LOAD_TEST_PACKAGE(core_specs)
 LOAD_TEST_PACKAGE(math_specs)
+LOAD_TEST_PACKAGE(rrlstrategy_specs)
 
 END_TEST_SESSION()

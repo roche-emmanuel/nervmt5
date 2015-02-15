@@ -18,9 +18,21 @@ BEGIN_TEST_CASE("should take some time to perform long operation")
   for(int i=0;i<100000;++i) {
     res += MathCos(i);
   }
-  DISPLAY(res)
+  DISPLAY(res);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should allow conversion of datetime to number of seconds")
+  datetime t1 = D'19.07.1980 12:30:27';
+  datetime t2 = D'19.07.1980 12:30:37';
+
+  ulong diff = t2-t1;
+  ulong val1 = t1;
+  ulong val2 = t2;
+  DISPLAY(val1);
+  DISPLAY(val2);
+  REQUIRE_EQUAL(diff,10);
+  REQUIRE(t2>t1);
+END_TEST_CASE()
 
 END_TEST_SUITE()
 

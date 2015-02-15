@@ -81,6 +81,7 @@
 #define REQUIRE_MSG(val,msg) if(!(val)) SHOWFATAL(msg)
 #define ASSERT_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWERROR(msg)
 #define REQUIRE_EQUAL_MSG(v1,v2,msg) if(v1!=v2) SHOWFATAL(msg)
+#define REQUIRE_NOT_EQUAL_MSG(v1,v2,msg) if(v1==v2) SHOWFATAL(msg)
 #define REQUIRE_CLOSE_MSG(v1,v2,eps,msg) if(v1!=v2 && MathAbs(v1-v2)/(0.5*(MathAbs(v1)+MathAbs(v2))) > eps) SHOWFATAL(msg)
 
 #define ASSUME(val) ASSUME_MSG(val,"Assumption "<< TOSTR(val) << " is invalid.")
@@ -88,4 +89,5 @@
 #define REQUIRE(val) REQUIRE_MSG(val,"Assertion "<< TOSTR(val) << " failed.")
 #define ASSERT_EQUAL(v1,v2) ASSERT_EQUAL_MSG(v1,v2,"Equality assertion failed: "<<(v1)<<"!="<<(v2))
 #define REQUIRE_EQUAL(v1,v2) REQUIRE_EQUAL_MSG(v1,v2,"Equality assertion failed: "<<(v1)<<"!="<<(v2))
+#define REQUIRE_NOT_EQUAL(v1,v2) REQUIRE_NOT_EQUAL_MSG(v1,v2,"Not equality assertion failed: "<<(v1)<<"=="<<(v2))
 #define REQUIRE_CLOSE(v1,v2,eps) REQUIRE_CLOSE_MSG(v1,v2,eps,"Close value assertion failed: relative_change("<<(v1)<<","<<(v2)<<") > "<<eps)

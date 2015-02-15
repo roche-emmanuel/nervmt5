@@ -25,3 +25,4 @@
 02/14/15-11:33:41: Added initial implementation for StringStream.
 02/14/15-14:41:55: Added initial implementation for logging system.
 02/14/15-15:05:56: Added support for FileLogger close.
+02/15/15-16:49:44: Added core strategy implementation.

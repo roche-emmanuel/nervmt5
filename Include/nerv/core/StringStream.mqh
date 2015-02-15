@@ -54,7 +54,25 @@ public:
     return GetPointer(this);
   }
 
+  nvStringStream *operator<<(long rhs)
+  {
+    _buf += (string)rhs;
+    return GetPointer(this);
+  }
+
+  nvStringStream *operator<<(ulong rhs)
+  {
+    _buf += (string)rhs;
+    return GetPointer(this);
+  }
+
   nvStringStream *operator<<(bool rhs)
+  {
+    _buf += (string)rhs;
+    return GetPointer(this);
+  }
+
+  nvStringStream *operator<<(datetime rhs)
   {
     _buf += (string)rhs;
     return GetPointer(this);

@@ -165,6 +165,39 @@ BEGIN_TEST_CASE("should support renormalization")
   REQUIRE_EQUAL(val,MathSqrt(len*4.0));
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support back and front access")
+  double arr[] = {1,2,3,4,5};
+  nvVecd vec1(arr);
+  
+  REQUIRE_EQUAL(vec1.front(),1);
+  REQUIRE_EQUAL(vec1.back(),5);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support randomization function")
+  int len = nv_random_int(1,100);
+  nvVecd vec1(len);
+  
+  vec1.randomize(-1.0,1.0);
+
+  for(int i=0;i<len-1;++i) {
+    REQUIRE_NOT_EQUAL(vec1[i],vec1[i+1]);
+  }
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support sub vector setting")
+  double arr1[] = {1,2,3,4,5,6,7,8,9,10};
+  double arr2[] = {3,2,1};
+  double arr3[] = {1,2,3,3,2,1,7,8,9,10};
+  nvVecd vec1(arr1);
+  nvVecd vec2(arr2);
+  nvVecd vec3(arr3);
+  
+  vec1.set(3,vec2);
+
+  REQUIRE_EQUAL(vec1,vec3);
+END_TEST_CASE()
+
+
 END_TEST_SUITE()
 
 END_TEST_SUITE()

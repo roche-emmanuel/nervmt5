@@ -83,6 +83,12 @@ public:
     _data[index] = val;
   }
 
+  void set(const uint index, const nvVecd& rhs)
+  {
+    CHECK(index+rhs.size()<=_len,"Cannot inject too long sub vector. index="<<index<<", len="<<_len<<", sublen="<<rhs.size());
+    CHECK(ArrayCopy(_data,rhs._data,index,0)==rhs.size(),"Cannot copy all the elements from source vector.");
+  }
+
   bool operator==(const nvVecd &rhs) const
   {
     if(_len!=rhs._len)
@@ -225,14 +231,33 @@ public:
     return MathSqrt(norm2());
   }
 
-  double normalize()
+  double normalize(double newNorm = 1.0)
   {
     // compute the current norm:
     double n = norm();
     if(n==0.0)
       return n; // Do not try to divide by zero in that case.
 
-    this/=n;
+    this *= (newNorm/n);
+
     return n;
+  }
+
+  double front() const
+  {
+    return _data[0];
+  }
+
+  double back() const
+  {
+    return _data[_len-1];
+  }
+
+  void randomize(double mini, double maxi)
+  {
+    for(uint i=0;i<_len;++i)
+    {
+      _data[i] = nv_random_real(mini,maxi);
+    }
   }
 };
