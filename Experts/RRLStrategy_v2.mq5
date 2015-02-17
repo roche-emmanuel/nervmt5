@@ -7,11 +7,12 @@
 
 #include <nerv/trade/RRLStrategy.mqh>
 
-input int       numInputs = 8;    // Number of input price returns
-input double 		eta = 0.05;				// Sharpe adaptation factor
-input double		rho = 0.11; 			// Learning rate
-input double		delta = 0.0005;	// Transaction cost
+input int       numInputs = 12;    // Number of input price returns
+input double 		eta = 0.01;				// Sharpe adaptation factor
+input double		rho = 0.01; 			// Learning rate
+input double		tcost = 0.00008;	// Transaction cost
 input double 		maxNorm = 2.0;	// Max theta vector norm (has no real influence on the profits).
+input ulong			warmUpDuration = 0; // WarmUp duration
 
 nvRRLStrategy* strategy = NULL;
 
@@ -19,7 +20,8 @@ nvRRLStrategy* strategy = NULL;
 int OnInit()
 {
   Print("Initializing expert with Symbol='", _Symbol, "' and period='", _Period, "'");
-  strategy = new nvRRLStrategy(numInputs, rho, eta, delta,maxNorm,_Symbol,_Period);
+  strategy = new nvRRLStrategy(numInputs, rho, eta, tcost,maxNorm,_Symbol,_Period);
+  strategy.setWarmUp(warmUpDuration);
   return (INIT_SUCCEEDED);
 }
 

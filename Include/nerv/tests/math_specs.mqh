@@ -205,6 +205,59 @@ BEGIN_TEST_CASE("should support retrieving min and max values")
   REQUIRE_EQUAL(vec1.max(),10);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support computing mean value")
+  double arr1[] = {1,2,3,4,5,6,7,8,9};
+  nvVecd vec1(arr1);
+
+  REQUIRE_EQUAL(vec1.mean(),5);
+  REQUIRE(vec1.deviation()>0);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support creating dynamic vectors")
+  nvVecd vec1;
+
+  REQUIRE_EQUAL(vec1.size(),0);
+  vec1.push_back(1.1);
+  REQUIRE_EQUAL(vec1.size(),1);
+  REQUIRE_EQUAL(vec1[0],1.1);
+  vec1.push_front(2.2);
+  REQUIRE_EQUAL(vec1.size(),2);
+  REQUIRE_EQUAL(vec1[0],2.2);
+  REQUIRE_EQUAL(vec1[1],1.1);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support popping values")
+  double arr1[] = {1,2,3,4,5,6,7,8,9};
+  nvVecd vec1(arr1,true);
+
+  REQUIRE_EQUAL(vec1.size(),9);
+  REQUIRE_EQUAL(vec1.pop_front(),1);
+  REQUIRE_EQUAL(vec1.pop_back(),9);
+  REQUIRE_EQUAL(vec1.pop_front(),2);
+  REQUIRE_EQUAL(vec1.pop_back(),8);
+  REQUIRE_EQUAL(vec1.size(),5);
+  REQUIRE_EQUAL(vec1[0],3);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support computation of EMA")
+  double arr1[] = {1,2,3,4,5,6,7,8,9};
+  nvVecd vec1(arr1);
+
+  REQUIRE(vec1.EMA(0.9)>vec1.EMA(0.8));
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support adding/substracting scalar")
+  double arr1[] = {1,2,3,4,5,6,7,8,9};
+  nvVecd vec1(arr1);
+
+  vec1 = vec1 + 1;
+  REQUIRE_EQUAL(vec1[0],2);
+
+  vec1 -= 2.0;
+  REQUIRE_EQUAL(vec1[0],0.0);
+END_TEST_CASE()
+
+
 END_TEST_SUITE()
 
 END_TEST_SUITE()

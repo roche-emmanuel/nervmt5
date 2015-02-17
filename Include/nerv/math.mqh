@@ -16,3 +16,14 @@ double nv_sign(double val)
 {
   return val > 0.0 ? 1.0 : val < 0.0 ? -1.0 : 0.0;
 }
+
+double nv_sign_threshold(double val, double thres)
+{
+  return val > thres ? 1.0 : val < -thres ? -1.0 : 0.0;
+}
+
+double nv_tanh(double x)
+{
+  double z = exp(-2.0*x);
+  return (1.0 - z)/(1.0 + z);
+}
