@@ -257,6 +257,15 @@ BEGIN_TEST_CASE("should support adding/substracting scalar")
   REQUIRE_EQUAL(vec1[0],0.0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support reading vector from file")
+  nvVecd vec1 = nv_read_vecd("retDAX.txt");
+
+  REQUIRE_EQUAL(vec1.size(),5425);
+
+  // Check the mean and deviation values:
+  REQUIRE_CLOSE(vec1.mean(),-0.0001670546824234,1e-6);
+  REQUIRE_CLOSE(vec1.deviation(),0.0147594082452264,1e-6);
+END_TEST_CASE()
 
 END_TEST_SUITE()
 

@@ -27,3 +27,28 @@ double nv_tanh(double x)
   double z = exp(-2.0*x);
   return (1.0 - z)/(1.0 + z);
 }
+
+nvVecd nv_read_vecd(string filename)
+{
+  int handle = FileOpen(filename, FILE_READ | FILE_CSV | FILE_ANSI);
+
+  CHECK(handle!=INVALID_HANDLE,"Could not open file "<<filename<<" for reading.");
+
+  // Prepare a dynamic vector:
+  nvVecd result;
+
+  //--- read data from the file
+  while (!FileIsEnding(handle))
+  {
+    //--- read the string
+    //content = FileReadString(handle);
+    //double val = StringToDouble(content);
+    double val = FileReadNumber(handle);
+    //logDEBUG("Read value: "<<val); //<<" from string '"<<content<<"'");
+    result.push_back(val);
+  }
+  //--- close the file
+  FileClose(handle);
+
+  return result;
+}

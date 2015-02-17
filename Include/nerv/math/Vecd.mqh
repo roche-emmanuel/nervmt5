@@ -414,7 +414,7 @@ public:
 
     double m = mean();
     double dev = norm2();
-    dev /= _len;
+    dev /= (_len-1);
 
     dev -= m * m;
     dev = MathSqrt(dev);

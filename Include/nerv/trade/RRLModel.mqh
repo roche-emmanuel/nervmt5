@@ -30,7 +30,7 @@ public:
   nvRRLModel(uint num)
   {
     _numInputs = num;
-    _learningRate = 0.01;
+    _learningRate = 0.003;
     _maxNorm = 2.0;
     _normalizeInputs = true;
 
@@ -39,7 +39,8 @@ public:
     _theta = new nvVecd(_numInputs + 2);
 
     // generate initial random coefficients:
-    _theta.randomize(-1.0, 1.0);
+    //_theta.randomize(-1.0, 1.0);
+    _theta.fill(1.0); // Initialize with 1.0.
     checkNorm();
 
     logDEBUG("Initial theta vector is: "<<_theta);
@@ -61,10 +62,10 @@ public:
     //  _theta *= 0.95;
     //}
 
-    double tn = _theta.norm()/_maxNorm;
-    if(tn>1.0) {
-      _theta *= MathExp(-tn + 1);  
-    }
+    //double tn = _theta.norm()/_maxNorm;
+    //if(tn>1.0) {
+    //  _theta *= MathExp(-tn + 1);  
+    //}
   }
 
   double predict(nvVecd* params) const
