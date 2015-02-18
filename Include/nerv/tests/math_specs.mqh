@@ -257,6 +257,18 @@ BEGIN_TEST_CASE("should support adding/substracting scalar")
   REQUIRE_EQUAL(vec1[0],0.0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support retrieving sub vector")
+  double arr1[] = {1,2,3,4,5,6,7,8,9};
+  nvVecd vec1(arr1);
+
+  nvVecd vec2 = vec1.subvec(1,3);
+
+  REQUIRE_EQUAL(vec2.size(),3);
+  REQUIRE_EQUAL(vec2[0],2);
+  REQUIRE_EQUAL(vec2[1],3);
+  REQUIRE_EQUAL(vec2[2],4);
+END_TEST_CASE()
+
 BEGIN_TEST_CASE("should support reading vector from file")
   nvVecd vec1 = nv_read_vecd("retDAX.txt");
 
@@ -266,6 +278,31 @@ BEGIN_TEST_CASE("should support reading vector from file")
   REQUIRE_CLOSE(vec1.mean(),-0.0001670546824234,1e-6);
   REQUIRE_CLOSE(vec1.deviation(),0.0147594082452264,1e-6);
 END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support performing std normalization")
+  nvVecd vec1 = nv_read_vecd("retDAX.txt");
+
+  REQUIRE_EQUAL(vec1.size(),5425);
+
+  nvVecd vec2 = vec1.stdnormalize();
+
+  nvVecd diff = vec2 - (vec1 - vec1.mean())/vec1.deviation();
+
+  // Check the mean and deviation values:
+  REQUIRE_CLOSE(diff.norm(),0.0,1e-6);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support per element multiplication")
+  double arr1[] = {1,2,3,4,5};
+  double arr2[] = {5,4,3,2,1};
+  double arr3[] = {5,8,9,8,5};
+  nvVecd vec1(arr1);
+  nvVecd vec2(arr2);
+  nvVecd vec3(arr3);
+
+  REQUIRE_EQUAL(vec1.mult(vec2),vec3);
+END_TEST_CASE()
+
 
 END_TEST_SUITE()
 

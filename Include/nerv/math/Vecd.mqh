@@ -446,4 +446,30 @@ public:
       _data[i] = val;
     }
   }
+
+  nvVecd subvec(uint index, uint len) const
+  {
+    CHECK(len>0,"Invalid length for sub vector.");
+    CHECK(index+len-1<_len,"Out of range access for subvector");
+    nvVecd res(len);
+    CHECK(ArrayCopy(res._data, _data, 0, index, len)==len,"Invalid result for Array copy");
+    return res;
+  }
+
+  nvVecd stdnormalize() const
+  {
+    double dev = deviation();
+    return (this - mean())/(dev==0.0 ? 1.0 : dev);
+  }
+
+  nvVecd mult(const nvVecd& rhs) const
+  {
+    CHECK(_len==rhs._len,"Mismatch in lengths");
+    nvVecd res(this);
+    for(uint i=0;i<_len;++i)
+    {
+      res._data[i] *= rhs._data[i];
+    }
+    return res;
+  }
 };

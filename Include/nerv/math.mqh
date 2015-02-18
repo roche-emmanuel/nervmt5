@@ -1,6 +1,8 @@
 
 #include <nerv/core.mqh>
 #include <nerv/math/Vecd.mqh>
+#include <nerv/math/lbfgs_utils.mqh>
+#include <nerv/math/lbfgs.mqh>
 
 double nv_random_real(double mini=0.0, double maxi=1.0)
 {
@@ -52,3 +54,4 @@ nvVecd nv_read_vecd(string filename)
 
   return result;
 }
+

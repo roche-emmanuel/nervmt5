@@ -29,3 +29,4 @@
 02/15/15-18:55:58: Trying to get algorithm to work.
 02/17/15-02:04:20: Started implementation of RRL model.
 02/17/15-12:11:49: Adding support for RRL model debugging.
+02/18/15-17:27:10: Added initial implementation for LBFGS algorithm.

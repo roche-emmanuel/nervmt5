@@ -1,6 +1,11 @@
 
 #include <nerv/unit/Testing.mqh>
 
+void assign_value(double& arr[])
+{
+  arr[0] = 1.0;
+}
+
 BEGIN_TEST_PACKAGE(sanity_specs)
 
 BEGIN_TEST_SUITE("Sanity checks")
@@ -32,6 +37,14 @@ BEGIN_TEST_CASE("should allow conversion of datetime to number of seconds")
   DISPLAY(val2);
   REQUIRE_EQUAL(diff,10);
   REQUIRE(t2>t1);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should allow manipulating array references")
+  double arr[] = {0,0,0,3};
+
+  assign_value(arr);
+  REQUIRE_EQUAL(arr[0],1.0);
+  REQUIRE_EQUAL(arr[3],3.0);
 END_TEST_CASE()
 
 END_TEST_SUITE()
