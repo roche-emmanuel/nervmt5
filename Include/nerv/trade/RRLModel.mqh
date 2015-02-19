@@ -9,7 +9,7 @@
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
 
-double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *grad, nvVecd* theta)
+double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *grad, nvVecd *theta)
 {
   // Train the model with the given inputs for a given number of epochs.
   uint size = returns.size();
@@ -60,7 +60,7 @@ double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *gra
     // The rvec is ready for usage, so we build a prediction:
     //double val = params*theta;
     //logDEBUG("Pre-tanh value: "<<val);
-    Ft = nv_tanh(params*theta);
+    Ft = nv_tanh(params * theta);
     //logDEBUG("Prediction at "<<i<<" is: Ft="<<Ft);
 
     // From that we can build the new return value:
@@ -114,46 +114,109 @@ double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *gra
   return -sr;
 }
 
+class nvRRLEvaluator : public CNDimensional_Grad
+{
+protected:
+  nvVecd _returns;
+  nvVecd _nrets;
+
+  nvVecd _grad;
+  nvVecd _theta;
+  double _tcost;
+  
+  double _bestCost;
+  nvVecd _bestTheta;
+
+public:
+  nvRRLEvaluator(double tcost, nvVecd* returns, nvVecd* nretsvec = NULL) : _bestCost(1e10) {
+
+    _returns = returns;
+
+    if (nretsvec != NULL)
+    {
+      _nrets = nretsvec;
+    }
+    else
+    {
+      _nrets = returns.stdnormalize();
+    }
+
+    _tcost = tcost;
+  }
+
+  virtual void Grad(double &x[],double &func,double &grad[],CObject &obj)
+  {
+    _theta = x;
+    //logDEBUG("Theta: "<<_theta);
+    func = rrlCostFunction(GetPointer(_nrets),GetPointer(_returns),_tcost,GetPointer(_grad),GetPointer(_theta));
+    //logDEBUG("Computed cost: "<<func);
+    _grad.toArray(grad);
+
+    if(func<=_bestCost) {
+      _bestCost = func;
+      _bestTheta = x;    
+    }
+  };
+
+  double getBestCost() const
+  {
+    return _bestCost;
+  }
+
+  nvVecd* getBestTheta() const
+  {
+    return GetPointer(_bestTheta);
+  }  
+};
+
 class nvRRLModel : public nvObject
 {
 protected:
   // Number of return inputs:
   uint _numInputs;
 
-  // Learning rate applying during training:
-  double _learningRate;
-
   // max norm allowed for theta vector:
   double _maxNorm;
 
   // Theta parameters:
-  nvVecd *_theta;
+  nvVecd _theta;
 
   bool _normalizeInputs;
+
+  // Training parameters:
+  double _epsg;
+  double _epsf;
+  double _epsx;
+  int _maxIts;
 
 public:
   nvRRLModel(uint num)
   {
     _numInputs = num;
-    _learningRate = 0.01;
     _maxNorm = 2.0;
     _normalizeInputs = true;
 
     // Prepare the vector containing the theta values:
     // We need 2 additional coeffs for the u and w coeffs
-    _theta = new nvVecd(_numInputs + 2);
+    nvVecd initial_theta(_numInputs + 2, 1.0);
+    _theta = initial_theta;
 
     // generate initial random coefficients:
     //_theta.randomize(-1.0, 1.0);
-    _theta.fill(1.0); // Initialize with 1.0.
+    //_theta.fill(1.0); // Initialize with 1.0.
     checkNorm();
 
     //logDEBUG("Initial theta vector is: " << _theta);
+
+    // Default training parameters:
+    _epsg = 0.0000000001;
+    _epsf = 0.0;
+    _epsx = 0.0;
+    _maxIts = 1000;
   }
 
   ~nvRRLModel()
   {
-    delete _theta;
   }
 
   void checkNorm()
@@ -182,50 +245,44 @@ public:
     return nv_tanh(val);
   }
 
-  //double computeReturn(double rt, double tcost, double Ft, double Ft_1) const
-  //{
-    //logDEBUG("Computing Rt with Ft_1=" << Ft_1 << " and rt=" << rt);
-    //return Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
-  //}
-
-  double train_batch(nvVecd *nrets, nvVecd *returns, double tcost)
+  void setTrainingParams(double epsg, double epsf, double epsx, int maxits)
   {
-    nvVecd dSt(_numInputs + 2);
-
-    double sr = rrlCostFunction(nrets, returns, tcost, GetPointer(dSt),_theta);
-
-    // Perform gradient descent:
-    _theta -= dSt * _learningRate;
-    checkNorm();
-
-    return -sr;
+    _epsg = epsg;
+    _epsf = epsf;
+    _epsx = epsx;
+    _maxIts = maxits;
   }
 
-  void train(nvVecd *returns, double tcost, uint nepochs, nvVecd *nretsvec = NULL, nvVecd *sharpe_ratios = NULL)
+  double train(double tcost, nvVecd *returns, nvVecd *nretsvec = NULL)
   {
-    uint ns = returns.size() - _numInputs + 1;
+    return train_cg(tcost,GetPointer(_theta),returns,nretsvec);
+  }
 
-    if (sharpe_ratios != NULL)
-    {
-      CHECK(sharpe_ratios.size() == 0, "Invalid sharpe ratio vector length.");
-    }
+  double train_cg(double tcost, nvVecd* theta, nvVecd *returns, nvVecd *nretsvec = NULL)
+  {
+    // Prepare the training with MinCG:
+    double x[];
+    theta.toArray(x);
 
-    nvVecd nrets(returns.size());
-    if (nretsvec != NULL)
-    {
-      nrets = nretsvec;
-    }
-    else
-    {
-      nrets = returns.stdnormalize();
-    }
+    CMinCGStateShell state;
+    CAlglib::MinCGCreate(x,state);
 
-    double sr;
-    for (uint i = 0; i < nepochs; ++i)
-    {
-      sr = train_batch(GetPointer(nrets), returns, tcost);
-      if (sharpe_ratios)
-        sharpe_ratios.push_back(sr);
-    }
+    CAlglib::MinCGSetCond(state, _epsg, _epsf, _epsx, _maxIts);
+
+    nvRRLEvaluator ev(tcost,returns,nretsvec);
+    CNDimensional_Rep rep;
+
+    CObject objdum;
+    CAlglib::MinCGOptimize(state,ev,rep,false,objdum);
+
+    CMinCGReportShell res;
+    CAlglib::MinCGResults(state, x, res);
+    logDEBUG("Optimization done with best cost: "<< ev.getBestCost())
+    _theta = x;
+
+    nvVecd bestTheta = ev.getBestTheta();
+    CHECK(bestTheta==_theta,"Mismatch in theta vectors: "<<_theta<<"!="<<bestTheta);
+
+    return ev.getBestCost();
   }
 };

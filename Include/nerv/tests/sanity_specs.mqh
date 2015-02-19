@@ -6,6 +6,27 @@ void assign_value(double& arr[])
   arr[0] = 1.0;
 }
 
+struct my_struct
+{
+  double val1;
+  double val2[];
+  string val3;
+};
+
+#ifdef TEST_COPY_STRUCT
+my_struct buildStruct()
+{
+  my_struct res;
+  res.val1 = 1.0;
+  ArrayResize(res.val2,3);
+  res.val2[0]=2.0;
+  res.val2[1]=3.0;
+  res.val2[2]=4.0;
+  res.val3 = "Hello world!";
+  return res;
+}
+#endif
+
 BEGIN_TEST_PACKAGE(sanity_specs)
 
 BEGIN_TEST_SUITE("Sanity checks")
@@ -46,6 +67,18 @@ BEGIN_TEST_CASE("should allow manipulating array references")
   REQUIRE_EQUAL(arr[0],1.0);
   REQUIRE_EQUAL(arr[3],3.0);
 END_TEST_CASE()
+
+#ifdef TEST_COPY_STRUCT
+BEGIN_TEST_CASE("should allow copy of structures")
+  my_struct myres = buildStruct();
+  REQUIRE_EQUAL(myres.val1,1.0);
+  REQUIRE_EQUAL(ArraySize(myres.val2),3.0);
+  REQUIRE_EQUAL(myres.val2[0],2.0);
+  REQUIRE_EQUAL(myres.val2[1],3.0);
+  REQUIRE_EQUAL(myres.val2[2],4.0);
+  REQUIRE_EQUAL(myres.val3,"Helo world!");
+END_TEST_CASE()
+#endif
 
 END_TEST_SUITE()
 

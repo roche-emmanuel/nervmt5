@@ -1,8 +1,10 @@
 
 #include <nerv/core.mqh>
 #include <nerv/math/Vecd.mqh>
-#include <nerv/math/lbfgs_utils.mqh>
+#include <Math/Alglib/alglib.mqh>
+
 #include <nerv/math/lbfgs.mqh>
+//#include <nerv/math/fminlbfgs.mqh>
 
 double nv_random_real(double mini=0.0, double maxi=1.0)
 {
