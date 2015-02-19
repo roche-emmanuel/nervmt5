@@ -54,33 +54,33 @@ enum
   LBFGSERR_INVALID_N_SSE,
   /** The array x must be aligned to 16 (for SSE). */
   LBFGSERR_INVALID_X_SSE,
-  /** Invalid parameter LBGFSParameters::epsilon specified. */
+  /** Invalid parameter LBFGSParameters::epsilon specified. */
   LBFGSERR_INVALID_EPSILON,
-  /** Invalid parameter LBGFSParameters::past specified. */
+  /** Invalid parameter LBFGSParameters::past specified. */
   LBFGSERR_INVALID_TESTPERIOD,
-  /** Invalid parameter LBGFSParameters::delta specified. */
+  /** Invalid parameter LBFGSParameters::delta specified. */
   LBFGSERR_INVALID_DELTA,
-  /** Invalid parameter LBGFSParameters::linesearch specified. */
+  /** Invalid parameter LBFGSParameters::linesearch specified. */
   LBFGSERR_INVALID_LINESEARCH,
-  /** Invalid parameter LBGFSParameters::max_step specified. */
+  /** Invalid parameter LBFGSParameters::max_step specified. */
   LBFGSERR_INVALID_MINSTEP,
-  /** Invalid parameter LBGFSParameters::max_step specified. */
+  /** Invalid parameter LBFGSParameters::max_step specified. */
   LBFGSERR_INVALID_MAXSTEP,
-  /** Invalid parameter LBGFSParameters::ftol specified. */
+  /** Invalid parameter LBFGSParameters::ftol specified. */
   LBFGSERR_INVALID_FTOL,
-  /** Invalid parameter LBGFSParameters::wolfe specified. */
+  /** Invalid parameter LBFGSParameters::wolfe specified. */
   LBFGSERR_INVALID_WOLFE,
-  /** Invalid parameter LBGFSParameters::gtol specified. */
+  /** Invalid parameter LBFGSParameters::gtol specified. */
   LBFGSERR_INVALID_GTOL,
-  /** Invalid parameter LBGFSParameters::xtol specified. */
+  /** Invalid parameter LBFGSParameters::xtol specified. */
   LBFGSERR_INVALID_XTOL,
-  /** Invalid parameter LBGFSParameters::max_linesearch specified. */
+  /** Invalid parameter LBFGSParameters::max_linesearch specified. */
   LBFGSERR_INVALID_MAXLINESEARCH,
-  /** Invalid parameter LBGFSParameters::orthantwise_c specified. */
+  /** Invalid parameter LBFGSParameters::orthantwise_c specified. */
   LBFGSERR_INVALID_ORTHANTWISE,
-  /** Invalid parameter LBGFSParameters::orthantwise_start specified. */
+  /** Invalid parameter LBFGSParameters::orthantwise_start specified. */
   LBFGSERR_INVALID_ORTHANTWISE_START,
-  /** Invalid parameter LBGFSParameters::orthantwise_end specified. */
+  /** Invalid parameter LBFGSParameters::orthantwise_end specified. */
   LBFGSERR_INVALID_ORTHANTWISE_END,
   /** The line-search step went out of the interval of uncertainty. */
   LBFGSERR_OUTOFINTERVAL,
@@ -90,22 +90,136 @@ enum
   /** A rounding error occurred; alternatively, no line-search step
       satisfies the sufficient decrease and curvature conditions. */
   LBFGSERR_ROUNDING_ERROR,
-  /** The line-search step became smaller than LBGFSParameters::min_step. */
+  /** The line-search step became smaller than LBFGSParameters::min_step. */
   LBFGSERR_MINIMUMSTEP,
-  /** The line-search step became larger than LBGFSParameters::max_step. */
+  /** The line-search step became larger than LBFGSParameters::max_step. */
   LBFGSERR_MAXIMUMSTEP,
   /** The line-search routine reaches the maximum number of evaluations. */
   LBFGSERR_MAXIMUMLINESEARCH,
   /** The algorithm routine reaches the maximum number of iterations. */
   LBFGSERR_MAXIMUMITERATION,
   /** Relative width of the interval of uncertainty is at most
-      LBGFSParameters::xtol. */
+      LBFGSParameters::xtol. */
   LBFGSERR_WIDTHTOOSMALL,
   /** A logic error (negative line-search step) occurred. */
   LBFGSERR_INVALIDPARAMETERS,
   /** The current search direction increases the objective function value. */
   LBFGSERR_INCREASEGRADIENT,
 };
+
+string lbfgs_code_string(int code)
+{
+  switch(code)
+  {
+  /** L-BFGS reaches convergence. */
+  case LBFGS_SUCCESS : 
+    return "LBFGS_SUCCESS";
+  case LBFGS_STOP : 
+    return "LBFGS_STOP";
+  /** The initial variables already minimize the objective function. */
+  case LBFGS_ALREADY_MINIMIZED : 
+    return "LBFGS_ALREADY_MINIMIZED";
+
+  /** Unknown error. */
+  case LBFGSERR_UNKNOWNERROR: 
+    return "LBFGSERR_UNKNOWNERROR";
+  /** Logic error. */
+  case LBFGSERR_LOGICERROR: 
+    return "LBFGSERR_LOGICERROR";
+  /** Insufficient memory. */
+  case LBFGSERR_OUTOFMEMORY: 
+    return "LBFGSERR_OUTOFMEMORY";
+  /** The minimization process has been canceled. */
+  case LBFGSERR_CANCELED: 
+    return "LBFGSERR_CANCELED";
+  /** Invalid number of variables specified. */
+  case LBFGSERR_INVALID_N: 
+    return "LBFGSERR_INVALID_N";
+  /** Invalid number of variables (for SSE) specified. */
+  case LBFGSERR_INVALID_N_SSE: 
+    return "LBFGSERR_INVALID_N_SSE";
+  /** The array x must be aligned to 16 (for SSE). */
+  case LBFGSERR_INVALID_X_SSE: 
+    return "LBFGSERR_INVALID_X_SSE";
+  /** Invalid parameter LBFGSParameters::epsilon specified. */
+  case LBFGSERR_INVALID_EPSILON: 
+    return "LBFGSERR_INVALID_EPSILON";
+  /** Invalid parameter LBFGSParameters::past specified. */
+  case LBFGSERR_INVALID_TESTPERIOD: 
+    return "LBFGSERR_INVALID_TESTPERIOD";
+  /** Invalid parameter LBFGSParameters::delta specified. */
+  case LBFGSERR_INVALID_DELTA: 
+    return "LBFGSERR_INVALID_DELTA";
+  /** Invalid parameter LBFGSParameters::linesearch specified. */
+  case LBFGSERR_INVALID_LINESEARCH: 
+    return "LBFGSERR_INVALID_LINESEARCH";
+  /** Invalid parameter LBFGSParameters::max_step specified. */
+  case LBFGSERR_INVALID_MINSTEP: 
+    return "LBFGSERR_INVALID_MINSTEP";
+  /** Invalid parameter LBFGSParameters::max_step specified. */
+  case LBFGSERR_INVALID_MAXSTEP: 
+    return "LBFGSERR_INVALID_MAXSTEP";
+  /** Invalid parameter LBFGSParameters::ftol specified. */
+  case LBFGSERR_INVALID_FTOL: 
+    return "LBFGSERR_INVALID_FTOL";
+  /** Invalid parameter LBFGSParameters::wolfe specified. */
+  case LBFGSERR_INVALID_WOLFE: 
+    return "LBFGSERR_INVALID_WOLFE";
+  /** Invalid parameter LBFGSParameters::gtol specified. */
+  case LBFGSERR_INVALID_GTOL: 
+    return "LBFGSERR_INVALID_GTOL";
+  /** Invalid parameter LBFGSParameters::xtol specified. */
+  case LBFGSERR_INVALID_XTOL: 
+    return "LBFGSERR_INVALID_XTOL";
+  /** Invalid parameter LBFGSParameters::max_linesearch specified. */
+  case LBFGSERR_INVALID_MAXLINESEARCH: 
+    return "LBFGSERR_INVALID_MAXLINESEARCH";
+  /** Invalid parameter LBFGSParameters::orthantwise_c specified. */
+  case LBFGSERR_INVALID_ORTHANTWISE: 
+    return "LBFGSERR_INVALID_ORTHANTWISE";
+  /** Invalid parameter LBFGSParameters::orthantwise_start specified. */
+  case LBFGSERR_INVALID_ORTHANTWISE_START: 
+    return "LBFGSERR_INVALID_ORTHANTWISE_START";
+  /** Invalid parameter LBFGSParameters::orthantwise_end specified. */
+  case LBFGSERR_INVALID_ORTHANTWISE_END: 
+    return "LBFGSERR_INVALID_ORTHANTWISE_END";
+  /** The line-search step went out of the interval of uncertainty. */
+  case LBFGSERR_OUTOFINTERVAL: 
+    return "LBFGSERR_OUTOFINTERVAL";
+  /** A logic error occurred; alternatively, the interval of uncertainty
+      became too small. */
+  case LBFGSERR_INCORRECT_TMINMAX: 
+    return "LBFGSERR_INCORRECT_TMINMAX";
+  /** A rounding error occurred; alternatively, no line-search step
+      satisfies the sufficient decrease and curvature conditions. */
+  case LBFGSERR_ROUNDING_ERROR: 
+    return "LBFGSERR_ROUNDING_ERROR";
+  /** The line-search step became smaller than LBFGSParameters::min_step. */
+  case LBFGSERR_MINIMUMSTEP: 
+    return "LBFGSERR_MINIMUMSTEP";
+  /** The line-search step became larger than LBFGSParameters::max_step. */
+  case LBFGSERR_MAXIMUMSTEP: 
+    return "LBFGSERR_MAXIMUMSTEP";
+  /** The line-search routine reaches the maximum number of evaluations. */
+  case LBFGSERR_MAXIMUMLINESEARCH: 
+    return "LBFGSERR_MAXIMUMLINESEARCH";
+  /** The algorithm routine reaches the maximum number of iterations. */
+  case LBFGSERR_MAXIMUMITERATION: 
+    return "LBFGSERR_MAXIMUMITERATION";
+  /** Relative width of the interval of uncertainty is at most
+      LBFGSParameters::xtol. */
+  case LBFGSERR_WIDTHTOOSMALL: 
+    return "LBFGSERR_WIDTHTOOSMALL";
+  /** A logic error (negative line-search step) occurred. */
+  case LBFGSERR_INVALIDPARAMETERS: 
+    return "LBFGSERR_INVALIDPARAMETERS";
+  /** The current search direction increases the objective function value. */
+  case LBFGSERR_INCREASEGRADIENT: 
+    return "LBFGSERR_INCREASEGRADIENT";    
+  }
+
+  return "UNKNOWN_CODE";
+}
 
 /**
  * Line search algorithms.
@@ -120,7 +234,7 @@ enum
    * Backtracking method with the Armijo condition.
    *  The backtracking method finds the step length such that it satisfies
    *  the sufficient decrease (Armijo) condition,
-   *    - f(x + a * d) <= f(x) + LBGFSParameters::ftol * a * g(x)^T d,
+   *    - f(x + a * d) <= f(x) + LBFGSParameters::ftol * a * g(x)^T d,
    *
    *  where x is the current point, d is the current search direction, and
    *  a is the step length.
@@ -133,7 +247,7 @@ enum
    *  The backtracking method finds the step length such that it satisfies
    *  both the Armijo condition (LBFGS_LINESEARCH_BACKTRACKING_ARMIJO)
    *  and the curvature condition,
-   *    - g(x + a * d)^T d >= LBGFSParameters::wolfe * g(x)^T d,
+   *    - g(x + a * d)^T d >= LBFGSParameters::wolfe * g(x)^T d,
    *
    *  where x is the current point, d is the current search direction, and
    *  a is the step length.
@@ -144,7 +258,7 @@ enum
    *  The backtracking method finds the step length such that it satisfies
    *  both the Armijo condition (LBFGS_LINESEARCH_BACKTRACKING_ARMIJO)
    *  and the following condition,
-   *    - |g(x + a * d)^T d| <= LBGFSParameters::wolfe * |g(x)^T d|,
+   *    - |g(x + a * d)^T d| <= LBFGSParameters::wolfe * |g(x)^T d|,
    *
    *  where x is the current point, d is the current search direction, and
    *  a is the step length.
@@ -152,252 +266,19 @@ enum
   LBFGS_LINESEARCH_BACKTRACKING_STRONG_WOLFE = 3,
 };
 
-/**
- * L-BFGS optimization parameters.
- *  Call lbfgs_parameter_init() function to initialize parameters to the
- *  default values.
- */
-class LBGFSParameters
-{
-public:
-  /**
-   * The number of corrections to approximate the inverse hessian matrix.
-   *  The L-BFGS routine stores the computation results of previous \ref m
-   *  iterations to approximate the inverse hessian matrix of the current
-   *  iteration. This parameter controls the size of the limited memories
-   *  (corrections). The default value is \c 6. Values less than \c 3 are
-   *  not recommended. Large values will result in excessive computing time.
-   */
-  int m;
 
-  /**
-   * Epsilon for convergence test.
-   *  This parameter determines the accuracy with which the solution is to
-   *  be found. A minimization terminates when
-   *      ||g|| < \ref epsilon * max(1, ||x||),
-   *  where ||.|| denotes the Euclidean (L2) norm. The default value is
-   *  \c 1e-5.
-   */
-  double epsilon;
-
-  /**
-   * Distance for delta-based convergence test.
-   *  This parameter determines the distance, in iterations, to compute
-   *  the rate of decrease of the objective function. If the value of this
-   *  parameter is zero, the library does not perform the delta-based
-   *  convergence test. The default value is \c 0.
-   */
-  int past;
-
-  /**
-   * Delta for convergence test.
-   *  This parameter determines the minimum rate of decrease of the
-   *  objective function. The library stops iterations when the
-   *  following condition is met:
-   *      (f' - f) / f < \ref delta,
-   *  where f' is the objective value of \ref past iterations ago, and f is
-   *  the objective value of the current iteration.
-   *  The default value is \c 0.
-   */
-  double delta;
-
-  /**
-   * The maximum number of iterations.
-   *  The lbfgs() function terminates an optimization process with
-   *  ::LBFGSERR_MAXIMUMITERATION status code when the iteration count
-   *  exceedes this parameter. Setting this parameter to zero continues an
-   *  optimization process until a convergence or error. The default value
-   *  is \c 0.
-   */
-  int max_iterations;
-
-  /**
-   * The line search algorithm.
-   *  This parameter specifies a line search algorithm to be used by the
-   *  L-BFGS routine.
-   */
-  int linesearch;
-
-  /**
-   * The maximum number of trials for the line search.
-   *  This parameter controls the number of function and gradients evaluations
-   *  per iteration for the line search routine. The default value is \c 20.
-   */
-  int max_linesearch;
-
-  /**
-   * The minimum step of the line search routine.
-   *  The default value is \c 1e-20. This value need not be modified unless
-   *  the exponents are too large for the machine being used, or unless the
-   *  problem is extremely badly scaled (in which case the exponents should
-   *  be increased).
-   */
-  double min_step;
-
-  /**
-   * The maximum step of the line search.
-   *  The default value is \c 1e+20. This value need not be modified unless
-   *  the exponents are too large for the machine being used, or unless the
-   *  problem is extremely badly scaled (in which case the exponents should
-   *  be increased).
-   */
-  double max_step;
-
-  /**
-   * A parameter to control the accuracy of the line search routine.
-   *  The default value is \c 1e-4. This parameter should be greater
-   *  than zero and smaller than \c 0.5.
-   */
-  double ftol;
-
-  /**
-   * A coefficient for the Wolfe condition.
-   *  This parameter is valid only when the backtracking line-search
-   *  algorithm is used with the Wolfe condition,
-   *  ::LBFGS_LINESEARCH_BACKTRACKING_STRONG_WOLFE or
-   *  ::LBFGS_LINESEARCH_BACKTRACKING_WOLFE .
-   *  The default value is \c 0.9. This parameter should be greater
-   *  the \ref ftol parameter and smaller than \c 1.0.
-   */
-  double wolfe;
-
-  /**
-   * A parameter to control the accuracy of the line search routine.
-   *  The default value is \c 0.9. If the function and gradient
-   *  evaluations are inexpensive with respect to the cost of the
-   *  iteration (which is sometimes the case when solving very large
-   *  problems) it may be advantageous to set this parameter to a small
-   *  value. A typical small value is \c 0.1. This parameter shuold be
-   *  greater than the \ref ftol parameter (\c 1e-4) and smaller than
-   *  \c 1.0.
-   */
-  double gtol;
-
-  /**
-   * The machine precision for floating-point values.
-   *  This parameter must be a positive value set by a client program to
-   *  estimate the machine precision. The line search routine will terminate
-   *  with the status code (::LBFGSERR_ROUNDING_ERROR) if the relative width
-   *  of the interval of uncertainty is less than this parameter.
-   */
-  double xtol;
-
-  /**
-   * Coeefficient for the L1 norm of variables.
-   *  This parameter should be set to zero for standard minimization
-   *  problems. Setting this parameter to a positive value activates
-   *  Orthant-Wise Limited-memory Quasi-Newton (OWL-QN) method, which
-   *  minimizes the objective function F(x) combined with the L1 norm |x|
-   *  of the variables, {F(x) + C |x|}. This parameter is the coeefficient
-   *  for the |x|, i.e., C. As the L1 norm |x| is not differentiable at
-   *  zero, the library modifies function and gradient evaluations from
-   *  a client program suitably; a client program thus have only to return
-   *  the function value F(x) and gradients G(x) as usual. The default value
-   *  is zero.
-   */
-  double orthantwise_c;
-
-  /**
-   * Start index for computing L1 norm of the variables.
-   *  This parameter is valid only for OWL-QN method
-   *  (i.e., \ref orthantwise_c != 0). This parameter b (0 <= b < N)
-   *  specifies the index number from which the library computes the
-   *  L1 norm of the variables x,
-   *      |x| := |x_{b}| + |x_{b+1}| + ... + |x_{N}| .
-   *  In other words, variables x_1, ..., x_{b-1} are not used for
-   *  computing the L1 norm. Setting b (0 < b < N), one can protect
-   *  variables, x_1, ..., x_{b-1} (e.g., a bias term of logistic
-   *  regression) from being regularized. The default value is zero.
-   */
-  int orthantwise_start;
-
-  /**
-   * End index for computing L1 norm of the variables.
-   *  This parameter is valid only for OWL-QN method
-   *  (i.e., \ref orthantwise_c != 0). This parameter e (0 < e <= N)
-   *  specifies the index number at which the library stops computing the
-   *  L1 norm of the variables x,
-   */
-  int orthantwise_end;
-
-  LBGFSParameters() : m(6), epsilon(1e-5), past(0), delta(1e-5),
-    max_iterations(0), linesearch(LBFGS_LINESEARCH_DEFAULT), max_linesearch(40),
-    min_step(1e-20), max_step(1e20), ftol(1e-4), wolfe(0.9), gtol(0.9),
-    xtol(1.0e-16), orthantwise_c(0.0), orthantwise_start(0), orthantwise_end(-1)
-  {
-  }
-};
-
-class LBGFSUserData
-{
-
-};
-
-class LBGFSEvaluationHandler
-{
-public:
-
-  /**
-   * Callback interface to provide objective function and gradient evaluations.
-   *
-   *  The lbfgs() function call this function to obtain the values of objective
-   *  function and its gradients when needed. A client program must implement
-   *  this function to evaluate the values of the objective function and its
-   *  gradients, given current values of variables.
-   *
-   *  @param  instance    The user data sent for lbfgs() function by the client.
-   *  @param  x           The current values of variables.
-   *  @param  g           The gradient vector. The callback function must compute
-   *                      the gradient values for the current variables.
-   *  @param  n           The number of variables.
-   *  @param  step        The current step of the line search routine.
-   *  @retval double The value of the objective function for the current
-   *                          variables.
-   */
-  virtual double evaluate(LBGFSUserData *instance, const double &x[], double &grad[], int n, double step)
-  {
-    return 0.0;
-  };
-};
-
-class LBGFSProgressHandler
-{
-public:
-  /**
-   * Callback interface to receive the progress of the optimization process.
-   *
-   *  The lbfgs() function call this function for each iteration. Implementing
-   *  this function, a client program can store or display the current progress
-   *  of the optimization process.
-   *
-   *  @param  instance    The user data sent for lbfgs() function by the client.
-   *  @param  x           The current values of variables.
-   *  @param  g           The current gradient values of variables.
-   *  @param  fx          The current value of the objective function.
-   *  @param  xnorm       The Euclidean norm of the variables.
-   *  @param  gnorm       The Euclidean norm of the gradients.
-   *  @param  step        The line-search step used for this iteration.
-   *  @param  n           The number of variables.
-   *  @param  k           The iteration count.
-   *  @param  ls          The number of evaluations called for this iteration.
-   *  @retval int         Zero to continue the optimization process. Returning a
-   *                      non-zero value will cancel the optimization process.
-   */
-  virtual int progress(LBGFSUserData *instance, const double &x[],
-                       const double &grad[], const double fx,
-                       const double xnorm, const double gnorm,
-                       const double step, int n, int k, int ls)
-  {
-    return 0;
-  };
-};
+#include "lbfgs_utils.mqh"
+#include "lbfgs/UserData.mqh"
+#include "lbfgs/Parameters.mqh"
+#include "lbfgs/ProgressHandler.mqh"
+#include "lbfgs/EvaluationHandler.mqh"
 
 struct callback_data_t
 {
   int n;
-  LBGFSUserData *instance;
-  LBGFSEvaluationHandler *proc_evaluate;
-  LBGFSProgressHandler *proc_progress;
+  LBFGSUserData *instance;
+  LBFGSEvaluationHandler *proc_evaluate;
+  LBFGSProgressHandler *proc_progress;
 };
 
 struct iteration_data_t
@@ -408,9 +289,11 @@ struct iteration_data_t
   double ys;     /* vecdot(y, s) */
 };
 
+
 #include "lbfgs/LineSearchMorethuente.mqh"
 #include "lbfgs/LineSearchBacktracking_owlqn.mqh"
 #include "lbfgs/LineSearchBacktracking.mqh"
+
 
 /*
 A user must implement a function compatible with ::lbfgs_evaluate_t (evaluation
@@ -473,11 +356,11 @@ In this formula, ||.|| denotes the Euclidean norm.
 int lbfgs(
   int n,
   double &x[],
-  double &ptr_fx[],
-  LBGFSEvaluationHandler *proc_evaluate,
-  LBGFSProgressHandler *proc_progress,
-  LBGFSUserData *instance,
-  LBGFSParameters *_param = NULL
+  double &ptr_fx,
+  LBFGSEvaluationHandler *proc_evaluate,
+  LBFGSProgressHandler *proc_progress,
+  LBFGSUserData *instance = NULL,
+  LBFGSParameters *_param = NULL
 )
 {
   int ret = LBFGS_SUCCESS;
@@ -485,8 +368,8 @@ int lbfgs(
   double step;
 
   /* Constant parameters and their default values. */
-  LBGFSParameters defaultParams;
-  LBGFSParameters *param = _param != NULL ? _param : GetPointer(defaultParams);
+  LBFGSParameters defaultParams;
+  LBFGSParameters *param = _param != NULL ? _param : GetPointer(defaultParams);
   const int m = param.m;
 
   double xp[];
@@ -870,6 +753,6 @@ int lbfgs(
     step = 1.0;
   }
 
-  SET_OPTIONAL(ptr_fx,fx);
+  ptr_fx = fx;
   return ret;
 }

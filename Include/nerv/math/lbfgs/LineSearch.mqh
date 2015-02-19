@@ -13,7 +13,7 @@ public:
     const double &gp[],
     double &wa[],
     callback_data_t &cd,
-    const LBGFSParameters *param)
+    const LBFGSParameters *param)
   {
     return 0;
   }

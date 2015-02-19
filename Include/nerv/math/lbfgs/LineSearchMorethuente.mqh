@@ -14,7 +14,7 @@ public:
     const double &gp[],
     double &wp[],
     callback_data_t &cd,
-    const LBGFSParameters *param)
+    const LBFGSParameters *param)
   {
     int count = 0;
     int brackt, stage1, uinfo = 0;

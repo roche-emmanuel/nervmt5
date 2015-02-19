@@ -71,6 +71,18 @@ public:
     return GetPointer(this);
   }
 
+  nvVecd *operator=(const double &rhs[])
+  {
+    _len = ArraySize(rhs);
+    _dynamic = false;
+    _reserveSize = 0;
+    CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
+
+    int count = ArrayCopy(_data, rhs, 0, 0);
+    CHECK(count == _len, "Invalid array copy count: " << count);
+    return GetPointer(this);
+  }
+
   ~nvVecd(void)
   {
   };
@@ -245,6 +257,18 @@ public:
     for (uint i = 0; i < _len; ++i)
     {
       res += _data[i] * rhs._data[i];
+    }
+    return res;
+  }
+
+  double operator*(const double &rhs[]) const
+  {
+    int arrlen = ArraySize(rhs);
+    CHECK(_len == arrlen, "Mismatch of lengths: " << _len << "!=" << arrlen);
+    double res = 0.0;
+    for (uint i = 0; i < _len; ++i)
+    {
+      res += _data[i] * rhs[i];
     }
     return res;
   }
@@ -471,5 +495,11 @@ public:
       res._data[i] *= rhs._data[i];
     }
     return res;
+  }
+
+  void toArray(double& arr[]) const
+  {
+    CHECK(ArrayResize(arr,_len)==_len,"Invalid Array resize result.");
+    CHECK(ArrayCopy(arr,_data,0,0)==_len,"Invalid array copy result.");
   }
 };

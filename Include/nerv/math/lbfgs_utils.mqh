@@ -6,7 +6,7 @@
 #define max2(a, b)      ((a) >= (b) ? (a) : (b))
 #define max3(a, b, c)   max2(max2((a), (b)), (c));
 
-#define LBFGS_EXIT(code) { SET_OPTIONAL(ptr_fx,fx); return code; }
+#define LBFGS_EXIT(code) { ptr_fx = fx; return code; }
 
 
 /**

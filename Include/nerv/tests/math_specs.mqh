@@ -303,6 +303,25 @@ BEGIN_TEST_CASE("should support per element multiplication")
   REQUIRE_EQUAL(vec1.mult(vec2),vec3);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support copying to array")
+  double arr1[] = {1,2,3,4,5};
+  double arr2[];
+  nvVecd vec1(arr1);
+  
+  vec1.toArray(arr2);
+
+  REQUIRE_EQUAL(arr2[4],vec1[4]);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support assignment from array")
+  double arr1[] = {1,2,3,4,5};
+  
+  nvVecd vec1;
+  
+  vec1 = arr1;
+  REQUIRE_EQUAL(arr1[4],vec1[4]);
+  
+END_TEST_CASE()
 
 END_TEST_SUITE()
 

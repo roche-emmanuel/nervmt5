@@ -26,6 +26,13 @@ double nv_sign_threshold(double val, double thres)
 
 double nv_tanh(double x)
 {
+  if(x>30.0) {
+    return 1.0;
+  }
+  else if(x<-30.0) {
+    return -1.0;
+  }
+
   double z = exp(-2.0*x);
   return (1.0 - z)/(1.0 + z);
 }

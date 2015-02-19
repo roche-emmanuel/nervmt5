@@ -14,7 +14,7 @@ public:
     const double &gp[],
     double &wp[],
     callback_data_t &cd,
-    const LBGFSParameters *param)
+    const LBFGSParameters *param)
   {
     int i, count = 0;
     double width = 0.5, norm = 0.;
