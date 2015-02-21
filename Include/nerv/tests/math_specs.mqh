@@ -323,6 +323,17 @@ BEGIN_TEST_CASE("should support assignment from array")
   
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support writing vector to file")
+  double arr1[] = {1,2.2,3.3,4.4,5.5};
+  
+  nvVecd vec1(arr1);
+  nv_write_vecd(GetPointer(vec1),"my_vec_file.txt");
+
+  nvVecd vec2 = nv_read_vecd("my_vec_file.txt");
+  
+  REQUIRE_EQUAL(vec1,vec2);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_SUITE()

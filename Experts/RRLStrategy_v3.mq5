@@ -5,14 +5,12 @@
 #property link      "https://wiki.singularityworld.net"
 #property version   "1.00"
 
-#include <nerv/trade/RRLStrategy_v0.mqh>
+#include <nerv/trade/RRLStrategy.mqh>
 
-input int       numInputs = 12;    // Number of input price returns
-input double 		eta = 0.01;				// Sharpe adaptation factor
-input double		rho = 0.01; 			// Learning rate
-input double		tcost = 0.00008;	// Transaction cost
-input double 		maxNorm = 2.0;	// Max theta vector norm (has no real influence on the profits).
-input ulong			warmUpDuration = 0; // WarmUp duration
+input int       numInputs = 10;    // Number of input price returns
+input int       trainLen = 600;    // Training duration
+input int       evalLen = 100;    // Evaluation duration
+input double    transCost = 0.0008; // Transaction cost
 
 nvRRLStrategy* strategy = NULL;
 
@@ -20,8 +18,7 @@ nvRRLStrategy* strategy = NULL;
 int OnInit()
 {
   Print("Initializing expert with Symbol='", _Symbol, "' and period='", _Period, "'");
-  strategy = new nvRRLStrategy(numInputs, rho, eta, tcost,maxNorm,_Symbol,_Period);
-  strategy.setWarmUp(warmUpDuration);
+  strategy = new nvRRLStrategy(transCost, numInputs, trainLen, evalLen, _Symbol,_Period);
   return (INIT_SUCCEEDED);
 }
 

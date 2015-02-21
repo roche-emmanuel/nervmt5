@@ -1,10 +1,3 @@
-//+------------------------------------------------------------------+
-//|                                                          Log.mqh |
-//|                                         Copyright 2015, NervTech |
-//|                                https://wiki.singularityworld.net |
-//+------------------------------------------------------------------+
-#property copyright "Copyright 2015, NervTech"
-#property link      "https://wiki.singularityworld.net"
 
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
@@ -181,6 +174,9 @@ protected:
   // Theta parameters:
   nvVecd _theta;
 
+  // params used for evaluation:
+  nvVecd _params;
+
   bool _normalizeInputs;
 
   // Training parameters:
@@ -189,8 +185,13 @@ protected:
   double _epsx;
   int _maxIts;
 
+  double _rmean;
+  double _rdev;
+
 public:
-  nvRRLModel(uint num)
+  nvRRLModel(uint num, int maxIts = 250) : _params(num+2), _theta(num+2),
+    _rmean(0.0), _rdev(0.0),
+    _maxIts(maxIts)
   {
     _numInputs = num;
     _maxNorm = 2.0;
@@ -198,8 +199,8 @@ public:
 
     // Prepare the vector containing the theta values:
     // We need 2 additional coeffs for the u and w coeffs
-    nvVecd initial_theta(_numInputs + 2, 1.0);
-    _theta = initial_theta;
+    //nvVecd initial_theta(_numInputs + 2, 1.0);
+    _theta.fill(1.0);
 
     // generate initial random coefficients:
     //_theta.randomize(-1.0, 1.0);
@@ -210,9 +211,9 @@ public:
 
     // Default training parameters:
     _epsg = 0.0000000001;
+    //_epsg = 0.0000001;
     _epsf = 0.0;
     _epsx = 0.0;
-    _maxIts = 1000;
   }
 
   ~nvRRLModel()
@@ -236,13 +237,22 @@ public:
     //}
   }
 
-  double predict(nvVecd *params) const
+  double predict(nvVecd *rvec, double Ft_1)
   {
-    double val = _theta * params;
+    _params.set(0,1.0);
+    _params.set(1,Ft_1);
+    _params.set(2,(rvec-_rmean)/_rdev);
+
+    double val = _theta * _params;
     //logDEBUG("Theta vector: "<<_theta);
     //logDEBUG("Param vector: "<<params);
     //logDEBUG("Pre tanh value: "<<val);
     return nv_tanh(val);
+  }
+
+  void setMaxIterations(int num)
+  {
+    _maxIts = num;
   }
 
   void setTrainingParams(double epsg, double epsf, double epsx, int maxits)
@@ -253,9 +263,9 @@ public:
     _maxIts = maxits;
   }
 
-  double train(double tcost, nvVecd *returns, nvVecd *nretsvec = NULL)
+  double train(double tcost, nvVecd *returns)
   {
-    return train_cg(tcost,GetPointer(_theta),returns,nretsvec);
+    return train_cg(tcost,GetPointer(_theta),returns);
   }
 
   double train_cg(double tcost, nvVecd* theta, nvVecd *returns, nvVecd *nretsvec = NULL)
@@ -277,11 +287,17 @@ public:
 
     CMinCGReportShell res;
     CAlglib::MinCGResults(state, x, res);
-    logDEBUG("Optimization done with best cost: "<< ev.getBestCost())
+    
+    //logDEBUG("Optimization done with best cost: "<< ev.getBestCost())
     _theta = x;
+    _rmean = returns.mean();
+    _rdev = returns.deviation();
 
-    nvVecd bestTheta = ev.getBestTheta();
-    CHECK(bestTheta==_theta,"Mismatch in theta vectors: "<<_theta<<"!="<<bestTheta);
+    //logDEBUG("Trained theta: "<<_theta);
+    //logDEBUG("rmean="<<_rmean<<", rdev="<<_rdev);
+
+    //nvVecd bestTheta = ev.getBestTheta();
+    //CHECK(bestTheta==_theta,"Mismatch in theta vectors: "<<_theta<<"!="<<bestTheta);
 
     return ev.getBestCost();
   }

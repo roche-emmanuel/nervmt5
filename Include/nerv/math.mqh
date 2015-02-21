@@ -64,3 +64,18 @@ nvVecd nv_read_vecd(string filename)
   return result;
 }
 
+void nv_write_vecd(nvVecd* vec, string filename)
+{
+  int handle = FileOpen(filename, FILE_WRITE | FILE_TXT | FILE_ANSI);
+
+  CHECK(handle!=INVALID_HANDLE,"Could not open file "<<filename<<" for writing.");
+
+  uint len = vec.size();
+
+  for(uint i = 0; i<len;++i)
+  {
+    FileWriteString(handle,((string)vec[i])+"\n");
+  }
+
+  FileClose(handle);
+}

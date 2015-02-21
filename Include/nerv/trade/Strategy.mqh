@@ -39,6 +39,7 @@ protected:
   // Stop lost deviation value in pips:
   double _stopDev;
 
+  bool _useStopLoss;
 public:
   nvStrategy(string symbol, ENUM_TIMEFRAMES period = PERIOD_M1)
   {
@@ -51,6 +52,7 @@ public:
     _stopMean = 20.0;
     _stopDev = 10.0;
 
+    _useStopLoss = false;
     _confs = new nvVecd(5);
 
     // Save the time of the current bar so that we can start detecting new bars afterwards:
@@ -72,8 +74,8 @@ public:
 
   ~nvStrategy()
   {
-    logDEBUG("Deleting nvStrategy()");
-    logDEBUG("Total num frames: " << _frameCount);
+    //logDEBUG("Deleting nvStrategy()");
+    //logDEBUG("Total num frames: " << _frameCount);
 
     delete _confs;
   }
@@ -111,7 +113,7 @@ public:
       CHECK(diff > (tdelta - 1), "Unexpected bar delta difference, diff=" << diff);
       if (diff > tdelta)
       {
-        logWARN("More than 1 delta elapsed, missing " << (diff / tdelta - 1.0) << " bar(s).");
+        //logWARN("More than 1 delta elapsed, missing " << (diff / tdelta - 1.0) << " bar(s).");
         reset();
       }
       else
@@ -128,13 +130,13 @@ public:
     }
 
     // On each tick we should update the stop lost if we are in a position.
-    if (getCurrentPosition() != POSITION_NONE)
+    if (_useStopLoss && getCurrentPosition() != POSITION_NONE)
     {
-      updateStopLost();
+      updateStopLoss();
     }
   }
 
-  void updateStopLost()
+  void updateStopLoss()
   {
     // We assume we are in a LONG or SHORT position:
     int pos = getCurrentPosition();
@@ -163,7 +165,7 @@ public:
     double ratio = _confs.EMA(_confAdaptation); // confidence value should always be between 0 and 1.
 
     // This stp value is the offset we want to apply from the best price in number of pips.
-    double stp = _stopMean + _stopDev * (ratio - 0.5) * 2.0;
+    double stp = _stopMean; // + _stopDev * (ratio - 0.5) * 2.0;
 
     // compute the new stop lost value we want to apply:
     double nstpval = NormalizeDouble(_best_price + stp * _Point * (pos == POSITION_LONG ? -1.0 : 1.0), _Digits);
@@ -182,7 +184,7 @@ public:
 
   virtual void reset()
   {
-    logDEBUG("Should override to reset the algorithm.");
+    //logDEBUG("Should override to reset the algorithm.");
   }
 
   virtual void handleNewBar(const MqlRates &rates)
@@ -214,7 +216,6 @@ public:
         _confs.fill(confidence);
 
         openPosition(pos, nlots);
-
       }
     }
   }
@@ -367,5 +368,18 @@ public:
     }
 
     return pos;
+  }
+
+  double getCurrentPositionValue() const
+  {
+    int pos = getCurrentPosition();
+    if(pos==POSITION_NONE)
+      return 0.0;
+
+    double volume = PositionGetDouble(POSITION_VOLUME);
+    if(pos==POSITION_LONG)
+      return volume;
+
+    return -volume;
   }
 };
