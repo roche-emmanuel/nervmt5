@@ -265,8 +265,9 @@ BEGIN_TEST_CASE("should be able to train on DAX template with RRLModel")
   double delta = 0.001;
 
   nvRRLModel model(10);  
-
-  double cost = model.train(delta,GetPointer(returns));
+	
+	nvVecd initx(10,1.0);
+  double cost = model.train_cg(delta,GetPointer(initx),GetPointer(returns));
 
   DISPLAY(cost);  
 END_TEST_CASE()
@@ -286,9 +287,10 @@ BEGIN_TEST_CASE("should be able to train on EURUSD template with RRLModel")
 
   double delta = 0.00001;
 
-  nvRRLModel model(M,0);  
+  nvRRLModel model(M,50);  
 
-  double cost = model.train(delta,GetPointer(returns));
+	nvVecd initx(12,1.0);
+  double cost = model.train_cg(delta,GetPointer(initx),GetPointer(returns));
 
   double sr = -cost;
   DISPLAY(cost);  
@@ -312,7 +314,8 @@ BEGIN_TEST_CASE("should be able to train on EURUSD template with RRLModel")
     }
 
     // We have enough elements in the vector, so we can start evaluating:
-    double Ft = model.predict(GetPointer(rvec),Ft_1);
+    double Ft;
+    model.predict(GetPointer(rvec),Ft_1,Ft);
     //logDEBUG("Predicting: Ft="<<Ft);
 
     // Compute the Rt value:
@@ -481,7 +484,7 @@ BEGIN_TEST_CASE("should be able to reproduce the behavior of a dry RRL strategy"
 END_TEST_CASE()
 
 
-BEGIN_TEST_CASE("should find the best settings for maximizing profits on one week for EURUSD")
+XBEGIN_TEST_CASE("should find the best settings for maximizing profits on one week for EURUSD")
   //double x[] = {0.000001,600,100};
   double x[] = {600,100};
 

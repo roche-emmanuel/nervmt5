@@ -23,17 +23,7 @@ public:
   */
   nvVecd(uint len = 0, double val = 0.0, bool dynamic = false)
   {
-    _len = len;
-
-    // Create a dynamic vector if its length is set to zero.
-    _dynamic = _len == 0 || dynamic;
-    _reserveSize = _dynamic ? 1000 : 0;
-
-    CHECK(ArrayResize(_data, len, _reserveSize) == len, "Invalid result for ArrayResize()");
-
-    // Assign the default value:
-    if (_len > 0)
-      ArrayFill(_data, 0, _len, val);
+    resize(len,val,dynamic);
   };
 
   nvVecd(const nvVecd &rhs)
@@ -86,6 +76,21 @@ public:
   ~nvVecd(void)
   {
   };
+
+  void resize(uint len = 0, double val = 0.0, bool dynamic = false)
+  {
+    _len = len;
+
+    // Create a dynamic vector if its length is set to zero.
+    _dynamic = _len == 0 || dynamic;
+    _reserveSize = _dynamic ? 1000 : 0;
+
+    CHECK(ArrayResize(_data, len, _reserveSize) == len, "Invalid result for ArrayResize()");
+
+    // Assign the default value:
+    if (_len > 0)
+      ArrayFill(_data, 0, _len, val);
+  }
 
   uint size() const
   {

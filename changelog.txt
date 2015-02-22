@@ -33,3 +33,4 @@
 02/19/15-01:07:34: Finalized LBFGS implementation. Adding source for octave version.
 02/19/15-14:56:21: Implemented optimization of RRL model with minCG.
 02/21/15-16:51:36: Investigations on RRL model.
+02/22/15-17:32:51: winning 0.00143 units in 1 week without too much drawndown.

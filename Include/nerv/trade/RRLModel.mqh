@@ -1,6 +1,7 @@
 
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
+#include "RRLModelBase.mqh"
 
 double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *grad, nvVecd *theta)
 {
@@ -121,18 +122,10 @@ protected:
   nvVecd _bestTheta;
 
 public:
-  nvRRLEvaluator(double tcost, nvVecd* returns, nvVecd* nretsvec = NULL) : _bestCost(1e10) {
+  nvRRLEvaluator(double tcost, nvVecd* returns) : _bestCost(1e10) {
 
     _returns = returns;
-
-    if (nretsvec != NULL)
-    {
-      _nrets = nretsvec;
-    }
-    else
-    {
-      _nrets = returns.stdnormalize();
-    }
+    _nrets = returns.stdnormalize();
 
     _tcost = tcost;
   }
@@ -162,82 +155,32 @@ public:
   }  
 };
 
-class nvRRLModel : public nvObject
+class nvRRLModel : public nvRRLModelBase
 {
 protected:
-  // Number of return inputs:
-  uint _numInputs;
-
-  // max norm allowed for theta vector:
-  double _maxNorm;
-
   // Theta parameters:
   nvVecd _theta;
 
   // params used for evaluation:
   nvVecd _params;
 
-  bool _normalizeInputs;
-
-  // Training parameters:
-  double _epsg;
-  double _epsf;
-  double _epsx;
-  int _maxIts;
-
-  double _rmean;
-  double _rdev;
-
 public:
   nvRRLModel(uint num, int maxIts = 250) : _params(num+2), _theta(num+2),
-    _rmean(0.0), _rdev(0.0),
-    _maxIts(maxIts)
+    nvRRLModelBase(maxIts)
   {
-    _numInputs = num;
-    _maxNorm = 2.0;
-    _normalizeInputs = true;
-
     // Prepare the vector containing the theta values:
     // We need 2 additional coeffs for the u and w coeffs
     //nvVecd initial_theta(_numInputs + 2, 1.0);
     _theta.fill(1.0);
 
-    // generate initial random coefficients:
-    //_theta.randomize(-1.0, 1.0);
-    //_theta.fill(1.0); // Initialize with 1.0.
-    checkNorm();
-
     //logDEBUG("Initial theta vector is: " << _theta);
-
-    // Default training parameters:
-    _epsg = 0.0000000001;
-    //_epsg = 0.0000001;
-    _epsf = 0.0;
-    _epsx = 0.0;
   }
 
   ~nvRRLModel()
   {
   }
 
-  void checkNorm()
-  {
-    // Prevent theta from becoming too big:
-    //if(_theta.norm()>1.0) {
-    //  _theta.normalize(0.8);
-    //}
-
-    //if(MathMax(MathAbs(_theta.max()),MathAbs(_theta.min())) > 5.0) {
-    //  _theta *= 0.95;
-    //}
-
-    //double tn = _theta.norm()/_maxNorm;
-    //if(tn>1.0) {
-    //  _theta *= MathExp(-tn + 1);
-    //}
-  }
-
-  double predict(nvVecd *rvec, double Ft_1)
+  virtual double predict(nvVecd *rvec, double Ft_1, double& signal)
   {
     _params.set(0,1.0);
     _params.set(1,Ft_1);
@@ -247,39 +190,22 @@ public:
     //logDEBUG("Theta vector: "<<_theta);
     //logDEBUG("Param vector: "<<params);
     //logDEBUG("Pre tanh value: "<<val);
-    return nv_tanh(val);
+    signal = nv_tanh(val);
+    return signal;
   }
 
-  void setMaxIterations(int num)
-  {
-    _maxIts = num;
-  }
-
-  void setTrainingParams(double epsg, double epsf, double epsx, int maxits)
-  {
-    _epsg = epsg;
-    _epsf = epsf;
-    _epsx = epsx;
-    _maxIts = maxits;
-  }
-
-  double train(double tcost, nvVecd *returns)
-  {
-    return train_cg(tcost,GetPointer(_theta),returns);
-  }
-
-  double train_cg(double tcost, nvVecd* theta, nvVecd *returns, nvVecd *nretsvec = NULL)
+  virtual double train_cg(double tcost, nvVecd* initx, nvVecd *returns)
   {
     // Prepare the training with MinCG:
     double x[];
-    theta.toArray(x);
+    initx.toArray(x);
 
     CMinCGStateShell state;
     CAlglib::MinCGCreate(x,state);
 
     CAlglib::MinCGSetCond(state, _epsg, _epsf, _epsx, _maxIts);
 
-    nvRRLEvaluator ev(tcost,returns,nretsvec);
+    nvRRLEvaluator ev(tcost,returns);
     CNDimensional_Rep rep;
 
     CObject objdum;
@@ -288,7 +214,7 @@ public:
     CMinCGReportShell res;
     CAlglib::MinCGResults(state, x, res);
     
-    //logDEBUG("Optimization done with best cost: "<< ev.getBestCost())
+    logDEBUG("Optimization done with best cost: "<< ev.getBestCost())
     _theta = x;
     _rmean = returns.mean();
     _rdev = returns.deviation();

@@ -46,7 +46,8 @@ public:
   virtual void evaluate()
   {
     // Evaluation the model prediction:
-    double Ft = _model.predict(GetPointer(_eval_returns),_Ft_1);
+    double Ft;
+    _model.predict(GetPointer(_eval_returns),_Ft_1, Ft);
     //logDEBUG("Predicting: Ft="<<Ft);
 
     // Compute the Rt value:

@@ -23,9 +23,10 @@ protected:
   nvVecd _train_returns;
   nvVecd _eval_returns;
 
-  nvRRLModel _model;
+  nvRRLModelBase* _model;
 
   nvVecd _params; // parameter vectors containing the price returns, the last position F and the intercept term.
+  nvVecd _init_x;
 
   double _last_price;
 
@@ -49,7 +50,7 @@ public:
     _eval_returns(num),
     _trainLen(train_len),
     _evalLen(eval_len),
-    _model(num, 100),
+    _model(NULL),
     _barCount(0),
     _last_price(0.0),
     _evalCount(0),
@@ -59,13 +60,35 @@ public:
     nvStrategy(symbol, period)
   {
     _useStopLoss = false;
+    _init_x.resize(num+2);
+
+    assignModel(new nvRRLModel(num,100));
+  }
+
+  nvRRLModelBase* getModel()
+  {
+    return _model;
   }
 
   ~nvRRLStrategy()
   {
+    if(_model) {
+      delete _model;
+      _model = NULL;
+    }
     //logDEBUG("Deleting nvRRLStrategy()");
   }
 
+  void assignModel(nvRRLModelBase* model)
+  {
+    if(_model) {
+      delete _model;
+      _model = NULL;
+    }
+
+    _model = model;
+  }
+  
   void setMaxIterations(int num)
   {
     _model.setMaxIterations(num);
@@ -120,6 +143,8 @@ public:
     if ((_evalCount % _evalLen) == 0)
     {
       performTraining();
+      // reset evaluation count after training:
+      _evalCount = 0;
     }
 
     _evalCount++;
@@ -131,9 +156,9 @@ public:
   {
     // perform the training:
     //double sr = _model.train(_tcost, GetPointer(_train_returns));
-    nvVecd init_theta(_numInputs + 2, 1.0);
+    _init_x.fill(1.0);
     //double cost = _model.train(_tcost, GetPointer(_train_returns));
-    double cost = _model.train_cg(_tcost, GetPointer(init_theta), GetPointer(_train_returns));
+    double cost = _model.train_cg(_tcost, GetPointer(_init_x), GetPointer(_train_returns));
     _SR = -cost;
     //logDEBUG("Achieved SR=" << _SR << " on training.")
     // Return the achieved sharpe ratio on this training:
@@ -153,7 +178,9 @@ public:
     double Ft_1 = getCurrentPositionValue();
     //logDEBUG("Previous position value is : " << Ft_1);
 
-    double Ft = _model.predict(GetPointer(_eval_returns), Ft_1);
+		double Ft;
+    _model.predict(GetPointer(_eval_returns), Ft_1, Ft);
+    
     //logDEBUG("Predicting: Ft=" << Ft);
 
     double threshold = 0.1;
