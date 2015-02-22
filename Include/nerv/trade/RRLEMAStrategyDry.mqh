@@ -6,6 +6,7 @@ class nvRRLEMAStrategyDry : public nvRRLStrategyDry
 {
 protected:
   double _Gt_1;
+  int _maxEvalLen;
 
 public:
   nvRRLEMAStrategyDry(double tcost, uint num, int train_len, int eval_len,
@@ -13,6 +14,7 @@ public:
     _Gt_1(0.0),
     nvRRLStrategyDry(tcost, num, train_len, eval_len, symbol, period)
   {
+    _maxEvalLen = eval_len;
     _init_x.resize(num+3);
   	nvRRLEMAModel* model = new nvRRLEMAModel(num,100);
     assignModel(model);
@@ -23,7 +25,10 @@ public:
     nvRRLStrategyDry::performTraining();
 
     // Update the evaluation duration with the estimation from the model:
-    _evalLen = (int)MathFloor(((nvRRLEMAModel*)getModel()).getEvaluationEstimate()+0.5);
+    double est = ((nvRRLEMAModel*)getModel()).getEvaluationEstimate();
+    est = MathMin(est,_maxEvalLen);
+    
+    _evalLen = (int)MathFloor(est+0.5);
     CHECK(_evalLen>0,"Invalid evaluation duration.");
     logDEBUG("Using evaluation duration: "<<_evalLen);
     return _SR;

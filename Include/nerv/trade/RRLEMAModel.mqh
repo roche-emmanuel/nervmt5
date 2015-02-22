@@ -283,7 +283,7 @@ public:
   double getEvaluationEstimate() const
   {
     // Update the estimation for the evaluation phase duration:
-    return MathMin(3.0/MathMax(_eps,0.01),100);
+    return 1.0/MathMax(_eps,0.01);
   }
 
   double train_cg(double tcost, nvVecd *init_x, nvVecd *returns)
