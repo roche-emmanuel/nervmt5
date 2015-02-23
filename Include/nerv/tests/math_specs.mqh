@@ -360,6 +360,28 @@ BEGIN_TEST_CASE("should support cloning")
   REQUIRE_NOT_EQUAL(GetPointer(vec1),GetPointer(vec2));
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should provide readFrom method")
+  nvVecd vec1;
+  vec1.readFrom("retDAX.txt");
+
+  REQUIRE_EQUAL(vec1.size(),5425);
+
+  // Check the mean and deviation values:
+  REQUIRE_CLOSE(vec1.mean(),-0.0001670546824234,1e-6);
+  REQUIRE_CLOSE(vec1.deviation(),0.0147594082452264,1e-6);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should provide writeTo method")
+  double arr1[] = {1,2.2,3.3,4.4,5.5};
+  
+  nvVecd vec1(arr1);
+  vec1.writeTo("my_vec_file.txt");
+
+  nvVecd vec2("my_vec_file.txt");
+  
+  REQUIRE_EQUAL(vec1,vec2);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_SUITE()

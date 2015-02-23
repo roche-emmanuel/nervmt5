@@ -54,6 +54,24 @@ BEGIN_TEST_CASE("should be able to clear")
   REQUIRE_EQUAL(map.size(),0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should be able to unset values")
+  nvObjectMap map;
+
+  nvVecd vec;
+  nvVecd vec2;
+  nvVecd* vec3 = new nvVecd();
+  map.set("my_vec",GetPointer(vec),false);
+  map.set("my_vec2",GetPointer(vec2),false);
+  map.set("my_vec3",vec3);
+
+  REQUIRE_EQUAL(map.size(),3);
+  REQUIRE_EQUAL(map.unset("my_vec"),true);
+  REQUIRE_EQUAL(map.size(),2);
+  REQUIRE_EQUAL(map.unset("my_vec3"),true);
+  REQUIRE_EQUAL(map.size(),1);
+  REQUIRE_EQUAL(map.get("my_vec2"),GetPointer(vec2));
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

@@ -23,7 +23,7 @@ public:
   */
   nvVecd(uint len = 0, double val = 0.0, bool dynamic = false)
   {
-    resize(len,val,dynamic);
+    resize(len, val, dynamic);
   };
 
   nvVecd(const nvVecd &rhs)
@@ -47,6 +47,11 @@ public:
     _reserveSize = _dynamic ? 1000 : 0;
     int count = ArrayCopy(_data, arr, 0, 0);
     CHECK(count == _len, "Invalid array copy count: " << count);
+  }
+
+  nvVecd(string filename)
+  {
+    readFrom(filename);
   }
 
   nvVecd *operator=(const nvVecd &rhs)
@@ -140,6 +145,26 @@ public:
   }
 
   bool operator!=(const nvVecd &rhs) const
+  {
+    return !(this == rhs);
+  }
+
+  bool operator==(const double &rhs[]) const
+  {
+
+    if (_len != ArraySize(rhs))
+      return false;
+
+    for (uint i = 0; i < _len; ++i)
+    {
+      if (_data[i] != rhs[i])
+        return false;
+    }
+
+    return true;
+  }
+
+  bool operator!=(const double &rhs[]) const
   {
     return !(this == rhs);
   }
@@ -443,7 +468,7 @@ public:
 
     double m = mean();
     double dev = norm2();
-    dev /= (_len-1);
+    dev /= (_len - 1);
 
     dev -= m * m;
     dev = MathSqrt(dev);
@@ -458,19 +483,19 @@ public:
   double EMA(double alpha) const
   {
     CHECK(_len > 0, "Cannot compute EMA with length " << _len);
-    CHECK(0.0<alpha && alpha < 1.0,"Invalid value for alpha coeff: "<<alpha);
+    CHECK(0.0 < alpha && alpha < 1.0, "Invalid value for alpha coeff: " << alpha);
 
     double val = _data[0];
-    for(uint i=1;i<_len;++i)
+    for (uint i = 1; i < _len; ++i)
     {
       val = alpha * _data[i] + (1.0 - alpha) * val;
     }
-    
+
     return val;
   }
 
   void fill(double val) {
-    for(uint i=0;i<_len;++i)
+    for (uint i = 0; i < _len; ++i)
     {
       _data[i] = val;
     }
@@ -478,38 +503,77 @@ public:
 
   nvVecd subvec(uint index, uint len) const
   {
-    CHECK(len>0,"Invalid length for sub vector.");
-    CHECK(index+len-1<_len,"Out of range access for subvector");
+    CHECK(len > 0, "Invalid length for sub vector.");
+    CHECK(index + len - 1 < _len, "Out of range access for subvector");
     nvVecd res(len);
-    CHECK(ArrayCopy(res._data, _data, 0, index, len)==len,"Invalid result for Array copy");
+    CHECK(ArrayCopy(res._data, _data, 0, index, len) == len, "Invalid result for Array copy");
     return res;
   }
 
   nvVecd stdnormalize() const
   {
     double dev = deviation();
-    return (this - mean())/(dev==0.0 ? 1.0 : dev);
+    return (this - mean()) / (dev == 0.0 ? 1.0 : dev);
   }
 
-  nvVecd mult(const nvVecd& rhs) const
+  nvVecd mult(const nvVecd &rhs) const
   {
-    CHECK(_len==rhs._len,"Mismatch in lengths");
+    CHECK(_len == rhs._len, "Mismatch in lengths");
     nvVecd res(this);
-    for(uint i=0;i<_len;++i)
+    for (uint i = 0; i < _len; ++i)
     {
       res._data[i] *= rhs._data[i];
     }
     return res;
   }
 
-  void toArray(double& arr[]) const
+  void toArray(double &arr[]) const
   {
-    CHECK(ArrayResize(arr,_len)==_len,"Invalid Array resize result.");
-    CHECK(ArrayCopy(arr,_data,0,0)==_len,"Invalid array copy result.");
+    CHECK(ArrayResize(arr, _len) == _len, "Invalid Array resize result.");
+    CHECK(ArrayCopy(arr, _data, 0, 0) == _len, "Invalid array copy result.");
   }
 
-  nvVecd clone() const{
+  nvVecd clone() const {
     nvVecd res(this);
     return res;
+  }
+
+  void readFrom(string filename)
+  {
+    int handle = FileOpen(filename, FILE_READ | FILE_CSV | FILE_ANSI);
+
+    CHECK(handle != INVALID_HANDLE, "Could not open file " << filename << " for reading.");
+
+    // Turn this into a dynamic vector:
+    resize();
+
+    //--- read data from the file
+    while (!FileIsEnding(handle))
+    {
+      //--- read the string
+      //content = FileReadString(handle);
+      //double val = StringToDouble(content);
+      double val = FileReadNumber(handle);
+      //logDEBUG("Read value: "<<val); //<<" from string '"<<content<<"'");
+      push_back(val);
+    }
+    //--- close the file
+    FileClose(handle);
+  }
+
+  void writeTo(string filename) const
+  {
+    int handle = FileOpen(filename, FILE_WRITE | FILE_TXT | FILE_ANSI);
+
+    CHECK(handle != INVALID_HANDLE, "Could not open file " << filename << " for writing.");
+
+    uint len = size();
+
+    for (uint i = 0; i < len; ++i)
+    {
+      FileWriteString(handle, ((string)_data[i]) + "\n");
+    }
+
+    FileClose(handle);
   }
 };

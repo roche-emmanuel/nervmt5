@@ -72,7 +72,13 @@ public:
 
         // need to move the following elements if this is not the last one.
         if (i < _len - 1) {
-          CHECK(ArrayCopy(_nodes, _nodes, i, i + 1) == _len - i - 1, "Invalid ArrayCopy result.");
+        	int total = _len - i - 1;
+          for(int j=1;j<=total;j++)
+          {
+            _nodes[i+j-1].key = _nodes[i+j].key;
+            _nodes[i+j-1].value = _nodes[i+j].value;
+            _nodes[i+j-1].toDelete = _nodes[i+j].toDelete;
+          }
         }
 
         // Now need to resize the array:
