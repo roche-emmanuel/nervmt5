@@ -39,3 +39,4 @@
 02/23/15-14:52:19: Adding implementation of RRLCostFunction class.
 02/23/15-15:58:09: Creating proper RRLModel.
 02/23/15-16:31:30: Adding support for history generatino.
+02/23/15-20:54:17: Added implementation for object map class.

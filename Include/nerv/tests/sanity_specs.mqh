@@ -129,6 +129,29 @@ BEGIN_TEST_CASE("should support class as namespace")
 END_TEST_CASE()
 #endif
 
+BEGIN_TEST_CASE("should support deleting a null pointer")
+  class my_test_class
+  {
+  public:
+    my_test_class() {};
+  };
+
+  my_test_class* obj = NULL;
+  delete obj;
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support deleting a pointer twice")
+  class my_test_class
+  {
+  public:
+    my_test_class() {};
+  };
+
+  my_test_class* obj = new my_test_class();
+  delete obj;
+  delete obj;
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
