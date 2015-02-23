@@ -11,7 +11,7 @@
 #include <nerv/tests/core_specs.mqh>
 #include <nerv/tests/math_specs.mqh>
 #include <nerv/tests/RRLStrategy_specs.mqh>
-#include <nerv/tests/RRLModel_specs.mqh>
+#include <nerv/tests/RRLModel_old_specs.mqh>
 
 BEGIN_TEST_SESSION("TestResults")
 
