@@ -36,3 +36,4 @@
 02/22/15-17:32:51: winning 0.00143 units in 1 week without too much drawndown.
 02/22/15-18:02:12: Using eval_len as max evaluation length.
 02/23/15-12:41:45: Added start and end signals for training.
+02/23/15-14:52:19: Adding implementation of RRLCostFunction class.

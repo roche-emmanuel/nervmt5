@@ -13,7 +13,7 @@ string nvReadFile(string filename, int flags = FILE_ANSI)
 {
   int handle = FileOpen(filename, FILE_READ | flags);
 
-  CHECK(handle!=INVALID_HANDLE,"Could not open file "<<filename<<" for reading.");
+  CHECK(handle != INVALID_HANDLE, "Could not open file " << filename << " for reading.");
 
   string content = "";
 
@@ -28,3 +28,4 @@ string nvReadFile(string filename, int flags = FILE_ANSI)
 
   return content;
 }
+

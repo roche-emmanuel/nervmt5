@@ -27,6 +27,46 @@ my_struct buildStruct()
 }
 #endif
 
+#ifdef TEST_INNER_CLASSES
+class my_namespace
+{
+public:
+  class my_base
+  {
+  protected:
+    int _val;
+    int _val2;
+
+  public:
+    my_base()
+    {
+      _val = 1;
+      _val2 = 2;
+    }
+
+    int getVal1() const
+    {
+      return _val;
+    }
+
+    int getVal2() const
+    {
+      return _val2;
+    }
+  };
+
+  class my_child : public my_base
+  {
+  public:
+    my_child()
+    {
+      _val2 = 3;
+    }
+  };
+};
+#endif
+
+
 BEGIN_TEST_PACKAGE(sanity_specs)
 
 BEGIN_TEST_SUITE("Sanity checks")
@@ -77,6 +117,15 @@ BEGIN_TEST_CASE("should allow copy of structures")
   REQUIRE_EQUAL(myres.val2[1],3.0);
   REQUIRE_EQUAL(myres.val2[2],4.0);
   REQUIRE_EQUAL(myres.val3,"Helo world!");
+END_TEST_CASE()
+#endif
+
+#ifdef TEST_INNER_CLASSES
+BEGIN_TEST_CASE("should support class as namespace")
+  my_namespace::my_child* child = new my_namespace::my_child();
+
+  REQUIRE_EQUAL(child.getVal1(),1);
+  REQUIRE_EQUAL(child.getVal2(),3);
 END_TEST_CASE()
 #endif
 

@@ -507,4 +507,9 @@ public:
     CHECK(ArrayResize(arr,_len)==_len,"Invalid Array resize result.");
     CHECK(ArrayCopy(arr,_data,0,0)==_len,"Invalid array copy result.");
   }
+
+  nvVecd clone() const{
+    nvVecd res(this);
+    return res;
+  }
 };

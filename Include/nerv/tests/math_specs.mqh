@@ -334,6 +334,32 @@ BEGIN_TEST_CASE("should support writing vector to file")
   REQUIRE_EQUAL(vec1,vec2);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support comparing vector pointers")
+  double arr1[] = {1,2.2,3.3,4.4,5.5};
+  
+  nvVecd vec1(arr1);
+  nvVecd vec2(arr1);
+
+  REQUIRE_EQUAL(vec1,vec2);
+  REQUIRE_EQUAL(GetPointer(vec1),vec2);
+  
+  // Comparing 2 pointers should not give the same result:
+  REQUIRE_NOT_EQUAL(GetPointer(vec1),GetPointer(vec2));
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support cloning")
+  double arr1[] = {1,2.2,3.3,4.4,5.5};
+  
+  nvVecd vec1(arr1);
+  nvVecd vec2 = vec1.clone();
+
+  REQUIRE_EQUAL(vec1,vec2);
+  REQUIRE_EQUAL(GetPointer(vec1),vec2);
+  
+  // Comparing 2 pointers should not give the same result:
+  REQUIRE_NOT_EQUAL(GetPointer(vec1),GetPointer(vec2));
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_SUITE()
