@@ -8,7 +8,7 @@ double sigmoid(double z)
   return 1.0/(1.0+exp(-z));
 }
 
-double rrlemaCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *grad, nvVecd *x)
+double rrlemaCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, double Fstart, double Fend, nvVecd *grad, nvVecd *x)
 {
   // We retrieve the EMA adaptation coefficient as a first element of the x vector:
   double eps = sigmoid(x[0]);
@@ -66,6 +66,11 @@ double rrlemaCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *
 
     //logDEBUG("On iteration " << i <<" rt="<<rt<<", rtn="<<rtn);
 
+    if(i==0) {
+      // Force the initial Ft_1 value:
+      Ft_1 = Fstart;
+    }
+
     // Prepare the parameter vector:
     params.set(1, Ft_1);
     params.set(2, rvec);
@@ -79,6 +84,11 @@ double rrlemaCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *
     Ft = nv_tanh(Gt);
     //logDEBUG("Prediction at "<<i<<" is: Gt="<<Gt<<", Ft="<<Ft<<", wx="<<wx<<" eps="<<eps);
 
+    if(i==size-1) {
+      // Force the final Ft value:
+      Ft = Fend;
+    }
+    
     // From that we can build the new return value:
     Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
     //logDEBUG("Return at "<<i<<" is Rt=" << Rt <<", rt="<<rt<<", tcost="<<tcost);
@@ -197,8 +207,14 @@ protected:
   double _bestCost;
   nvVecd _bestX;
 
+  double _Fstart;
+  double _Fend;
+
 public:
-  nvRRLEMAEvaluator(double tcost, nvVecd *returns) : _bestCost(1e10)
+  nvRRLEMAEvaluator(double tcost, double Fstart, double Fend, nvVecd *returns) : 
+    _bestCost(1e10),
+    _Fstart(Fstart),
+    _Fend(Fend)
   {
 
     _returns = returns;
@@ -214,7 +230,7 @@ public:
     }
     
     //logDEBUG("Theta: "<<_x);
-    func = rrlemaCostFunction(GetPointer(_nrets), GetPointer(_returns), _tcost, GetPointer(_grad), GetPointer(_x));
+    func = rrlemaCostFunction(GetPointer(_nrets), GetPointer(_returns), _tcost, _Fstart, _Fend, GetPointer(_grad), GetPointer(_x));
     //logDEBUG("Computed cost: "<<func);
     _grad.toArray(grad);
 
@@ -286,7 +302,7 @@ public:
     return 1.0/MathMax(_eps,0.01);
   }
 
-  double train_cg(double tcost, nvVecd *init_x, nvVecd *returns)
+  double train_cg(double tcost, double Fstart, double Fend, nvVecd *init_x, nvVecd *returns)
   {
     // Prepare the training with MinCG:
     double x[];
@@ -297,7 +313,7 @@ public:
 
     CAlglib::MinCGSetCond(state, _epsg, _epsf, _epsx, _maxIts);
 
-    nvRRLEMAEvaluator ev(tcost, returns);
+    nvRRLEMAEvaluator ev(tcost, Fstart, Fend, returns);
     CNDimensional_Rep rep;
 
     CObject objdum;

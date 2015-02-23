@@ -64,7 +64,7 @@ public:
     _maxIts = maxits;
   }
 
-  virtual double train_cg(double tcost, nvVecd* init_x, nvVecd *returns)
+  virtual double train_cg(double tcost, double Fstart, double Fend, nvVecd* init_x, nvVecd *returns)
   {
     return 0.0;
   }

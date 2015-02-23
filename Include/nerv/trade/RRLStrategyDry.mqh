@@ -50,6 +50,9 @@ public:
     _model.predict(GetPointer(_eval_returns),_Ft_1, Ft);
     //logDEBUG("Predicting: Ft="<<Ft);
 
+    // Add the newly computed signal to the list:
+    _signals.push_back(Ft);
+    
     // Compute the Rt value:
     double rt = _eval_returns.back();
     _Rt = _Ft_1 *rt - _tcost * MathAbs(Ft - _Ft_1);

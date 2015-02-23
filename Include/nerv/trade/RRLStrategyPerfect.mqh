@@ -94,6 +94,9 @@ public:
     _actual_returns.push_back(Rt);
     _wealth += Rt;
 
+    // Add the newly computed signal to the list:
+    _signals.push_back(Ft);
+    
     _Ft_1 = Ft;
     
     _signalWriter.add(_Ft_1);  

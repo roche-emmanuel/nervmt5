@@ -28,6 +28,8 @@ protected:
   nvVecd _params; // parameter vectors containing the price returns, the last position F and the intercept term.
   nvVecd _init_x;
 
+  nvVecd _signals;
+
   double _last_price;
 
   // Counters for the phases:
@@ -48,6 +50,7 @@ public:
     _numInputs(num),
     _train_returns(train_len),
     _eval_returns(num),
+    _signals(train_len+1),
     _trainLen(train_len),
     _evalLen(eval_len),
     _model(NULL),
@@ -158,7 +161,13 @@ public:
     //double sr = _model.train(_tcost, GetPointer(_train_returns));
     _init_x.fill(1.0);
     //double cost = _model.train(_tcost, GetPointer(_train_returns));
-    double cost = _model.train_cg(_tcost, GetPointer(_init_x), GetPointer(_train_returns));
+    
+    // trainigng limit signal conditions:
+    double Fstart = _signals.front();
+    double Fend = _signals.back();
+
+    double cost = _model.train_cg(_tcost, Fstart, Fend, GetPointer(_init_x), GetPointer(_train_returns));
+    
     _SR = -cost;
     //logDEBUG("Achieved SR=" << _SR << " on training.")
     // Return the achieved sharpe ratio on this training:
@@ -181,6 +190,9 @@ public:
 		double Ft;
     _model.predict(GetPointer(_eval_returns), Ft_1, Ft);
     
+    // Add the newly computed signal to the list:
+    _signals.push_back(Ft);
+
     //logDEBUG("Predicting: Ft=" << Ft);
 
     double threshold = 0.1;

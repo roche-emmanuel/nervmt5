@@ -3,7 +3,7 @@
 #include <nerv/math.mqh>
 #include "RRLModelBase.mqh"
 
-double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *grad, nvVecd *theta)
+double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, double Fstart, double Fend, nvVecd *grad, nvVecd *theta)
 {
   // Train the model with the given inputs for a given number of epochs.
   uint size = returns.size();
@@ -47,6 +47,12 @@ double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *gra
 
     //logDEBUG("On iteration " << i <<" rt="<<rt<<", rtn="<<rtn);
 
+    if(i==0) {
+      // Force the initial Ft_1 value:
+      Ft_1 = Fstart;
+    }
+      
+
     // Prepare the parameter vector:
     params.set(1, Ft_1);
     params.set(2, rvec);
@@ -56,6 +62,12 @@ double rrlCostFunction(nvVecd *nrets, nvVecd *returns, double tcost, nvVecd *gra
     //logDEBUG("Pre-tanh value: "<<val);
     Ft = nv_tanh(params * theta);
     //logDEBUG("Prediction at "<<i<<" is: Ft="<<Ft);
+
+    if(i==size-1) {
+      // Force the final Ft value:
+      Ft = Fend;
+    }
+      
 
     // From that we can build the new return value:
     Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
@@ -117,12 +129,19 @@ protected:
   nvVecd _grad;
   nvVecd _theta;
   double _tcost;
-  
+
   double _bestCost;
   nvVecd _bestTheta;
 
+  double _Fstart;
+  double _Fend;
+
 public:
-  nvRRLEvaluator(double tcost, nvVecd* returns) : _bestCost(1e10) {
+  nvRRLEvaluator(double tcost, double Fstart, double Fend, nvVecd *returns) :
+    _bestCost(1e10),
+    _Fstart(Fstart),
+    _Fend(Fend)
+  {
 
     _returns = returns;
     _nrets = returns.stdnormalize();
@@ -130,17 +149,18 @@ public:
     _tcost = tcost;
   }
 
-  virtual void Grad(double &x[],double &func,double &grad[],CObject &obj)
+  virtual void Grad(double &x[], double &func, double &grad[], CObject &obj)
   {
     _theta = x;
     //logDEBUG("Theta: "<<_theta);
-    func = rrlCostFunction(GetPointer(_nrets),GetPointer(_returns),_tcost,GetPointer(_grad),GetPointer(_theta));
+    func = rrlCostFunction(GetPointer(_nrets), GetPointer(_returns), _tcost, _Fstart, _Fend, GetPointer(_grad), GetPointer(_theta));
     //logDEBUG("Computed cost: "<<func);
     _grad.toArray(grad);
 
-    if(func<=_bestCost) {
+    if (func <= _bestCost)
+    {
       _bestCost = func;
-      _bestTheta = x;    
+      _bestTheta = x;
     }
   };
 
@@ -149,10 +169,10 @@ public:
     return _bestCost;
   }
 
-  nvVecd* getBestTheta() const
+  nvVecd *getBestTheta() const
   {
     return GetPointer(_bestTheta);
-  }  
+  }
 };
 
 class nvRRLModel : public nvRRLModelBase
@@ -165,7 +185,7 @@ protected:
   nvVecd _params;
 
 public:
-  nvRRLModel(uint num, int maxIts = 250) : _params(num+2), _theta(num+2),
+  nvRRLModel(uint num, int maxIts = 250) : _params(num + 2), _theta(num + 2),
     nvRRLModelBase(maxIts)
   {
     // Prepare the vector containing the theta values:
@@ -180,11 +200,11 @@ public:
   {
   }
 
-  virtual double predict(nvVecd *rvec, double Ft_1, double& signal)
+  virtual double predict(nvVecd *rvec, double Ft_1, double &signal)
   {
-    _params.set(0,1.0);
-    _params.set(1,Ft_1);
-    _params.set(2,(rvec-_rmean)/_rdev);
+    _params.set(0, 1.0);
+    _params.set(1, Ft_1);
+    _params.set(2, (rvec - _rmean) / _rdev);
 
     double val = _theta * _params;
     //logDEBUG("Theta vector: "<<_theta);
@@ -194,27 +214,27 @@ public:
     return signal;
   }
 
-  virtual double train_cg(double tcost, nvVecd* initx, nvVecd *returns)
+  virtual double train_cg(double tcost, double Fstart, double Fend, nvVecd *initx, nvVecd *returns)
   {
     // Prepare the training with MinCG:
     double x[];
     initx.toArray(x);
 
     CMinCGStateShell state;
-    CAlglib::MinCGCreate(x,state);
+    CAlglib::MinCGCreate(x, state);
 
     CAlglib::MinCGSetCond(state, _epsg, _epsf, _epsx, _maxIts);
 
-    nvRRLEvaluator ev(tcost,returns);
+    nvRRLEvaluator ev(tcost, Fstart, Fend, returns);
     CNDimensional_Rep rep;
 
     CObject objdum;
-    CAlglib::MinCGOptimize(state,ev,rep,false,objdum);
+    CAlglib::MinCGOptimize(state, ev, rep, false, objdum);
 
     CMinCGReportShell res;
     CAlglib::MinCGResults(state, x, res);
-    
-    logDEBUG("Optimization done with best cost: "<< ev.getBestCost())
+
+    logDEBUG("Optimization done with best cost: " << ev.getBestCost())
     _theta = x;
     _rmean = returns.mean();
     _rdev = returns.deviation();
