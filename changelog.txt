@@ -38,3 +38,4 @@
 02/23/15-12:41:45: Added start and end signals for training.
 02/23/15-14:52:19: Adding implementation of RRLCostFunction class.
 02/23/15-15:58:09: Creating proper RRLModel.
+02/23/15-16:31:30: Adding support for history generatino.

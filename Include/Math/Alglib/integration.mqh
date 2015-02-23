@@ -2712,7 +2712,7 @@ static bool CAutoGK::Func_Internal_lbl_14(CAutoGKInternalState &state,
 //--- additional memory if needed
    if(state.m_heapused==state.m_heapsize)
       MHeapResize(state.m_heap,state.m_heapsize,4*state.m_heapsize,state.m_heapwidth);
-//--- TODO: every 20 iterations recalculate errors/sums
+//--- every 20 iterations recalculate errors/sums
    if(state.m_sumerr<=state.m_eps*state.m_sumabs || state.m_heapused>=m_maxsubintervals)
      {
       state.m_r=0;

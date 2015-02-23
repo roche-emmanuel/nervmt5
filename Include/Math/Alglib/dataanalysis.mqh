@@ -3361,8 +3361,8 @@ static void CKMeans::KMeansGenerate(CMatrixDouble &xy,const int npoints,
       info=-1;
       return;
      }
-//--- TODO: special case K=1
-//--- TODO: special case K=NPoints
+//--- special case K=1
+//--- special case K=NPoints
    info=1;
 //--- Multiple passes of k-means++ algorithm
    ct.Resize(k,nvars);
@@ -13056,7 +13056,7 @@ static void CMLPTrain::MLPTrainLM(CMultilayerPerceptron &network,CMatrixDouble &
          if(invinfo<=0)
            {
             //--- if matrix can't be inverted then exit with errors
-            //--- TODO: make WCount steps in direction suggested by HMod
+            //--- make WCount steps in direction suggested by HMod
             info=-9;
             return;
            }

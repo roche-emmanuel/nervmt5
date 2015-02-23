@@ -11,6 +11,8 @@ class nvRRLModel : public nvObject
 protected:
   nvRRLModelTraits _traits;
 
+  /* A model can keep an history of relevant data. */
+
 public:
   /* Default constructor. Will assign the model traits. */
   nvRRLModel(const nvRRLModelTraits& traits);
@@ -55,6 +57,25 @@ void nvRRLModel::reset()
 
 double nvRRLModel::digest(const nvRRLDigestTraits& dt, double& confidence)
 {
+  // Default value for confidence:
+  confidence = 0.0;
+
+  if(dt.isFirst()) {
+    logDEBUG("Received first digest element, reseting RRLModel.");
+    reset();
+    return 0.0;
+  }
+
+  // This is not the first element so we should process it.
+  double price = dt.closePrice();
+  double rt = dt.priceReturn();
+
+  // But first we should add the inputs to the history if requested.
+  if(_traits.keepHistory()) {
+    //_history.add("close_prices",price);
+    //_history.add("price_returns",rt);
+  }
+
   // TODO: provide implementation.
   return 0.0;
 }

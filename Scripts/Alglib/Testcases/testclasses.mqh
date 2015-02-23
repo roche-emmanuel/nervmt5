@@ -18453,7 +18453,7 @@ static bool CTestSVDUnit::TestSVD(const bool silent)
    failthreshold=5.0E-3;
 //--- allocation
    a.Resize(maxmn,maxmn);
-//--- TODO: div by zero fail,convergence fail
+//--- div by zero fail,convergence fail
    for(gpass=1;gpass<=1;gpass++)
      {
       //--- zero matrix,several cases
@@ -19612,7 +19612,7 @@ static bool CTestLinRegUnit::TestLinReg(const bool silent)
       //--- search errors
       grothererrors=grothererrors || !allsame;
      }
-//--- TODO: Degenerate tests (when design matrix and right part are zero)
+//--- Degenerate tests (when design matrix and right part are zero)
 //--- Final report
    waserrors=(((((slerrors || slcerrors) || gropterrors) || grcoverrors) || gresterrors) || grothererrors) || grconverrors;
 //--- check
@@ -21772,7 +21772,7 @@ static void CTestDenseSolverUnit::TestCSolver(const int maxn,const int maxm,
             rfserrors=rfserrors || CMath::AbsComplex(v-bv[i])>8*CMath::m_machineepsilon*MathMax(1,CMath::AbsComplex(bv[i]));
            }
         }
-      //--- TODO: Test LS-solver on the same matrix
+      //--- Test LS-solver on the same matrix
      }
   }
 //+------------------------------------------------------------------+
