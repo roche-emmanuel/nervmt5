@@ -5,7 +5,7 @@
 /*
 Base class representing the data that can be passed to the RRL model digest method.
 */
-class nvRRLDigestTraits : public nvObject
+class nvDigestTraits : public nvObject
 {
 protected:
   double _closePrice;
@@ -15,16 +15,16 @@ protected:
 public:
   /* Default constructor,
   assign default values.*/
-  nvRRLDigestTraits();
+  nvDigestTraits();
 
   /* Copy constructor, will copy the values from the original */
-  nvRRLDigestTraits(const nvRRLDigestTraits &rhs);
+  nvDigestTraits(const nvDigestTraits &rhs);
 
   /* Assignment operator. */
-  nvRRLDigestTraits *operator=(const nvRRLDigestTraits &rhs);
+  nvDigestTraits *operator=(const nvDigestTraits &rhs);
 
   /* Assign the last close price observed. */
-  nvRRLDigestTraits *closePrice(double val);
+  nvDigestTraits *closePrice(double val);
 
   /* Retrieve the last close price observed. */
   double closePrice() const;
@@ -35,7 +35,7 @@ public:
 
   /* Mark this instance as being a first value received. thus forcing any model
   using this input to discard the state computed with previous data. */
-  nvRRLDigestTraits *first();
+  nvDigestTraits *first();
 
   /* Check if this running instance is the first of a serie. */
   bool isFirst() const;
@@ -44,26 +44,26 @@ public:
 
 ///////////////////////////////// implementation part ///////////////////////////////
 
-nvRRLDigestTraits::nvRRLDigestTraits()
+nvDigestTraits::nvDigestTraits()
   : _closePrice(0.0),
     _isFirst(true),
     _priceReturn(0.0)
 {
 }
 
-nvRRLDigestTraits::nvRRLDigestTraits(const nvRRLDigestTraits &rhs)
+nvDigestTraits::nvDigestTraits(const nvDigestTraits &rhs)
 {
   this = rhs;
 }
 
-nvRRLDigestTraits *nvRRLDigestTraits::operator=(const nvRRLDigestTraits &rhs)
+nvDigestTraits *nvDigestTraits::operator=(const nvDigestTraits &rhs)
 {
   _closePrice = rhs._closePrice;
   _isFirst = rhs._isFirst;
   return GetPointer(this);
 }
 
-nvRRLDigestTraits *nvRRLDigestTraits::closePrice(double val)
+nvDigestTraits *nvDigestTraits::closePrice(double val)
 {
   if (_closePrice != 0.0) {
     // The previous price is value, so we can compute a price return:
@@ -75,17 +75,17 @@ nvRRLDigestTraits *nvRRLDigestTraits::closePrice(double val)
   return GetPointer(this);
 }
 
-double nvRRLDigestTraits::closePrice() const
+double nvDigestTraits::closePrice() const
 {
   return _closePrice;
 }
 
-double nvRRLDigestTraits::priceReturn() const
+double nvDigestTraits::priceReturn() const
 {
   return _priceReturn;
 }
 
-nvRRLDigestTraits *nvRRLDigestTraits::first()
+nvDigestTraits *nvDigestTraits::first()
 {
   _isFirst = true;
   _closePrice = 0.0;
@@ -93,7 +93,7 @@ nvRRLDigestTraits *nvRRLDigestTraits::first()
   return GetPointer(this);
 }
 
-bool nvRRLDigestTraits::isFirst() const
+bool nvDigestTraits::isFirst() const
 {
   return _isFirst;
 }

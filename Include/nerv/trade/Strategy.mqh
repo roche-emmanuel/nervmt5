@@ -18,7 +18,7 @@ protected:
   ENUM_TIMEFRAMES _period;
   datetime _last_bar_time;
 
-  nvRRLDigestTraits _digestTraits;
+  nvDigestTraits _digestTraits;
   nvRRLModel* _model;
 
 public:
@@ -32,7 +32,7 @@ public:
   virtual void handleTick();
 
   /* Method to handle a new bar creation event. */
-  virtual double handleBar(const MqlRates &rates, ulong elapsed, double& confidence);
+  virtual bool handleBar(const MqlRates &rates, ulong elapsed, nvTradePrediction& pred);
 
   /* Assign a model instance to this strategy object. */
   void setModel(nvRRLModel* model);
@@ -319,16 +319,17 @@ void nvStrategy::handleTick()
     CHECK(CopyRates(_symbol, _period, 0, 1, rates) == 1, "Cannot copy new rates");
 
     double confidence = 0.0;
-    double signal = handleBar(rates[0], diff, confidence);
+    nvTradePrediction pred;
+    bool valid = handleBar(rates[0], diff, pred);
   }
 }
 
-double nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, double& confidence)
+bool nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePrediction& pred)
 {
   CHECK(_model!=NULL,"Invalid model.");
   
   _digestTraits.closePrice(rates.close);
-  return _model.digest(_digestTraits, confidence);
+  return _model.digest(_digestTraits, pred);
 }
 
 void nvStrategy::setModel(nvRRLModel* model)

@@ -1,24 +1,3 @@
-
-#define __WITH_POINTER_EXCEPTION__
-
-#ifdef __WITH_POINTER_EXCEPTION__
-#define THROW(msg) { nvStringStream __ss__; \
-    __ss__ << msg; \
-    Print(__ss__.str()); \
-    CObject* obj = NULL; \
-    obj.Next(); \
-  }
-#else
-#define THROW(msg) { nvStringStream __ss__; \
-    __ss__ << msg; \
-    Print(__ss__.str()); \
-    ExpertRemove(); \
-    return; \
-  }
-#endif
-
-#define CHECK(val,msg) if(!(val)) THROW(__FILE__ << "(" << __LINE__ <<") :" << msg)
-
 #include "LogManager.mqh"
 #include "FileLogger.mqh"
 #include "LogRecord.mqh"

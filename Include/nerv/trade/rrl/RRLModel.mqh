@@ -1,35 +1,35 @@
 
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
+#include <nerv/trades.mqh>
 #include "RRLModelTraits.mqh"
 #include "RRLTrainTraits.mqh"
-#include "RRLDigestTraits.mqh"
-#include "HistoryMap.mqh"
 
 /* Base class used to represent an RRL trading model. */
-class nvRRLModel : public nvObject
+class nvRRLModel : public nvTradeModel
 {
-protected:
-  nvRRLModelTraits _traits;
-
-  /* A model can keep an history of relevant data. */
-  nvHistoryMap _history;
+private:
+  nvRRLModelTraits *_traits;
 
 public:
   /* Default constructor. Will assign the model traits. */
-  nvRRLModel(const nvRRLModelTraits &traits);
+  nvRRLModel(nvRRLModelTraits *traits = NULL);
+
+  /* Traits reference constructor. This constructor will make a copy
+  of the traits so that they can be assigned to this model. */
+  nvRRLModel(const nvRRLModelTraits& traits);
 
   /* Assign the model traits. */
-  void setTraits(const nvRRLModelTraits &traits);
+  virtual void setTraits(nvRRLModelTraits *traits);
 
   /* Reset the state of this model so that the next digest cycle will
     restart from scratches. */
-  void reset();
+  virtual void reset();
 
   /* Public method used to provide a new input to the model,
     And retrieve a new prediction. This method will also output a
     confidence value computed from the predict method. */
-  double digest(const nvRRLDigestTraits &dt, double &confidence);
+  virtual bool digest(const nvDigestTraits &dt, nvTradePrediction &pred);
 
 protected:
   /* Method used to get a prediction using the current context and
@@ -45,24 +45,27 @@ protected:
 ///////////////////////////////// implementation part ///////////////////////////////
 
 
-nvRRLModel::nvRRLModel(const nvRRLModelTraits &traits)
+nvRRLModel::nvRRLModel(nvRRLModelTraits *traits) : nvTradeModel(NULL)
 {
   // Assign the traits:
   setTraits(traits);
 }
 
-void nvRRLModel::setTraits(const nvRRLModelTraits &traits)
+nvRRLModel::nvRRLModel(const nvRRLModelTraits& traits) : nvTradeModel(NULL)
 {
+  nvRRLModelTraits* copy = new nvRRLModelTraits(traits);
+  setTraits(copy);
+}
+
+void nvRRLModel::setTraits(nvRRLModelTraits *traits)
+{
+  // call parent implementation:
+  nvTradeModel::setTraits(traits);
+
+  CHECK_PTR(traits, "Invalid traits.");
+
+  RELEASE_PTR(_traits);
   _traits = traits;
-
-  _history.setPrefix(_traits.id()=="" ? "" : (_traits.id()+"_"));
-
-  if (_traits.historyLength() != _history.getSize())
-  {
-    // Need to reset the history:
-    _history.setSize(_traits.historyLength());
-    _history.clear();
-  }
 }
 
 void nvRRLModel::reset()
@@ -70,15 +73,12 @@ void nvRRLModel::reset()
 
 }
 
-double nvRRLModel::digest(const nvRRLDigestTraits &dt, double &confidence)
+bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 {
-  // Default value for confidence:
-  confidence = 0.0;
-
   if (dt.isFirst()) {
     logDEBUG("Received first digest element, reseting RRLModel.");
     reset();
-    return 0.0;
+    return false;
   }
 
   // This is not the first element so we should process it.
@@ -91,16 +91,18 @@ double nvRRLModel::digest(const nvRRLDigestTraits &dt, double &confidence)
     _history.add("price_returns", rt);
   }
 
+  // Default value for confidence:
+  double confidence = 0.0;
   double signal = 0.0;
   // TODO: provide implementation to predict the signal and the confidence.
 
   // Write the history data if requested:
   if (_traits.keepHistory()) {
-    _history.add("signals",signal);
-    _history.add("confidence",confidence);
+    _history.add("signals", signal);
+    _history.add("confidence", confidence);
   }
 
-  return signal;
+  return true;
 }
 
 double nvRRLModel::predict(const nvVecd &rvec, double &confidence)

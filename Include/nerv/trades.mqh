@@ -1,6 +1,11 @@
 
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
+#include <nerv/trade/DigestTraits.mqh>
+#include <nerv/trade/HistoryMap.mqh>
+#include <nerv/trade/TradePrediction.mqh>
+#include <nerv/trade/TradeModelTraits.mqh>
+#include <nerv/trade/TradeModel.mqh>
 #include <nerv/trade/rrl/RRLCostFunction.mqh>
 
 nvVecd nv_get_return_prices(int count, string symbol = "EURUSD", ENUM_TIMEFRAMES period = PERIOD_M1, int offset = 0)

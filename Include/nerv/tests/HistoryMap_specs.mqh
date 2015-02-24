@@ -1,6 +1,6 @@
 
 #include <nerv/unit/Testing.mqh>
-#include <nerv/trade/rrl/HistoryMap.mqh>
+#include <nerv/trade/HistoryMap.mqh>
 
 BEGIN_TEST_PACKAGE(historymap_specs)
 
