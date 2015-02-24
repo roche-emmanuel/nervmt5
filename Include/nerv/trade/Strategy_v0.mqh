@@ -1,7 +1,13 @@
+//+------------------------------------------------------------------+
+//|                                                          Log.mqh |
+//|                                         Copyright 2015, NervTech |
+//|                                https://wiki.singularityworld.net |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2015, NervTech"
+#property link      "https://wiki.singularityworld.net"
+
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
-#include <nerv/trades.mqh>
-#include <nerv/trade/rrl/RRLModel.mqh>
 
 enum PositionType
 {
@@ -10,36 +16,126 @@ enum PositionType
   POSITION_SHORT
 };
 
-/* Class used as a base for the implementation of trading strategies. */
-class nvStrategy : public nvObject
+class nvStrategy_v0 : public nvObject
 {
 protected:
   string _symbol;
   ENUM_TIMEFRAMES _period;
   datetime _last_bar_time;
+  ulong _frameCount;
+  ulong _warmUpCount;
 
-  nvRRLDigestTraits _digestTraits;
-  nvRRLModel* _model;
+  // Confidence vector:
+  nvVecd *_confs;
 
+  // Confidence adaptation:
+  double _confAdaptation;
+
+  // best price observed for the current position:
+  double _best_price;
+
+  // Stop lost mean value in pips:
+  double _stopMean;
+  // Stop lost deviation value in pips:
+  double _stopDev;
+
+  bool _useStopLoss;
 public:
-  /* Constructor taking a base symbol and period to use.*/
-  nvStrategy(string symbol, ENUM_TIMEFRAMES period = PERIOD_M1);
+  nvStrategy_v0(string symbol, ENUM_TIMEFRAMES period = PERIOD_M1)
+  {
+    _symbol = symbol;
+    _period = period;
+    _frameCount = 0;
+    _warmUpCount = 0;
 
-  /* Destructor will release the model is any. */
-  ~nvStrategy();
+    _confAdaptation = 0.9;
+    _stopMean = 20.0;
+    _stopDev = 10.0;
 
-  /* Method that should be called externally each time a new tick is received. */
-  virtual void handleTick();
+    _useStopLoss = false;
+    _confs = new nvVecd(5);
 
-  /* Method to handle a new bar creation event. */
-  virtual double handleBar(const MqlRates &rates, ulong elapsed, double& confidence);
+    // Save the time of the current bar so that we can start detecting new bars afterwards:
+    datetime curTime[1];
+    CHECK(CopyTime(_symbol, _period, 0, 1, curTime) == 1, "Cannot retrieve the time of the last bar");
+    _last_bar_time = curTime[0];
+  }
 
-  /* Assign a model instance to this strategy object. */
-  void setModel(nvRRLModel* model);
+  void setWarmUp(ulong count)
+  {
+    _warmUpCount = count;
+    _frameCount = 0;
+  }
 
+  bool isReady() const
+  {
+    return _frameCount > _warmUpCount;
+  }
 
-/////////// TODO: to clean /////////////
-#ifdef __NOTHING__
+  ~nvStrategy_v0()
+  {
+    //logDEBUG("Deleting nvStrategy_v0()");
+    //logDEBUG("Total num frames: " << _frameCount);
+
+    delete _confs;
+  }
+
+  // Retrieve the expected delta in seconds between two consecutive bars:
+  ulong getBarDelta() const
+  {
+    switch (_period)
+    {
+    case PERIOD_M1: return 60;
+    case PERIOD_M2: return 60 * 2;
+    }
+
+    THROW("Invalid period value " << (int)_period);
+    return 0;
+  }
+
+  void handleTick()
+  {
+    datetime curTime[1];
+    bool IsNewBar = false;
+
+    // copying the last bar time to the element New_Time[0]
+    CHECK(CopyTime(_symbol, _period, 0, 1, curTime) == 1, "Cannot retrieve the time of the last bar");
+
+    if (_last_bar_time != curTime[0])
+    {
+      CHECK(curTime[0] > _last_bar_time, "Going back in time " << curTime[0] << "<" << _last_bar_time);
+      ulong diff = curTime[0] - _last_bar_time;
+      ulong tdelta = getBarDelta();
+
+      // We have to update the last bar time anyway:
+      _last_bar_time = curTime[0];
+
+      CHECK(diff > (tdelta - 1), "Unexpected bar delta difference, diff=" << diff);
+      if (diff > tdelta)
+      {
+        //logWARN("More than 1 delta elapsed, missing " << (diff / tdelta - 1.0) << " bar(s).");
+        reset();
+      }
+      else
+      {
+        // Regular situation:
+        MqlRates rates[1];
+        CHECK(CopyRates(_symbol, _period, 0, 1, rates) == 1, "Cannot copy new rates");
+
+        _frameCount++;
+
+        // Handle the new bar:
+        handleNewBar(rates[0]);
+      }
+    }
+
+    // On each tick we should update the stop lost if we are in a position.
+    if (_useStopLoss && getCurrentPosition() != POSITION_NONE)
+    {
+      updateStopLoss();
+    }
+  }
+
   void updateStopLoss()
   {
     // We assume we are in a LONG or SHORT position:
@@ -84,6 +180,16 @@ public:
       // Send order to update stop lost:
       sendStopLostOrder(nstpval);
     }
+  }
+
+  virtual void reset()
+  {
+    //logDEBUG("Should override to reset the algorithm.");
+  }
+
+  virtual void handleNewBar(const MqlRates &rates)
+  {
+    logDEBUG("Should override to handle new bar. Reading close price: " << rates.close);
   }
 
   void requestPosition(int pos, double confidence = 1.0)
@@ -276,67 +382,4 @@ public:
 
     return -volume;
   }
-#endif
 };
-
-
-nvStrategy::nvStrategy(string symbol, ENUM_TIMEFRAMES period)
-{
-  _symbol = symbol;
-  _period = period;
-
-  // Save the time of the current bar so that we can start detecting new bars afterwards:
-  datetime curTime[1];
-  CHECK(CopyTime(_symbol, _period, 0, 1, curTime) == 1, "Cannot retrieve the time of the last bar");
-  _last_bar_time = curTime[0];
-}
-
-nvStrategy::~nvStrategy()
-{
-  delete _model;
-}
-
-void nvStrategy::handleTick()
-{
-  datetime curTime[1];
-
-  // copying the last bar time to the element New_Time[0]
-  CHECK(CopyTime(_symbol, _period, 0, 1, curTime) == 1, "Cannot retrieve the time of the last bar");
-
-  if (_last_bar_time != curTime[0])
-  {
-    CHECK(curTime[0] > _last_bar_time, "Going back in time " << curTime[0] << "<" << _last_bar_time);
-   
-    ulong diff = curTime[0] - _last_bar_time;
-    _last_bar_time = curTime[0];
-
-    // Ensure the time delta is correct:
-    ulong tdelta = getBarDuration(_period);
-    CHECK(diff % tdelta == 0, "Unexpected bar delta difference, diff=" << diff <<" bar duration: "<<tdelta);
-    
-    // Handle the new bar:
-    MqlRates rates[1];
-    CHECK(CopyRates(_symbol, _period, 0, 1, rates) == 1, "Cannot copy new rates");
-
-    double confidence = 0.0;
-    double signal = handleBar(rates[0], diff, confidence);
-  }
-}
-
-double nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, double& confidence)
-{
-  CHECK(_model!=NULL,"Invalid model.");
-  
-  _digestTraits.closePrice(rates.close);
-  return _model.digest(_digestTraits, confidence);
-}
-
-void nvStrategy::setModel(nvRRLModel* model)
-{
-  if(_model) {
-    delete _model;
-    _model = NULL;
-  }
-
-  _model = model;
-}

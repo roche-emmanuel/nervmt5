@@ -4,7 +4,7 @@
 
 BEGIN_TEST_PACKAGE(rrlmodel_specs)
 
-BEGIN_TEST_SUITE("RRLModelBase class")
+BEGIN_TEST_SUITE("RRLModel class")
 
 BEGIN_TEST_CASE("should be able to create an RRLModel")
   nvRRLModelTraits traits; 

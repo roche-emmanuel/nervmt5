@@ -9,6 +9,7 @@ class nvRRLModelTraits : public nvObject
 {
 protected:
   int _historyLength;
+  string _id;
 
 public:
   /* Default constructor,
@@ -30,7 +31,13 @@ public:
   nvRRLModelTraits *historyLength(int len);
 
   /* Retrieve the desired history length. */
-  int historyLength() const;  
+  int historyLength() const;
+
+  /* Assign an id to this model. */
+  nvRRLModelTraits *id(string name);
+
+  /* Retrieve the id assigned to this model. */
+  string id() const;  
 };
 
 
@@ -39,6 +46,7 @@ public:
 nvRRLModelTraits::nvRRLModelTraits()
   : _historyLength(-1)
 {
+  _id = "";
 }
 
 nvRRLModelTraits::nvRRLModelTraits(const nvRRLModelTraits &rhs)
@@ -49,6 +57,7 @@ nvRRLModelTraits::nvRRLModelTraits(const nvRRLModelTraits &rhs)
 nvRRLModelTraits *nvRRLModelTraits::operator=(const nvRRLModelTraits &rhs)
 {
   _historyLength = rhs._historyLength;
+  _id = rhs._id;
   return GetPointer(this);
 }
 
@@ -66,4 +75,15 @@ nvRRLModelTraits *nvRRLModelTraits::historyLength(int len)
 int nvRRLModelTraits::historyLength() const
 {
   return _historyLength;
+}
+
+nvRRLModelTraits *nvRRLModelTraits::id(string name)
+{
+  _id = name;
+  return GetPointer(this);
+}
+
+string nvRRLModelTraits::id() const
+{
+  return _id;
 }

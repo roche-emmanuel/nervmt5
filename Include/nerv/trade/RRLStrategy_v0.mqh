@@ -6,10 +6,10 @@
 #property copyright "Copyright 2015, NervTech"
 #property link      "https://wiki.singularityworld.net"
 
-#include <nerv/trade/Strategy.mqh>
+#include <nerv/trade/Strategy_v0.mqh>
 #include <Arrays/ArrayDouble.mqh>
 
-class nvRRLStrategy_v0 : public nvStrategy
+class nvRRLStrategy_v0 : public nvStrategy_v0
 {
 protected:
   uint _numInputs;
@@ -39,7 +39,7 @@ protected:
 
 public:
   nvRRLStrategy_v0(uint num, double rhoval, double etaval, double deltaval, double maxNormval,
-                string symbol, ENUM_TIMEFRAMES period = PERIOD_M1) : nvStrategy(symbol, period)
+                string symbol, ENUM_TIMEFRAMES period = PERIOD_M1) : nvStrategy_v0(symbol, period)
   {
     _numInputs = num;
     _maxNorm = maxNormval;

@@ -6,10 +6,10 @@
 #property copyright "Copyright 2015, NervTech"
 #property link      "https://wiki.singularityworld.net"
 
-#include <nerv/trade/Strategy.mqh>
+#include <nerv/trade/Strategy_v0.mqh>
 #include <nerv/trade/RRLModel.mqh>
 
-class nvRRLStrategy : public nvStrategy
+class nvRRLStrategy : public nvStrategy_v0
 {
 protected:
   uint _numInputs;
@@ -60,7 +60,7 @@ public:
     _tcost(tcost),
     _SR(0.0),
     _Rt(0.0),
-    nvStrategy(symbol, period)
+    nvStrategy_v0(symbol, period)
   {
     _useStopLoss = false;
     _init_x.resize(num+2);

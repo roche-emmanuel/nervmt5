@@ -41,3 +41,4 @@
 02/23/15-16:31:30: Adding support for history generatino.
 02/23/15-20:54:17: Added implementation for object map class.
 02/23/15-22:54:39: Added HistoryMap tests.
+02/24/15-16:10:02: Added initial implementation for strategy.
