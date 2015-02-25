@@ -46,3 +46,4 @@
 02/25/15-09:21:01: Added test on strategy dryrun. Minor fix in testing framework.
 02/25/15-15:09:00: Adding batch and online training support.
 02/25/15-15:59:48: Adding support for theoretical returns computation.
+02/25/15-23:12:15: Added proper computation for returns mean and deviation.

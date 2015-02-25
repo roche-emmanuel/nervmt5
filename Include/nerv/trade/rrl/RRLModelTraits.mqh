@@ -10,6 +10,7 @@ protected:
   int _numInputReturns;
   int _batchTrainLength;
   int _onlineTrainLength;
+  int _returnsMeanLength;
   double _transactionCost;
 
 public:
@@ -48,6 +49,13 @@ public:
 
   /* Retrieve the transaction cost. */
   double transactionCost() const;  
+
+  /* Assign the length of the vector that will be used
+    for the computation of the returns mean and deviation. */
+  nvRRLModelTraits* returnsMeanLength(int len);
+
+  /* Retrieve the desired length for the returns mean computation. */
+  int returnsMeanLength() const;
 };
 
 
@@ -57,6 +65,7 @@ nvRRLModelTraits::nvRRLModelTraits()
   : _numInputReturns(10),
   _batchTrainLength(-1),
   _onlineTrainLength(100),
+  _returnsMeanLength(1000),
   _transactionCost(0.00001)
 {
 }
@@ -73,6 +82,7 @@ nvRRLModelTraits *nvRRLModelTraits::operator=(const nvRRLModelTraits &rhs)
   _numInputReturns = rhs._numInputReturns;
   _batchTrainLength = rhs._batchTrainLength;
   _onlineTrainLength = rhs._onlineTrainLength;
+  _returnsMeanLength = rhs._returnsMeanLength;
   return GetPointer(this);
 }
 
@@ -118,4 +128,15 @@ nvRRLModelTraits *nvRRLModelTraits::transactionCost(double cost)
 double nvRRLModelTraits::transactionCost() const
 {
   return _transactionCost;
+}
+
+nvRRLModelTraits* nvRRLModelTraits::returnsMeanLength(int len)
+{
+  _returnsMeanLength = len;
+  return GetPointer(this);
+}
+
+int nvRRLModelTraits::returnsMeanLength() const
+{
+  return _returnsMeanLength;
 }

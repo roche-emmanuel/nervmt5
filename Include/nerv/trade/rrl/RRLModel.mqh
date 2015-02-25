@@ -14,12 +14,16 @@ private:
   nvVecd _batchTrainReturns;
   nvVecd _onlineTrainReturns;
   nvVecd _evalReturns;
+  nvVecd _lastReturns;
 
   nvVecd _theta;
+  
   double _currentSignal;
   double _returnMean;
-  double _returnMean2;
+  double _returnDev;
   double _wealth;
+
+  bool _batchTrainNeeded;
 
 public:
   /* Default constructor. Will assign the model traits. */
@@ -74,8 +78,9 @@ nvRRLModel::nvRRLModel(nvRRLModelTraits *traits)
   : _traits(NULL),
     _currentSignal(0.0),
     _returnMean(0.0),
-    _returnMean2(1.0),
+    _returnDev(0.0),
     _wealth(0.0),
+    _batchTrainNeeded(true),
     nvTradeModel(NULL)
 {
   if (traits != NULL) {
@@ -105,14 +110,17 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   int ni = _traits.numInputReturns();
   int blen = _traits.batchTrainLength();
   int olen = _traits.onlineTrainLength();
+  int rlen = _traits.returnsMeanLength();
 
   CHECK(ni > 0, "Invalid number of input returns.");
+  CHECK(rlen > 0, "Invalid number of returns for mean computation.");
   CHECK(blen >= 0 || olen >= 0, "Invalid training settings.");
 
   _theta.resize(ni + 2, 1.0);
   _batchTrainReturns.resize(MathMax(blen, 0));
   _onlineTrainReturns.resize(MathMax(olen, 0));
   _evalReturns.resize(ni);
+  _lastReturns.resize(rlen);
 }
 
 void nvRRLModel::reset()
@@ -161,13 +169,20 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     ready = false;
   }
 
-  if (bcount == _traits.batchTrainLength())
+  if (bcount < _traits.returnsMeanLength())
   {
-    logDEBUG("Performing batch training at bcount=" << bcount);
-    performBatchTraining();
+    // We don't have enough bars to compute the returns mean and deviation.
+    ready = false;
   }
 
   if (ready) {
+    if(_traits.batchTrainLength() >= 0 && _batchTrainNeeded) 
+    {
+      logDEBUG("Performing batch training at bcount=" << bcount);
+      _batchTrainNeeded = false;
+      performBatchTraining();
+    }
+
     if (_traits.onlineTrainLength() >= 0)
     {
       // perform the online training.
@@ -192,15 +207,14 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     _history.add("confidence", confidence);
 
     // Compute the return mean and deviation:
-    double dev = MathSqrt(_returnMean2 - _returnMean * _returnMean);
     _history.add("return_mean", _returnMean);
-    _history.add("return_dev", dev);
+    _history.add("return_dev", _returnDev);
 
     // Also compute the theoritical return:
     double Ft = getCurrentSignal();
     double tcost = _traits.transactionCost();
     double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);          
-    _history.add("theoritical_returns", Rt);
+    _history.add("theoretical_returns", Rt);
 
     // And compute the total wealth:
     _wealth += Rt;
@@ -218,13 +232,9 @@ double nvRRLModel::predict(const nvVecd &rvec, double &confidence)
   confidence = 1.0;
   nvVecd params(rvec.size() + 2);
 
-  // Compute the current deviation for the mean and mean2 values:
-  double rmean = _returnMean;
-  double rdev = MathSqrt(_returnMean2 - _returnMean * _returnMean);
-
   params.set(0, 1.0);
   params.set(1, Ft_1);
-  params.set(2, (rvec - rmean) / rdev);
+  params.set(2, (rvec - _returnMean) / _returnDev);
 
   double val = _theta * params;
   return nv_tanh(val);
@@ -246,11 +256,11 @@ void nvRRLModel::addPriceReturn(double rt)
   }
 
   _evalReturns.push_back(rt);
+  _lastReturns.push_back(rt);
 
-  // This method should also update the return mean and deviation exponential moving averages:
-  double eps = 0.0001;
-  _returnMean = _returnMean + eps * (rt - _returnMean);
-  _returnMean2 = _returnMean2 + eps * (rt * rt - _returnMean2);
+  // We can compute the returns mean and deviation right here:
+  _returnMean = _lastReturns.mean();
+  _returnDev = _lastReturns.deviation();
 }
 
 void nvRRLModel::performOnlineTraining()
