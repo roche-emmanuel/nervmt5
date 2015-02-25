@@ -1,7 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/math.mqh>
 #include <nerv/trades.mqh>
-#include <nerv/trade/rrl/RRLModel.mqh>
 
 enum PositionType
 {
@@ -19,7 +18,7 @@ protected:
   datetime _last_bar_time;
 
   nvDigestTraits _digestTraits;
-  nvRRLModel* _model;
+  nvTradeModel* _model;
 
 public:
   /* Constructor taking a base symbol and period to use.*/
@@ -35,7 +34,13 @@ public:
   virtual bool handleBar(const MqlRates &rates, ulong elapsed, nvTradePrediction& pred);
 
   /* Assign a model instance to this strategy object. */
-  void setModel(nvRRLModel* model);
+  void setModel(nvTradeModel* model);
+
+  /* Retrieve the model assigned to this strategy. */
+  nvTradeModel* getModel() const;
+
+  /* Method used to perform a dryrun of this strategy given a vector of input prices. */
+  virtual void dryrun(const nvVecd& prices);
 
 
 /////////// TODO: to clean /////////////
@@ -293,7 +298,7 @@ nvStrategy::nvStrategy(string symbol, ENUM_TIMEFRAMES period)
 
 nvStrategy::~nvStrategy()
 {
-  delete _model;
+  RELEASE_PTR(_model);
 }
 
 void nvStrategy::handleTick()
@@ -332,12 +337,36 @@ bool nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePredicti
   return _model.digest(_digestTraits, pred);
 }
 
-void nvStrategy::setModel(nvRRLModel* model)
+void nvStrategy::setModel(nvTradeModel* model)
 {
-  if(_model) {
-    delete _model;
-    _model = NULL;
-  }
-
+  RELEASE_PTR(_model);
   _model = model;
+}
+
+nvTradeModel* nvStrategy::getModel() const
+{
+  return _model;
+}
+
+void nvStrategy::dryrun(const nvVecd& prices)
+{
+  // perform a run on the provided returns:
+  uint num = prices.size();
+  
+  CHECK(num > 2,"Invalid size for prices vector.");
+
+  MqlRates rates;
+  rates.close = prices[0];
+
+  ulong elapsed = getBarDuration(_period);
+  nvTradePrediction pred;
+
+  // initialization:
+  handleBar(rates,elapsed,pred);
+
+  for (uint i = 1; i < num; ++i)
+  {
+    rates.close = prices[i];
+    handleBar(rates,elapsed,pred);
+  }
 }

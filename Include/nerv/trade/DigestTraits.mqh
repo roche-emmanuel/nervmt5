@@ -9,7 +9,6 @@ class nvDigestTraits : public nvObject
 {
 protected:
   double _closePrice;
-  double _isFirst;
   double _priceReturn;
 
 public:
@@ -46,7 +45,6 @@ public:
 
 nvDigestTraits::nvDigestTraits()
   : _closePrice(0.0),
-    _isFirst(true),
     _priceReturn(0.0)
 {
 }
@@ -59,7 +57,6 @@ nvDigestTraits::nvDigestTraits(const nvDigestTraits &rhs)
 nvDigestTraits *nvDigestTraits::operator=(const nvDigestTraits &rhs)
 {
   _closePrice = rhs._closePrice;
-  _isFirst = rhs._isFirst;
   return GetPointer(this);
 }
 
@@ -67,7 +64,6 @@ nvDigestTraits *nvDigestTraits::closePrice(double val)
 {
   if (_closePrice != 0.0) {
     // The previous price is value, so we can compute a price return:
-    _isFirst = false;
     _priceReturn = val - _closePrice;
   }
 
@@ -87,7 +83,6 @@ double nvDigestTraits::priceReturn() const
 
 nvDigestTraits *nvDigestTraits::first()
 {
-  _isFirst = true;
   _closePrice = 0.0;
   _priceReturn = 0.0;
   return GetPointer(this);
@@ -95,5 +90,5 @@ nvDigestTraits *nvDigestTraits::first()
 
 bool nvDigestTraits::isFirst() const
 {
-  return _isFirst;
+  return _closePrice==0.0;
 }

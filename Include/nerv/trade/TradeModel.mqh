@@ -19,6 +19,9 @@ public:
   /* destructor, will release the traits if applicable. */
   ~nvTradeModel();
 
+  /* Retrieve the history map in this object. */
+  nvHistoryMap* getHistoryMap();
+
   /* Assign the model traits. */
   virtual void setTraits(nvTradeModelTraits *traits);
 
@@ -50,6 +53,11 @@ nvTradeModel::~nvTradeModel()
   RELEASE_PTR(_traits);
 }
 
+nvHistoryMap* nvTradeModel::getHistoryMap()
+{
+  return GetPointer(_history);
+}
+
 void nvTradeModel::setTraits(nvTradeModelTraits *traits)
 {
   CHECK_PTR(traits, "Invalid traits.");
@@ -60,7 +68,8 @@ void nvTradeModel::setTraits(nvTradeModelTraits *traits)
   _traits = traits;
 
   _history.setPrefix(_traits.id() == "" ? "" : (_traits.id() + "_"));
-
+  _history.setAutoWrite(_traits.autoWriteHistory());
+  
   if (_traits.historyLength() != _history.getSize())
   {
     // Need to reset the history:

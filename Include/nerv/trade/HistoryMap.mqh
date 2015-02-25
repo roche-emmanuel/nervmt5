@@ -8,6 +8,7 @@ class nvHistoryMap : public nvObjectMap
 protected:
   int _size;
   string _prefix;
+  bool _autoWrite;
 
 public:
   /* Constructor. Used to specify the desired size of the history vectors.*/
@@ -35,17 +36,24 @@ public:
   /* Assign a prefix that will be prepended to the file names
    when writing the channels to the disk. */
   void setPrefix(string prefix);
+
+  /* Specify if the history data should automaticaly be written to 
+  disk when this history object is destroyed. Default value is true. */
+  void setAutoWrite(bool enable);
 };
 
 nvHistoryMap::nvHistoryMap(int size)
-  : _size(size)
+  : _size(size),
+    _autoWrite(true)
 {
   _prefix = "";
 }
 
 nvHistoryMap::~nvHistoryMap()
 {
-  writeToDisk();
+  if (_autoWrite) {
+    writeToDisk();
+  }
 }
 
 void nvHistoryMap::add(string channel, double value)
@@ -72,4 +80,9 @@ void nvHistoryMap::writeToDisk() const
 void nvHistoryMap::setPrefix(string prefix)
 {
   _prefix = prefix;
+}
+
+void nvHistoryMap::setAutoWrite(bool enable)
+{
+  _autoWrite = enable;
 }

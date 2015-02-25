@@ -10,6 +10,7 @@ class nvTradeModelTraits : public nvObject
 protected:
   int _historyLength;
   string _id;
+  bool _autoWriteHistory;
 
 public:
   /* Default constructor,
@@ -38,13 +39,20 @@ public:
 
   /* Retrieve the id assigned to this model. */
   string id() const;  
+
+  /* Assign the auto write history mode. */
+  nvTradeModelTraits *autoWriteHistory(bool enable);
+
+  /* Retrieve the auto write history mode. */
+  bool autoWriteHistory() const;  
 };
 
 
 ///////////////////////////////// implementation part ///////////////////////////////
 
 nvTradeModelTraits::nvTradeModelTraits()
-  : _historyLength(-1)
+  : _historyLength(-1),
+  _autoWriteHistory(true)
 {
   _id = "";
 }
@@ -58,6 +66,7 @@ nvTradeModelTraits *nvTradeModelTraits::operator=(const nvTradeModelTraits &rhs)
 {
   _historyLength = rhs._historyLength;
   _id = rhs._id;
+  _autoWriteHistory = rhs._autoWriteHistory;
   return GetPointer(this);
 }
 
@@ -86,4 +95,15 @@ nvTradeModelTraits *nvTradeModelTraits::id(string name)
 string nvTradeModelTraits::id() const
 {
   return _id;
+}
+
+nvTradeModelTraits *nvTradeModelTraits::autoWriteHistory(bool enable)
+{
+  _autoWriteHistory = enable;
+  return GetPointer(this);
+}
+
+bool nvTradeModelTraits::autoWriteHistory() const
+{
+  return _autoWriteHistory;
 }

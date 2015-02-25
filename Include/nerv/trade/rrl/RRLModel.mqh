@@ -17,7 +17,7 @@ public:
 
   /* Traits reference constructor. This constructor will make a copy
   of the traits so that they can be assigned to this model. */
-  nvRRLModel(const nvRRLModelTraits& traits);
+  nvRRLModel(const nvRRLModelTraits &traits);
 
   /* Assign the model traits. */
   virtual void setTraits(nvRRLModelTraits *traits);
@@ -45,15 +45,21 @@ protected:
 ///////////////////////////////// implementation part ///////////////////////////////
 
 
-nvRRLModel::nvRRLModel(nvRRLModelTraits *traits) : nvTradeModel(NULL)
+nvRRLModel::nvRRLModel(nvRRLModelTraits *traits)
+  : _traits(NULL),
+    nvTradeModel(NULL)
 {
-  // Assign the traits:
-  setTraits(traits);
+  if (traits != NULL) {
+    // Assign the traits:
+    setTraits(traits);
+  }
 }
 
-nvRRLModel::nvRRLModel(const nvRRLModelTraits& traits) : nvTradeModel(NULL)
+nvRRLModel::nvRRLModel(const nvRRLModelTraits &traits)
+  : _traits(NULL),
+    nvTradeModel(NULL)
 {
-  nvRRLModelTraits* copy = new nvRRLModelTraits(traits);
+  nvRRLModelTraits *copy = new nvRRLModelTraits(traits);
   setTraits(copy);
 }
 

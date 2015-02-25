@@ -43,3 +43,4 @@
 02/23/15-22:54:39: Added HistoryMap tests.
 02/24/15-16:10:02: Added initial implementation for strategy.
 02/24/15-22:40:11: Refactoring classes for better trade model organization.
+02/25/15-09:21:01: Added test on strategy dryrun. Minor fix in testing framework.
