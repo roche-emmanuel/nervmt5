@@ -44,3 +44,4 @@
 02/24/15-16:10:02: Added initial implementation for strategy.
 02/24/15-22:40:11: Refactoring classes for better trade model organization.
 02/25/15-09:21:01: Added test on strategy dryrun. Minor fix in testing framework.
+02/25/15-15:09:00: Adding batch and online training support.

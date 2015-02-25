@@ -1,0 +1,2 @@
+- To add support for comment in MQL5 files in sublimetext:
+  Add the "source.mq5" in the list of the "Comments (C++).tmPreferences" file (in the C++ package folder)

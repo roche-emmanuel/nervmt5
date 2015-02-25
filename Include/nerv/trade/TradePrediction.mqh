@@ -10,6 +10,7 @@ class nvTradePrediction : public nvObject
 protected:
   double _signal;
   double _confidence;
+  bool _valid;
 
 public:
   /* Default constructor,
@@ -33,6 +34,12 @@ public:
 
   /* Retrieve the confidence assigned to this prediction. */
   double confidence();
+
+  /* Mark this prediction as being valid or not. */
+  nvTradePrediction* valid(bool enable);
+
+  /* Retrieve the validity status of this prediction. */
+  bool valid() const;
 };
 
 
@@ -40,7 +47,8 @@ public:
 
 nvTradePrediction::nvTradePrediction()
   : _signal(0.0),
-  _confidence(0.0)
+  _confidence(0.0),
+  _valid(false)
 {
 }
 
@@ -53,6 +61,7 @@ nvTradePrediction *nvTradePrediction::operator=(const nvTradePrediction &rhs)
 {
   _signal = rhs._signal;
   _confidence = rhs._confidence;
+  _valid = rhs._valid;
   return GetPointer(this);
 }
 
@@ -76,4 +85,15 @@ nvTradePrediction* nvTradePrediction::confidence(double conf)
 double nvTradePrediction::confidence()
 {
   return _confidence;
+}
+
+nvTradePrediction* nvTradePrediction::valid(bool enable)
+{
+  _valid = enable;
+  return GetPointer(this);
+}
+
+bool nvTradePrediction::valid() const
+{
+  return _valid;
 }

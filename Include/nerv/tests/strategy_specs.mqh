@@ -33,7 +33,7 @@ BEGIN_TEST_CASE("should support dryrun")
   nvVecd prices(size);
   for(int i=0; i<size; ++i)
   {
-    prices.set(i,i);
+    prices.set(i,i+1); // The clsoe price should never be 0.0
   }
   //prices.randomize(1.1,1.4);
 
@@ -46,10 +46,16 @@ BEGIN_TEST_CASE("should support dryrun")
   REQUIRE_GE(history.size(),4);
 
   nvVecd* gen_prices = (nvVecd*)history.get("close_prices");
-  REQUIRE(IS_VALID_POINTER(gen_prices));
+  REQUIRE_VALID_PTR(gen_prices);
   REQUIRE_EQUAL(gen_prices.size(),size-1);
-  REQUIRE_EQUAL(gen_prices[0],1);
-  REQUIRE_EQUAL(gen_prices[size-2],size-1);
+  REQUIRE_EQUAL(gen_prices[0],2);
+  REQUIRE_EQUAL(gen_prices[size-2],size);
+
+  // Also check the return prices:
+  nvVecd* gen_returns = (nvVecd*)history.get("price_returns");
+  REQUIRE_VALID_PTR(gen_returns);
+  nvVecd rets(size-1,1.0);
+  REQUIRE_EQUAL(gen_returns,rets);
 END_TEST_CASE()
 
 END_TEST_SUITE()

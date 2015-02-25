@@ -10,6 +10,8 @@ class nvDigestTraits : public nvObject
 protected:
   double _closePrice;
   double _priceReturn;
+  bool _isFirst;
+  long _barCount;
 
 public:
   /* Default constructor,
@@ -38,6 +40,10 @@ public:
 
   /* Check if this running instance is the first of a serie. */
   bool isFirst() const;
+
+  /* Retrieve the number of valid bars received so far. 
+  This value will be incremented each time a new close price is received.*/
+  long barCount() const;
 };
 
 
@@ -45,7 +51,9 @@ public:
 
 nvDigestTraits::nvDigestTraits()
   : _closePrice(0.0),
-    _priceReturn(0.0)
+    _priceReturn(0.0),
+    _isFirst(true),
+    _barCount(0)
 {
 }
 
@@ -57,6 +65,9 @@ nvDigestTraits::nvDigestTraits(const nvDigestTraits &rhs)
 nvDigestTraits *nvDigestTraits::operator=(const nvDigestTraits &rhs)
 {
   _closePrice = rhs._closePrice;
+  _priceReturn = rhs._priceReturn;
+  _isFirst = rhs._isFirst;
+  _barCount = rhs._barCount;
   return GetPointer(this);
 }
 
@@ -65,6 +76,8 @@ nvDigestTraits *nvDigestTraits::closePrice(double val)
   if (_closePrice != 0.0) {
     // The previous price is value, so we can compute a price return:
     _priceReturn = val - _closePrice;
+    _isFirst = false;
+    _barCount++;
   }
 
   _closePrice = val;
@@ -83,12 +96,19 @@ double nvDigestTraits::priceReturn() const
 
 nvDigestTraits *nvDigestTraits::first()
 {
+  _isFirst = true;
   _closePrice = 0.0;
   _priceReturn = 0.0;
+  _barCount = 0;
   return GetPointer(this);
 }
 
 bool nvDigestTraits::isFirst() const
 {
-  return _closePrice==0.0;
+  return _isFirst;
+}
+
+long nvDigestTraits::barCount() const
+{
+  return _barCount;
 }
