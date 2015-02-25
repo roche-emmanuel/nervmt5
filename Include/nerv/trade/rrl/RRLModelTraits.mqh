@@ -10,6 +10,7 @@ protected:
   int _numInputReturns;
   int _batchTrainLength;
   int _onlineTrainLength;
+  double _transactionCost;
 
 public:
   /* Default constructor,
@@ -41,6 +42,12 @@ public:
 
   /* Retrieve the desired length for the batch training. */
   int onlineTrainLength() const;
+
+  /* Assign the transaction cost. */
+  nvRRLModelTraits *transactionCost(double cost);
+
+  /* Retrieve the transaction cost. */
+  double transactionCost() const;  
 };
 
 
@@ -49,7 +56,8 @@ public:
 nvRRLModelTraits::nvRRLModelTraits()
   : _numInputReturns(10),
   _batchTrainLength(-1),
-  _onlineTrainLength(100)
+  _onlineTrainLength(100),
+  _transactionCost(0.00001)
 {
 }
 
@@ -99,4 +107,15 @@ nvRRLModelTraits* nvRRLModelTraits::onlineTrainLength(int len)
 int nvRRLModelTraits::onlineTrainLength() const
 {
   return _onlineTrainLength;
+}
+
+nvRRLModelTraits *nvRRLModelTraits::transactionCost(double cost)
+{
+  _transactionCost = cost;
+  return GetPointer(this);
+}
+
+double nvRRLModelTraits::transactionCost() const
+{
+  return _transactionCost;
 }

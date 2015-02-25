@@ -8,7 +8,7 @@ Logs/*
 
 # Ignore the generated files:
 # Files/*
-Files/test_*
+Files/test*
 Files/TestResults.html
 Files/RRL_Results.html
 Files/test.log

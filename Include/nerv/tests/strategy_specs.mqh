@@ -58,6 +58,34 @@ BEGIN_TEST_CASE("should support dryrun")
   REQUIRE_EQUAL(gen_returns,rets);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support dryrun with a real price serie")
+  nvVecd prices("eur_prices.txt");
+  REQUIRE_EQUAL(prices.size(),7123);
+
+  {
+    nvStrategy st("EURUSD",PERIOD_M1);  
+
+    // Assign a model to the strategy:
+    nvRRLModelTraits traits;
+    
+    // Keep history:
+    traits.historyLength(0);
+
+    // Do not write history data to disk.
+    traits.autoWriteHistory(true); 
+
+    traits.id("test1_eur");
+    st.setModel(new nvRRLModel(traits));
+
+    st.dryrun(prices);    
+  }
+
+  // Should have written the result files:
+  nvVecd gen_prices("test1_eur_close_prices.txt");
+  REQUIRE_EQUAL(gen_prices.size(),7122);
+  REQUIRE_EQUAL(gen_prices[0],prices[1]);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
