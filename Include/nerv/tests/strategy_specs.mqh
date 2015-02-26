@@ -89,8 +89,8 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   string symbol = "EURUSD";
   ENUM_TIMEFRAMES period = PERIOD_M1;
-  int offset = 1000;
-  int count = 80000;
+  int offset = 80000;
+  int count = 20000;
 
   double arr[];
   int res = CopyClose(symbol, period, offset, count, arr);

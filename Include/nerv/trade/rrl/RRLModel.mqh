@@ -339,7 +339,7 @@ void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext& ctx)
     double learningRate = 0.01; // TODO: provide as trait.
     _theta += ctx.dDt * learningRate;
 
-    logDEBUG("New theta norm: "<< _theta.norm());
+    //logDEBUG("New theta norm: "<< _theta.norm());
     
     // Validate the norm of the theta vector:
     validateThetaNorm();

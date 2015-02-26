@@ -24,7 +24,9 @@ protected:
 
 public:
   nvObjectMap() : _len(0) {};
-  ~nvObjectMap() {};
+  virtual ~nvObjectMap() {
+    clear();
+  };
 
   virtual string toString() const
   {
