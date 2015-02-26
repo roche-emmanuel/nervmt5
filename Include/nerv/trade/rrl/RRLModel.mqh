@@ -5,6 +5,19 @@
 #include "RRLModelTraits.mqh"
 #include "RRLTrainTraits.mqh"
 
+struct nvRRLOnlineTrainingContext
+{
+  nvVecd dFt_1;
+  nvVecd dFt;
+  nvVecd dRt;
+  nvVecd dDt;
+  nvVecd params;
+
+  double Ft_1;
+  double A;
+  double B;
+};
+
 /* Base class used to represent an RRL trading model. */
 class nvRRLModel : public nvTradeModel
 {
@@ -24,6 +37,8 @@ private:
   double _wealth;
 
   bool _batchTrainNeeded;
+
+  nvRRLOnlineTrainingContext _onlineContext;
 
 public:
   /* Default constructor. Will assign the model traits. */
@@ -46,6 +61,10 @@ public:
   virtual bool digest(const nvDigestTraits &dt, nvTradePrediction &pred);
 
 protected:
+  /* Method used to build the prediction from a parameter vector and the 
+  current theta vector. */
+  virtual double predict(const nvVecd& params, const nvVecd& theta);
+
   /* Method used to get a prediction using the current context and
    the newly provided inputs. This call will also provide a confidence value.
    The confidence will always be between 0.0 and 1.0. */
@@ -58,7 +77,7 @@ protected:
   virtual void addPriceReturn(double rt);
 
   /* perform online training. */
-  virtual void performOnlineTraining();
+  virtual void performOnlineTraining(nvRRLOnlineTrainingContext& ctx);
 
   /* perform batch training. */
   virtual void performBatchTraining();
@@ -68,6 +87,12 @@ protected:
 
   /* Retrieve the current (or latest) signal emitted by this model. */
   virtual double getCurrentSignal() const;
+
+  /* Initialize the online training context. */
+  virtual void initOnlineContext(nvRRLOnlineTrainingContext& context);
+
+  /* Ensure that the norm of the theta vector is not becoming too big. */
+  virtual void validateThetaNorm();
 };
 
 
@@ -125,7 +150,8 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
 void nvRRLModel::reset()
 {
-
+  logDEBUG("Resetting RRLModel.")
+  initOnlineContext(_onlineContext);
 }
 
 bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
@@ -186,8 +212,8 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     if (_traits.onlineTrainLength() >= 0)
     {
       // perform the online training.
-      logDEBUG("Performing online training at bcount=" << bcount);
-      performOnlineTraining();
+      // logDEBUG("Performing online training at bcount=" << bcount);
+      performOnlineTraining(_onlineContext);
     }
 
     // perform the evaluation:
@@ -219,15 +245,33 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     // And compute the total wealth:
     _wealth += Rt;
     _history.add("wealth", _wealth);
+
+    // Also write the expoential moving average version of the sharpe ratio:
+    double eSR = 0.0;
+    double A = _onlineContext.A;
+    double B = _onlineContext.B;
+    if(B - A*A != 0.0) {
+      eSR = A/MathSqrt(B-A*A);
+    }
+    _history.add("ema_SR",eSR);
+
+    // Also write the norm of the theta vector:
+    _history.add("theta_norm",_theta.norm());
   }
 
   return ready;
 }
 
+double nvRRLModel::predict(const nvVecd& params, const nvVecd& theta)
+{
+  double val = theta * params;
+  return nv_tanh(val);  
+}
+
 double nvRRLModel::predict(const nvVecd &rvec, double &confidence)
 {
   double Ft_1 = getCurrentSignal();
-  logDEBUG("Previous signal is : " << Ft_1);
+  // logDEBUG("Previous signal is : " << Ft_1);
 
   confidence = 1.0;
   nvVecd params(rvec.size() + 2);
@@ -236,8 +280,7 @@ double nvRRLModel::predict(const nvVecd &rvec, double &confidence)
   params.set(1, Ft_1);
   params.set(2, (rvec - _returnMean) / _returnDev);
 
-  double val = _theta * params;
-  return nv_tanh(val);
+  return predict(params,_theta);
 }
 
 void nvRRLModel::train(const nvRRLTrainTraits &trainTraits)
@@ -263,9 +306,55 @@ void nvRRLModel::addPriceReturn(double rt)
   _returnDev = _lastReturns.deviation();
 }
 
-void nvRRLModel::performOnlineTraining()
+void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext& ctx)
 {
+  // For now we just use the current return vector to perform the training.
+  double A = ctx.A;
+  double B = ctx.B;
+  double Ft_1 = getCurrentSignal();
 
+  ctx.params.set(0, 1.0);
+  ctx.params.set(1, Ft_1);
+  ctx.params.set(2, (_evalReturns - _returnMean) / _returnDev);
+
+  double rt = _evalReturns.back();
+
+  double Ft = predict(ctx.params,_theta);
+  double tcost = _traits.transactionCost();
+  double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);    
+
+  if(B-A*A != 0.0) {
+    // We can perform the training.
+    // 1. Compute the new value of dFt/dw
+    ctx.dFt = ctx.params + ctx.dFt_1 * _theta[1];
+
+    // 2. compute dRt/dw
+    double dsign = tcost * nv_sign(Ft - Ft_1);
+    ctx.dRt = ctx.dFt_1 * (rt + dsign) - ctx.dFt * dsign; 
+
+    // 3. compute dDt/dw
+    ctx.dDt = ctx.dRt * (B - A * Rt)/MathPow(B - A*A,1.5);
+
+    // 4. update Theta vector:
+    double learningRate = 0.01; // TODO: provide as trait.
+    _theta += ctx.dDt * learningRate;
+
+    logDEBUG("New theta norm: "<< _theta.norm());
+    
+    // Validate the norm of the theta vector:
+    validateThetaNorm();
+
+	  // Advance one step:
+	  ctx.dFt_1 = ctx.dFt;    
+  }
+
+  // The previous computation might have updated the value of Ft
+  // So we might want to recompute Ft and Rt here.
+
+  // Use Rt to update A and B:
+  double adapt = 0.01; // TODO: Provide as trait.
+  ctx.A = A + adapt * (Rt - A);
+  ctx.B = B + adapt * (Rt*Rt - B);
 }
 
 void nvRRLModel::performBatchTraining()
@@ -282,4 +371,22 @@ double nvRRLModel::evaluate(double &confidence)
 double nvRRLModel::getCurrentSignal() const
 {
   return _currentSignal;
+}
+
+void nvRRLModel::initOnlineContext(nvRRLOnlineTrainingContext& context)
+{
+  logDEBUG("Initializing online training context");
+  context.A = 0.0;
+  context.B = 0.0;
+  context.dFt_1.resize(_theta.size());
+  context.params.resize(_theta.size());
+}
+
+void nvRRLModel::validateThetaNorm()
+{
+  double tn = _theta.norm();
+  double maxNorm = 5.0;
+  if(tn>maxNorm) {
+    _theta *= exp(-tn/maxNorm + 1);
+  }
 }

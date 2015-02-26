@@ -58,7 +58,7 @@ BEGIN_TEST_CASE("should support dryrun")
   REQUIRE_EQUAL(gen_returns,rets);
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("should support dryrun with a real price serie")
+XBEGIN_TEST_CASE("should support dryrun with a real price serie")
   nvVecd prices("eur_prices.txt");
   REQUIRE_EQUAL(prices.size(),7123);
 
@@ -85,6 +85,39 @@ BEGIN_TEST_CASE("should support dryrun with a real price serie")
   REQUIRE_EQUAL(gen_prices.size(),7122);
   REQUIRE_EQUAL(gen_prices[0],prices[1]);
 END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
+  string symbol = "EURUSD";
+  ENUM_TIMEFRAMES period = PERIOD_M1;
+  int offset = 1000;
+  int count = 80000;
+
+  double arr[];
+  int res = CopyClose(symbol, period, offset, count, arr);
+  REQUIRE_EQUAL(res,count);
+
+  // build a vector from the prices:
+  nvVecd prices(arr);
+
+  {
+    nvStrategy st(symbol,period);  
+
+    // Assign a model to the strategy:
+    nvRRLModelTraits traits;
+    
+    // Keep history:
+    traits.historyLength(0);
+
+    // Do not write history data to disk.
+    traits.autoWriteHistory(true); 
+
+    traits.id("test1_eur");
+    st.setModel(new nvRRLModel(traits));
+
+    st.dryrun(prices);    
+  }
+END_TEST_CASE()
+
 
 END_TEST_SUITE()
 

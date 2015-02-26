@@ -47,3 +47,4 @@
 02/25/15-15:09:00: Adding batch and online training support.
 02/25/15-15:59:48: Adding support for theoretical returns computation.
 02/25/15-23:12:15: Added proper computation for returns mean and deviation.
+02/26/15-18:37:43: Added initial implementation for online training model.
