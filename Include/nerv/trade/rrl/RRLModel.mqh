@@ -283,11 +283,6 @@ double nvRRLModel::predict(const nvVecd &rvec, double &confidence)
   return predict(params,_theta);
 }
 
-void nvRRLModel::train(const nvRRLTrainTraits &trainTraits)
-{
-  // TODO: provide implementation.
-}
-
 void nvRRLModel::addPriceReturn(double rt)
 {
   if (_traits.batchTrainLength() >= 0) {
@@ -326,7 +321,7 @@ void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext& ctx)
   if(B-A*A != 0.0) {
     // We can perform the training.
     // 1. Compute the new value of dFt/dw
-    ctx.dFt = ctx.params + ctx.dFt_1 * _theta[1];
+    ctx.dFt = (ctx.params + ctx.dFt_1 * _theta[1])*(1 - Ft*Ft);
 
     // 2. compute dRt/dw
     double dsign = tcost * nv_sign(Ft - Ft_1);

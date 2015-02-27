@@ -12,3 +12,9 @@ St. Wealth mean: -0.05596329466185773
 St. Wealth deviation: 0.0386016283685143
 St. Max DrawDown mean: 0.06892669452989293
 St. Max DrawDown deviation: 0.0341479098543477
+
+- When fixed the computation of dFt/dw (adding the (1 - Ft*Ft) multiplier) we get:
+St. Wealth mean: -0.06721611303258085
+St. Wealth deviation: 0.02731523565676583
+St. Max DrawDown mean: 0.07601671241499514
+St. Max DrawDown deviation: 0.02598442805397161

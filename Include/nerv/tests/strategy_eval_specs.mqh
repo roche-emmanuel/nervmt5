@@ -39,8 +39,8 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   // build a vector from the prices:
   nvVecd all_prices(arr);
 
-  nvVecd final_wealth;
-  nvVecd max_dd;
+  // nvVecd final_wealth;
+  // nvVecd max_dd;
   nvVecd st_final_wealth;
   nvVecd st_max_dd;
   
@@ -67,19 +67,19 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
 
     st.dryrun(prices);
 
-    {
-      // Now retrieve the wealth data:
-      nvVecd* wealth = (nvVecd*)st.getModel().getHistoryMap().get("theoretical_wealth");
-      REQUIRE_VALID_PTR(wealth);
-      double fw = wealth.back();
-      logDEBUG("Acheived Th. final wealth: "<<fw);
-      final_wealth.push_back(fw);
+    // {
+    //   // Now retrieve the wealth data:
+    //   nvVecd* wealth = (nvVecd*)st.getModel().getHistoryMap().get("theoretical_wealth");
+    //   REQUIRE_VALID_PTR(wealth);
+    //   double fw = wealth.back();
+    //   logDEBUG("Acheived Th. final wealth: "<<fw);
+    //   final_wealth.push_back(fw);
 
-      // Compute the max drawndown of this run:
-      double dd = computeMaxDrawnDown(wealth);
-      logDEBUG("Acheived Th. max drawdown "<<dd);
-      max_dd.push_back(dd);      
-    }
+    //   // Compute the max drawndown of this run:
+    //   double dd = computeMaxDrawnDown(wealth);
+    //   logDEBUG("Acheived Th. max drawdown "<<dd);
+    //   max_dd.push_back(dd);      
+    // }
 
     {
       // Now retrieve the wealth data from the strategy itself:
@@ -96,13 +96,13 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
     }
   }
 
-  logDEBUG("Th. Wealth mean: "<< final_wealth.mean());
-  logDEBUG("Th. Wealth deviation: "<< final_wealth.deviation());
-  // final_wealth.writeTo("final_wealth.txt");
+  // logDEBUG("Th. Wealth mean: "<< final_wealth.mean());
+  // logDEBUG("Th. Wealth deviation: "<< final_wealth.deviation());
+  // // final_wealth.writeTo("final_wealth.txt");
 
-  logDEBUG("Th. Max DrawDown mean: "<< max_dd.mean());
-  logDEBUG("Th. Max DrawDown deviation: "<< max_dd.deviation());
-  // max_dd.writeTo("max_drawdown.txt");
+  // logDEBUG("Th. Max DrawDown mean: "<< max_dd.mean());
+  // logDEBUG("Th. Max DrawDown deviation: "<< max_dd.deviation());
+  // // max_dd.writeTo("max_drawdown.txt");
 
   logDEBUG("St. Wealth mean: "<< st_final_wealth.mean());
   logDEBUG("St. Wealth deviation: "<< st_final_wealth.deviation());
