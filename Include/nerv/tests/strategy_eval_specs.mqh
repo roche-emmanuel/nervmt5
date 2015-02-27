@@ -15,7 +15,8 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   straits.historyLength(0);
   straits.autoWriteHistory(false); 
   straits.id("test1_eur");
-
+	straits.warmUpLength(3000);
+	
   // Prepare the model traits:
   nvRRLModelTraits mtraits;
   // Keep history:

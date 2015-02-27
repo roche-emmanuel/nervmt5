@@ -95,6 +95,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   straits.historyLength(0);
   straits.autoWriteHistory(true);
   straits.id("test1_eur");
+  straits.warmUpLength(3000);
   
   int offset = 80000;
   int count = 20000;

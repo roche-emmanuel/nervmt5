@@ -18,3 +18,9 @@ St. Wealth mean: -0.06721611303258085
 St. Wealth deviation: 0.02731523565676583
 St. Max DrawDown mean: 0.07601671241499514
 St. Max DrawDown deviation: 0.02598442805397161
+
+- With the addition of the warmUp phase of 3000 bars:
+St. Wealth mean: -0.05935754022858003
+St. Wealth deviation: 0.02676160052919921
+St. Max DrawDown mean: 0.06841811194285298
+St. Max DrawDown deviation: 0.02465865822919882

@@ -134,7 +134,7 @@ void nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePredicti
   double Rt = Ft_1*rt; 
 
   // If the prediction is valid then we can use it to actually compute a return:
-  if (valid) {
+  if (valid && _digestTraits.barCount()>_traits.warmUpLength()) {
     // Retrieve the current signal which is predicted.
     double Ft = pred.signal();
 	
