@@ -239,12 +239,12 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     // Also compute the theoritical return:
     double Ft = getCurrentSignal();
     double tcost = _traits.transactionCost();
-    double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);          
+    double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1); 
     _history.add("theoretical_returns", Rt);
 
     // And compute the total wealth:
     _wealth += Rt;
-    _history.add("wealth", _wealth);
+    _history.add("theoretical_wealth", _wealth);
 
     // Also write the expoential moving average version of the sharpe ratio:
     double eSR = 0.0;

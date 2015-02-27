@@ -9,13 +9,15 @@ BEGIN_TEST_PACKAGE(strategy_specs)
 BEGIN_TEST_SUITE("Strategy class")
 
 BEGIN_TEST_CASE("should be able to create a strategy object")
-  nvStrategy* st = new nvStrategy("EURUSD",PERIOD_M1);  
+	nvStrategyTraits traits;
+  nvStrategy* st = new nvStrategy(traits);  
   REQUIRE(st!=NULL);
   delete st;
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should support dryrun")
-  nvStrategy st("EURUSD",PERIOD_M1);  
+	nvStrategyTraits straits;
+  nvStrategy st(straits);  
 
   // Assign a model to the strategy:
   nvRRLModelTraits traits;
@@ -63,8 +65,9 @@ XBEGIN_TEST_CASE("should support dryrun with a real price serie")
   REQUIRE_EQUAL(prices.size(),7123);
 
   {
-    nvStrategy st("EURUSD",PERIOD_M1);  
-
+  	nvStrategyTraits straits;
+  	nvStrategy st(straits); 
+  
     // Assign a model to the strategy:
     nvRRLModelTraits traits;
     
@@ -87,20 +90,24 @@ XBEGIN_TEST_CASE("should support dryrun with a real price serie")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
-  string symbol = "EURUSD";
-  ENUM_TIMEFRAMES period = PERIOD_M1;
+  nvStrategyTraits straits;
+ 	straits.symbol("EURUSD").period(PERIOD_M1);
+  straits.historyLength(0);
+  straits.autoWriteHistory(true);
+  straits.id("test1_eur");
+  
   int offset = 80000;
   int count = 20000;
 
   double arr[];
-  int res = CopyClose(symbol, period, offset, count, arr);
+  int res = CopyClose(straits.symbol(), straits.period(), offset, count, arr);
   REQUIRE_EQUAL(res,count);
 
   // build a vector from the prices:
   nvVecd prices(arr);
 
   {
-    nvStrategy st(symbol,period);  
+  	nvStrategy st(straits); 
 
     // Assign a model to the strategy:
     nvRRLModelTraits traits;

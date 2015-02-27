@@ -7,6 +7,7 @@
 #define IS_VALID_POINTER(obj) (CheckPointer(GetPointer(obj))!=POINTER_INVALID)
 
 #define RELEASE_PTR(ptr)  if (ptr != NULL && IS_DYN_POINTER(ptr)) { delete ptr; ptr = NULL; }
+#define THIS GetPointer(this)
 
 #define __WITH_POINTER_EXCEPTION__
 

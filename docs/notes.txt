@@ -1,2 +1,14 @@
 - To add support for comment in MQL5 files in sublimetext:
   Add the "source.mq5" in the list of the "Comments (C++).tmPreferences" file (in the C++ package folder)
+
+- 26/02/2015 - Current best results:
+Wealth mean: 0.01062900110988672
+Wealth deviation: 0.03249276241142517
+Max DrawDown mean: 0.01575850521331251
+Max DrawDown deviation: 0.008988242442272629
+
+- 27/02/2015 - Current real results (worst):
+St. Wealth mean: -0.05596329466185773
+St. Wealth deviation: 0.0386016283685143
+St. Max DrawDown mean: 0.06892669452989293
+St. Max DrawDown deviation: 0.0341479098543477

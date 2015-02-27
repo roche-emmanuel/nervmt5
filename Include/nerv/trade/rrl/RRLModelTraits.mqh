@@ -83,6 +83,7 @@ nvRRLModelTraits *nvRRLModelTraits::operator=(const nvRRLModelTraits &rhs)
   _batchTrainLength = rhs._batchTrainLength;
   _onlineTrainLength = rhs._onlineTrainLength;
   _returnsMeanLength = rhs._returnsMeanLength;
+  _transactionCost = rhs._transactionCost;
   return GetPointer(this);
 }
 

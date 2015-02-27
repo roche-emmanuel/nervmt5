@@ -49,3 +49,4 @@
 02/25/15-23:12:15: Added proper computation for returns mean and deviation.
 02/26/15-18:37:43: Added initial implementation for online training model.
 02/26/15-21:49:11: Initial setup for strategy evaluation.
+02/27/15-14:40:28: Fixed incorrect value for transaction cost. Fixed max drawdown computation. Computed real stats on strategy.

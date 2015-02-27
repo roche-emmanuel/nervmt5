@@ -6,6 +6,8 @@
 #include <nerv/trade/TradePrediction.mqh>
 #include <nerv/trade/TradeModelTraits.mqh>
 #include <nerv/trade/TradeModel.mqh>
+#include <nerv/trade/StrategyTraits.mqh>
+#include <nerv/trade/Strategy.mqh>
 #include <nerv/trade/rrl/RRLCostFunction.mqh>
 
 nvVecd nv_get_return_prices(int count, string symbol = "EURUSD", ENUM_TIMEFRAMES period = PERIOD_M1, int offset = 0)
@@ -54,4 +56,36 @@ ulong getBarDuration(ENUM_TIMEFRAMES period)
  
   THROW("Unsupported period value " << (int)period);
   return 0;
+}
+
+double computeMaxDrawnDown(const nvVecd& wealth)
+{
+  uint num = wealth.size();
+
+  double max_dd, dd, max_val, val;
+  max_dd = dd = max_val = 0.0;
+  max_val = wealth[0];
+
+  for(uint i =0; i< num;++i)
+  {
+    val = wealth[i];
+    if(val>=max_val) {
+      max_dd = MathMax(max_dd,dd);
+      // Now use this value as the new max:
+      max_val = val;
+
+      // reset the current drawndown:
+      dd = 0.0;
+    }
+    else {
+      // value is under the current max
+      // we check if it is a bigger drawndown than what we have so far:
+      dd = MathMax(dd, max_val - val);
+    }
+  }
+
+  // Final evaluation step in case we are only going down:
+  max_dd = MathMax(max_dd,dd);  
+
+  return max_dd;
 }
