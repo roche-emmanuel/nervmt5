@@ -12,6 +12,7 @@ protected:
   int _onlineTrainLength;
   int _returnsMeanLength;
   double _transactionCost;
+  int _batchTrainFrequency;
 
 public:
   /* Default constructor,
@@ -56,6 +57,16 @@ public:
 
   /* Retrieve the desired length for the returns mean computation. */
   int returnsMeanLength() const;
+
+  /* Assign the bacth train frequency.
+    This is the number of evaluations that should be performed
+    Before the batch training window is moved and used again
+    for a training session. */
+  nvRRLModelTraits* batchTrainFrequency(int freq);
+
+  /* Retrieve the batch train frequency. default is 0.
+  Any value <=0 means no batch cycle training. */
+  int batchTrainFrequency() const;  
 };
 
 
@@ -66,7 +77,8 @@ nvRRLModelTraits::nvRRLModelTraits()
   _batchTrainLength(-1),
   _onlineTrainLength(100),
   _returnsMeanLength(1000),
-  _transactionCost(0.00001)
+  _transactionCost(0.00001),
+  _batchTrainFrequency(0)
 {
 }
 
@@ -84,13 +96,14 @@ nvRRLModelTraits *nvRRLModelTraits::operator=(const nvRRLModelTraits &rhs)
   _onlineTrainLength = rhs._onlineTrainLength;
   _returnsMeanLength = rhs._returnsMeanLength;
   _transactionCost = rhs._transactionCost;
-  return GetPointer(this);
+  _batchTrainFrequency = rhs._batchTrainFrequency;
+  return THIS;
 }
 
 nvRRLModelTraits* nvRRLModelTraits::batchTrainLength(int len)
 {
   _batchTrainLength = len;
-  return GetPointer(this);
+  return THIS;
 }
 
 int nvRRLModelTraits::batchTrainLength() const
@@ -101,7 +114,7 @@ int nvRRLModelTraits::batchTrainLength() const
 nvRRLModelTraits* nvRRLModelTraits::numInputReturns(int num)
 {
   _numInputReturns = num;
-  return GetPointer(this);
+  return THIS;
 }
 
 int nvRRLModelTraits::numInputReturns() const
@@ -112,7 +125,7 @@ int nvRRLModelTraits::numInputReturns() const
 nvRRLModelTraits* nvRRLModelTraits::onlineTrainLength(int len)
 {
   _onlineTrainLength = len;
-  return GetPointer(this);
+  return THIS;
 }
 
 int nvRRLModelTraits::onlineTrainLength() const
@@ -123,7 +136,7 @@ int nvRRLModelTraits::onlineTrainLength() const
 nvRRLModelTraits *nvRRLModelTraits::transactionCost(double cost)
 {
   _transactionCost = cost;
-  return GetPointer(this);
+  return THIS;
 }
 
 double nvRRLModelTraits::transactionCost() const
@@ -134,10 +147,21 @@ double nvRRLModelTraits::transactionCost() const
 nvRRLModelTraits* nvRRLModelTraits::returnsMeanLength(int len)
 {
   _returnsMeanLength = len;
-  return GetPointer(this);
+  return THIS;
 }
 
 int nvRRLModelTraits::returnsMeanLength() const
 {
   return _returnsMeanLength;
+}
+
+nvRRLModelTraits* nvRRLModelTraits::batchTrainFrequency(int freq)
+{
+  _batchTrainFrequency = freq;
+  return THIS;
+}
+
+int nvRRLModelTraits::batchTrainFrequency() const
+{
+  return _batchTrainFrequency;
 }

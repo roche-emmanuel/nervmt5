@@ -1,6 +1,6 @@
 
 #include <nerv/unit/Testing.mqh>
-#include <nerv/trade/rrl/RRLCostFunction.mqh>
+#include <nerv/trade/rrl/RRLCostFunction_SR.mqh>
 
 BEGIN_TEST_PACKAGE(rrlcostfunction_specs)
 
@@ -11,7 +11,9 @@ BEGIN_TEST_CASE("should be able to create an RRLCostFunction")
   nvVecd vec1(100);
   vec1.randomize(-1,1);
   ct.returns(vec1); 
-  nvRRLCostFunction costfunc(ct);
+  
+  nvRRLCostFunction_SR costfunc(ct);
+  
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should be able to assign and retrieve returns")

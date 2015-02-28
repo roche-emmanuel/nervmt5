@@ -11,7 +11,7 @@ BEGIN_TEST_SUITE("Strategy evaluation")
 
 BEGIN_TEST_CASE("should support evaluation of strategy")
   nvStrategyTraits straits;
- 	straits.symbol("EURUSD").period(PERIOD_M1);
+ 	straits.symbol("EURUSD").period(PERIOD_M15);
   straits.historyLength(0);
   straits.autoWriteHistory(false); 
   straits.id("test1_eur");

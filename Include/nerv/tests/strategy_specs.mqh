@@ -95,13 +95,30 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   straits.historyLength(0);
   straits.autoWriteHistory(true);
   straits.id("test1_eur");
-  straits.warmUpLength(3000);
+  straits.warmUpLength(0);
   
+  double tcost = 0.0002;
+  straits.transactionCost(tcost);
+
+  // Assign a model to the strategy:
+  nvRRLModelTraits traits;
+  traits.transactionCost(tcost);  
+  //traits.batchTrainLength(2000);
+  traits.onlineTrainLength(100);
+  // Keep history:
+  traits.historyLength(0);
+  // Do not write history data to disk.
+  traits.autoWriteHistory(true); 
+  traits.id("test1_eur");
+  traits.numInputReturns(50);
+
+  datetime starttime = D'21.02.2015 12:00:00';
+
   int offset = 80000;
-  int count = 20000;
+  int count = 10000;
 
   double arr[];
-  int res = CopyClose(straits.symbol(), straits.period(), offset, count, arr);
+  int res = CopyClose(straits.symbol(), straits.period(), starttime, count, arr);
   REQUIRE_EQUAL(res,count);
 
   // build a vector from the prices:
@@ -110,16 +127,6 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   {
   	nvStrategy st(straits); 
 
-    // Assign a model to the strategy:
-    nvRRLModelTraits traits;
-    
-    // Keep history:
-    traits.historyLength(0);
-
-    // Do not write history data to disk.
-    traits.autoWriteHistory(true); 
-
-    traits.id("test1_eur");
     st.setModel(new nvRRLModel(traits));
 
     st.dryrun(prices);    
