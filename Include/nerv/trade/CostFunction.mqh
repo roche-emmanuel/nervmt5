@@ -40,7 +40,7 @@ public:
   double computeCost(const nvVecd &x);
 	
   /* Method that should be overriden to provide the concrete implementation. */
-  virtual double train(const nvVecd &initx, nvVecd &xresult);
+  //virtual double train(const nvVecd &initx, nvVecd &xresult, const nvVecd& returns);
 
   /* Debug method sued to compute numerical gradients. */
   void computeNumericalGradient(const nvVecd& x, nvVecd& grad, double eps = 1e-6);
@@ -204,11 +204,11 @@ double nvCostFunctionBase::train_gd_online(const nvTradeModelTraits &traits, con
   return 0.0;
 }
 
-double nvCostFunctionBase::train(const nvVecd &initx, nvVecd &xresult)
-{
-  THROW("This method should be overriden.");
-  return 0.0;
-}
+// double nvCostFunctionBase::train(const nvVecd &initx, nvVecd &xresult, const nvVecd& returns)
+// {
+//   THROW("This method should be overriden.");
+//   return 0.0;
+// }
 
 void nvCostFunctionBase::computeNumericalGradient(const nvVecd& x, nvVecd& grad, double eps = 1e-6)
 {

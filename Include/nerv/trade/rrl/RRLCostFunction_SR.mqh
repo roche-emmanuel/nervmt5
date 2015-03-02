@@ -2,17 +2,35 @@
 #include <nerv/core.mqh>
 #include <nerv/trades.mqh>
 #include <nerv/trade/rrl/RRLModelTraits.mqh>
+#include <nerv/trade/rrl/RRLTrainContext_SR.mqh>
+
+class nvRRLOnlineContext_SR
+{
+  nvVecd dFt_1;
+  nvVecd dFt;
+  nvVecd dRt;
+  nvVecd dDt;
+  nvVecd params;
+
+  double Ft_1;
+  double A;
+  double B;
+};
 
 class nvRRLCostFunction_SR : public nvCostFunctionBase
 {
 protected:
   nvRRLModelTraits _traits;
+  nvRRLTrainContext_SR *_context;
 
   nvVecd _returns;
   nvVecd _nrets;
 
 public:
-  nvRRLCostFunction_SR(const nvRRLModelTraits &traits, const nvVecd &returns);
+  nvRRLCostFunction_SR(const nvRRLModelTraits &traits);
+
+  void setReturns(const nvVecd &returns);
+  void setTrainContext(nvRRLTrainContext_SR &context);
 
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
@@ -20,14 +38,24 @@ public:
 
 
 //////////////////////////////////// implementation part ///////////////////////////
-nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits, const nvVecd &returns)
+nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits)
   : nvCostFunctionBase(traits.numInputReturns() + 2)
 {
   _traits = traits;
+  _context = NULL;
+}
+
+void nvRRLCostFunction_SR::setTrainContext(nvRRLTrainContext_SR &context)
+{
+  _context = GetPointer(context);
+}
+
+void nvRRLCostFunction_SR::setReturns(const nvVecd &returns)
+{
   _returns = returns;
-  if (traits.returnsMeanDevFixed()) {
-    logDEBUG("SR cost using mean: "<<traits.returnsMean()<<", dev:"<<traits.returnsDev());
-    _nrets = (returns - traits.returnsMean())/traits.returnsDev();
+  if (_traits.returnsMeanDevFixed()) {
+    //logDEBUG("SR cost using mean: "<<_traits.returnsMean()<<", dev:"<<_traits.returnsDev());
+    _nrets = (returns - _traits.returnsMean()) / _traits.returnsDev();
   }
   else {
     _nrets = returns.stdnormalize();

@@ -9,6 +9,7 @@
 #include <nerv/trade/StrategyTraits.mqh>
 #include <nerv/trade/Strategy.mqh>
 #include <nerv/trade/CostFunction.mqh>
+#include <nerv/trade/TrainContext.mqh>
 
 nvVecd nv_get_return_prices(int count, string symbol = "EURUSD", ENUM_TIMEFRAMES period = PERIOD_M1, int offset = 0)
 {

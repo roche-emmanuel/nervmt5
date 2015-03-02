@@ -38,6 +38,8 @@ private:
 
   bool _batchTrainNeeded;
 
+  nvRRLTrainContext_SR _context;
+
   nvRRLOnlineTrainingContext _onlineContext;
   int _evalCount;
 
@@ -99,7 +101,7 @@ protected:
   void performBatchTraining_simple();
 
   /* Method used to evaluate the performances on this model on a given return serie. */
-  void evaluate(const nvVecd& returns, nvVecd& rets);
+  void evaluate(const nvVecd &returns, nvVecd &rets);
 };
 
 
@@ -393,9 +395,17 @@ void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext &ctx)
 void nvRRLModel::performBatchTraining()
 {
   // Should use a cost function to perform training here.
-  nvRRLCostFunction_SR costfunc(_traits, _batchTrainReturns);
+  nvRRLCostFunction_SR costfunc(_traits);
+
+  costfunc.setTrainContext(_context);
+  costfunc.setReturns(_batchTrainReturns);
+
   nvVecd initx(_theta);
-  initx.fill(1.0);
+  if (!_traits.warmInit()) {
+    // We don't use the previous value of theta:
+    initx.fill(1.0);
+  }
+
   double cost = costfunc.train(initx, _theta);
   logDEBUG("Acheived best cost: " << cost);
 
@@ -407,7 +417,7 @@ void nvRRLModel::performBatchTraining()
 
   // Check the results by computing the sharpe ratio:
   nvVecd rets;
-  evaluate(_batchTrainReturns,rets);
+  evaluate(_batchTrainReturns, rets);
   double sr = nv_sharpe_ratio(rets);
   logDEBUG("Computed training sharpe ratio: " << sr);
 }
@@ -482,13 +492,13 @@ void nvRRLModel::validateThetaNorm()
   }
 }
 
-void nvRRLModel::evaluate(const nvVecd& returns, nvVecd& rets)
+void nvRRLModel::evaluate(const nvVecd &returns, nvVecd &rets)
 {
   int ni = _traits.numInputReturns();
   nvVecd rvec(ni);
 
   double Ft_1 = 0.0;
-  double Ft,Rt,rt;
+  double Ft, Rt, rt;
 
   double tcost = _traits.transactionCost();
 
@@ -497,11 +507,11 @@ void nvRRLModel::evaluate(const nvVecd& returns, nvVecd& rets)
 
   int num = (int)returns.size();
 
-  for(int i=0;i<num;++i)
+  for (int i = 0; i < num; ++i)
   {
     rt = returns[i];
     rvec.push_back(rt);
-    if(i<ni-1) {
+    if (i < ni - 1) {
       continue; // Not enough data yet.
     }
 

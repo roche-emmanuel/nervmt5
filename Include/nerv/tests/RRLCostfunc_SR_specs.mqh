@@ -15,8 +15,9 @@ BEGIN_TEST_CASE("should support computing cost")
   nvVecd returns(1000);
   returns.randomize(0.0,2.0);
 
-  nvRRLCostFunction_SR costfunc(traits,returns);
-
+  nvRRLCostFunction_SR costfunc(traits);
+	costfunc.setReturns(returns);
+	
   nvVecd xvec(traits.numInputReturns()+2,1.0);
   nvVecd grad;
 
@@ -38,8 +39,9 @@ BEGIN_TEST_CASE("should provide correct gradient")
     nvVecd returns(500);
     returns.randomize(1.0,1.4);
 
-    nvRRLCostFunction_SR costfunc(traits,returns);
-
+    nvRRLCostFunction_SR costfunc(traits);
+		costfunc.setReturns(returns);
+		
     nvVecd xvec(traits.numInputReturns()+2,1.0);
     xvec.randomize(-1.0,1.0);
     nvVecd grad;

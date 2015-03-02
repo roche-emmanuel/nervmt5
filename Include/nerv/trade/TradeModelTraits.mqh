@@ -31,6 +31,8 @@ protected:
 
   TrainingMode _trainMode;
 
+  bool _warmInit;
+
 public:
   /* Default constructor,
   assign default values.*/
@@ -101,6 +103,13 @@ public:
 
   /* Retrieve the training mode to use. */
   TrainingMode trainMode() const;
+
+  /* Specify if we should use warm initialization. (eg. using previous value of theta)
+  for training phase. */
+  nvTradeModelTraits* warmInit(bool enable);
+
+  /* Retrieve the warm initialization parameter. */
+  bool warmInit() const;
 };
 
 
@@ -118,6 +127,7 @@ nvTradeModelTraits::nvTradeModelTraits()
     _learningRate(0.01),
     _numEpochs(20),
     _trainMode(TRAIN_BATCH_CONJUGATE_GRADIENT),
+    _warmInit(false),
     nvBaseTraits()
 {
 }
@@ -141,6 +151,7 @@ nvTradeModelTraits *nvTradeModelTraits::operator=(const nvTradeModelTraits &rhs)
   _learningRate = rhs._learningRate;
   _numEpochs = rhs._numEpochs;
   _trainMode = rhs._trainMode;
+  _warmInit = rhs._warmInit;
   return THIS;
 }
 
@@ -253,4 +264,15 @@ nvTradeModelTraits* nvTradeModelTraits::trainMode(TrainingMode mode)
 TrainingMode nvTradeModelTraits::trainMode() const
 {
   return _trainMode;
+}
+
+nvTradeModelTraits* nvTradeModelTraits::warmInit(bool enable)
+{
+  _warmInit = enable;
+  return THIS;
+}
+
+bool nvTradeModelTraits::warmInit() const
+{
+  return _warmInit;
 }
