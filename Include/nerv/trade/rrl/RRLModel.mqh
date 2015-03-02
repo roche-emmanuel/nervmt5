@@ -5,19 +5,6 @@
 #include "RRLModelTraits.mqh"
 #include "RRLCostFunction_SR.mqh"
 
-struct nvRRLOnlineTrainingContext
-{
-  nvVecd dFt_1;
-  nvVecd dFt;
-  nvVecd dRt;
-  nvVecd dDt;
-  nvVecd params;
-
-  double Ft_1;
-  double A;
-  double B;
-};
-
 /* Base class used to represent an RRL trading model. */
 class nvRRLModel : public nvTradeModel
 {
@@ -31,8 +18,9 @@ private:
 
   nvVecd _theta;
 
-  nvVecd _returnMean1;
-  nvVecd _returnMean2;
+  nvVecd _returnMoment1;
+  nvVecd _returnMoment2;
+  nvVecd _signals;
 
   double _currentSignal;
   double _returnMean;
@@ -43,7 +31,6 @@ private:
 
   nvRRLTrainContext_SR _context;
 
-  nvRRLOnlineTrainingContext _onlineContext;
   int _evalCount;
 
 public:
@@ -151,8 +138,11 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
   _theta.resize(ni + 2, 1.0);
   _batchTrainReturns.resize(MathMax(blen, 1));
-  _returnMean1.resize(MathMax(blen,1));
-  _returnMean2.resize(MathMax(blen,1));
+  
+  _returnMoment1.resize(MathMax(blen, 1));
+  _returnMoment2.resize(MathMax(blen, 1));
+  _signals.resize(MathMax(blen, 1));
+
   _onlineTrainReturns.resize(MathMax(olen, 1));
   _evalReturns.resize(ni);
   _lastReturns.resize(rlen);
@@ -243,16 +233,27 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
   }
 
   // Compute the Return of the model:
-    // Also compute the theoritical return:
-    double Ft = getCurrentSignal();
-    double tcost = _traits.transactionCost();
-    double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
+  // Also compute the theoritical return:
+  double Ft = getCurrentSignal();
+  double tcost = _traits.transactionCost();
+  double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
+
+  // now we can compute the new exponential moving averages:
+  double A = _returnMoment1.back();
+  double B = _returnMoment2.back();
+  double eta = 0.01; // TODO: provide as traits.
+  A += eta * (Rt - A);
+  B += eta * (Rt * Rt - B);
+
+  _returnMoment1.push_back(A);
+  _returnMoment2.push_back(B);
+  _signals.push_back(Ft);
 
   // Write the history data if requested:
   if (_traits.keepHistory()) {
     _history.add("close_prices", price);
     _history.add("price_returns", rt);
-    _history.add("signals", signal);
+    _history.add("signals", Ft);
     _history.add("confidence", confidence);
 
     // Compute the return mean and deviation:
@@ -267,8 +268,8 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 
     // Also write the expoential moving average version of the sharpe ratio:
     double eSR = 0.0;
-    double A = _onlineContext.A;
-    double B = _onlineContext.B;
+    A = _returnMoment1.back();
+    B = _returnMoment2.back();
     if (B - A * A != 0.0) {
       eSR = A / MathSqrt(B - A * A);
     }
@@ -339,13 +340,13 @@ void nvRRLModel::performOnlineTraining()
   costfunc.setTrainContext(_context);
   costfunc.setReturns(_evalReturns);
 
-  costfunc.performStochasticTraining(_theta,_theta,_traits.learningRate());
+  costfunc.performStochasticTraining(_theta, _theta, _traits.learningRate());
 
-  logDEBUG("New theta norm after online training: "<< _theta.norm());
+  logDEBUG("New theta norm after online training: " << _theta.norm());
   double A = _context.A;
   double B = _context.B;
-  if(B-A*A!=0.0) {
-    logDEBUG("New SR: "<<(A/sqrt(B-A*A)));
+  if (B - A * A != 0.0) {
+    logDEBUG("New SR: " << (A / sqrt(B - A * A)));
   }
 }
 
