@@ -91,12 +91,6 @@ protected:
   /* Initialize the online training context. */
   virtual void initOnlineContext(nvRRLOnlineTrainingContext &context);
 
-  /* Ensure that the norm of the theta vector is not becoming too big. */
-  virtual void validateThetaNorm();
-
-  /* Method used to perform a minimal simple batch training. */
-  void performBatchTraining_simple();
-
   /* Method used to evaluate the performances on this model on a given return serie. */
   void evaluate(const nvVecd &returns, nvVecd &rets);
 };
@@ -408,15 +402,6 @@ void nvRRLModel::initOnlineContext(nvRRLOnlineTrainingContext &context)
   context.dFt_1.resize(_theta.size());
   context.dDt.resize(_theta.size());
   context.params.resize(_theta.size());
-}
-
-void nvRRLModel::validateThetaNorm()
-{
-  double tn = _theta.norm();
-  double maxNorm = 5.0;
-  if (tn > maxNorm) {
-    _theta *= exp(-tn / maxNorm + 1);
-  }
 }
 
 void nvRRLModel::evaluate(const nvVecd &returns, nvVecd &rets)
