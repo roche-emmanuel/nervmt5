@@ -59,3 +59,4 @@
 03/02/15-15:24:41: Added test result for stochastic training.
 03/02/15-16:09:40: Removed obsolete computeWeight method.
 03/02/15-16:15:12: Removed some obsolete methods.
+03/02/15-16:26:36: Removed initOnlineContext()

@@ -31,6 +31,9 @@ private:
 
   nvVecd _theta;
 
+  nvVecd _returnMean1;
+  nvVecd _returnMean2;
+
   double _currentSignal;
   double _returnMean;
   double _returnDev;
@@ -87,9 +90,6 @@ protected:
 
   /* Retrieve the current (or latest) signal emitted by this model. */
   virtual double getCurrentSignal() const;
-
-  /* Initialize the online training context. */
-  virtual void initOnlineContext(nvRRLOnlineTrainingContext &context);
 
   /* Method used to evaluate the performances on this model on a given return serie. */
   void evaluate(const nvVecd &returns, nvVecd &rets);
@@ -150,8 +150,10 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   CHECK(_traits.transactionCost() > 0, "Invalid transaction cost.");
 
   _theta.resize(ni + 2, 1.0);
-  _batchTrainReturns.resize(MathMax(blen, 0));
-  _onlineTrainReturns.resize(MathMax(olen, 0));
+  _batchTrainReturns.resize(MathMax(blen, 1));
+  _returnMean1.resize(MathMax(blen,1));
+  _returnMean2.resize(MathMax(blen,1));
+  _onlineTrainReturns.resize(MathMax(olen, 1));
   _evalReturns.resize(ni);
   _lastReturns.resize(rlen);
 }
@@ -160,7 +162,6 @@ void nvRRLModel::reset()
 {
   logDEBUG("Resetting RRLModel.")
   _context.init(_traits);
-  initOnlineContext(_onlineContext);
 }
 
 bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
@@ -357,6 +358,11 @@ void nvRRLModel::performBatchTraining()
   // _context.reset();
   // _context.Ft_1 = 0.0;
   // _context.dFt_1.fill(0.0);
+  // double A = _context.A;
+  // double B = _context.B;
+  // if(B-A*A!=0.0) {
+  //   logDEBUG("Initial SR: "<<(A/sqrt(B-A*A)));
+  // }
 
   costfunc.setTrainContext(_context);
   costfunc.setReturns(_batchTrainReturns);
@@ -392,16 +398,6 @@ double nvRRLModel::evaluate(double &confidence)
 double nvRRLModel::getCurrentSignal() const
 {
   return _currentSignal;
-}
-
-void nvRRLModel::initOnlineContext(nvRRLOnlineTrainingContext &context)
-{
-  logDEBUG("Initializing online training context");
-  context.A = 0.0;
-  context.B = 0.0;
-  context.dFt_1.resize(_theta.size());
-  context.dDt.resize(_theta.size());
-  context.params.resize(_theta.size());
 }
 
 void nvRRLModel::evaluate(const nvVecd &returns, nvVecd &rets)
