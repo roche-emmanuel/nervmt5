@@ -3,7 +3,7 @@
 #include <nerv/trades.mqh>
 #include <nerv/trade/rrl/RRLModelTraits.mqh>
 
-class nvRRLCostFunction_SR : public nvCostFunctionBase
+class nvRRLCostFunction_DDR : public nvCostFunctionBase
 {
 protected:
   nvRRLModelTraits _traits;
@@ -12,7 +12,7 @@ protected:
   nvVecd _nrets;
 
 public:
-  nvRRLCostFunction_SR(const nvRRLModelTraits &traits, const nvVecd &returns);
+  nvRRLCostFunction_DDR(const nvRRLModelTraits &traits, const nvVecd &returns);
 
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
@@ -20,26 +20,20 @@ public:
 
 
 //////////////////////////////////// implementation part ///////////////////////////
-nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits, const nvVecd &returns)
-  : nvCostFunctionBase(traits.numInputReturns() + 2)
+nvRRLCostFunction_DDR::nvRRLCostFunction_DDR(const nvRRLModelTraits &traits, const nvVecd &returns)
+  : nvCostFunctionBase(traits.numInputReturns()+2)
 {
   _traits = traits;
   _returns = returns;
-  if (traits.returnsMeanDevFixed()) {
-    logDEBUG("SR cost using mean: "<<traits.returnsMean()<<", dev:"<<traits.returnsDev());
-    _nrets = (returns - traits.returnsMean())/traits.returnsDev();
-  }
-  else {
-    _nrets = returns.stdnormalize();
-  }
+  _nrets = returns.stdnormalize();
 }
 
-double nvRRLCostFunction_SR::train(const nvVecd &initx, nvVecd &xresult)
+double nvRRLCostFunction_DDR::train(const nvVecd &initx, nvVecd &xresult)
 {
-  return dispatch_train(_traits, initx, xresult);
+  return train_cg(_traits,initx,xresult);
 }
 
-void nvRRLCostFunction_SR::computeCost()
+void nvRRLCostFunction_DDR::computeCost()
 {
   // Train the model with the given inputs for a given number of epochs.
   double tcost = _traits.transactionCost();
@@ -58,8 +52,8 @@ void nvRRLCostFunction_SR::computeCost()
   // Initialize the rvec:
   nvVecd rvec(ni);
 
-  double Ft, Ft_1, rt, rtn, Rt, A, B, dsign;
-  Ft_1 = A = B = 0.0;
+  double Ft, Ft_1, rt, rtn, Rt, A, DD, dsign;
+  Ft_1 = A = DD = 0.0;
 
   // dF0 is a zero vector.
   nvVecd dFt_1(nm);
@@ -114,23 +108,19 @@ void nvRRLCostFunction_SR::computeCost()
     A += Rt;
     B += Rt * Rt;
 
-    if (_computeGradient)
-    {
-      // we can compute the new derivative dFtdw
-      dFt = (params + dFt_1 * theta[1]) * (1.0 - Ft * Ft);
+    // we can compute the new derivative dFtdw
+    dFt = (params + dFt_1 * theta[1]) * (1.0 - Ft * Ft);
 
-      // Now we can compute dRtdw:
-      dsign = tcost * nv_sign(Ft - Ft_1);
-      dRt = dFt_1 * (rt + dsign) - dFt * dsign;
+    // Now we can compute dRtdw:
+    dsign = tcost * nv_sign(Ft - Ft_1);
+    dRt = dFt_1 * (rt + dsign) - dFt * dsign;
 
-      sumdRt += dRt;
-      sumRtdRt += dRt * Rt;
+    sumdRt += dRt;
+    sumRtdRt += dRt * Rt;
 
-      // Update the recurrent values:
-      dFt_1 = dFt;
-    }
-
+    // Update the recurrent values:
     Ft_1 = Ft;
+    dFt_1 = dFt;
   }
 
   //logDEBUG("Done with all samples.");
@@ -140,30 +130,23 @@ void nvRRLCostFunction_SR::computeCost()
   // Rescale A and B:
   A /= ns;
   B /= ns;
-  CHECK(B - A * A != 0.0, "Invalid values for A=" << A << " and B=" << B);
-
-  // Compute the current sharpe ratio:
-  double sr = A / MathSqrt(B - A * A);
 
   //logDEBUG("A="<<A<<", B="<<B);
 
-  if (_computeGradient)
-  {
-    // Rescale sumdRt and sumRtdRt:
-    sumdRt *= 1.0 / ns;
-    sumRtdRt *= 2.0 / ns; // There is a factor of 2 to keep in mind here.
+  // Rescale sumdRt and sumRtdRt:
+  sumdRt *= 1.0 / ns;
+  sumRtdRt *= 2.0 / ns; // There is a factor of 2 to keep in mind here.
 
-    // Now we can compute the derivatives of the sharpe ratio with respect to A and B:
-    double dSdA = B / pow(B - A * A, 1.5);
-    double dSdB = -0.5 * A / pow(B - A * A, 1.5);
+  CHECK(B - A * A != 0.0, "Invalid values for A=" << A << " and B=" << B);
 
-    // finally we can compute the sharpe ratio derivative:
-    nvVecd thetab(theta);
-    thetab.set(0, 0.0);
+  // Now we can compute the derivatives of the sharpe ratio with respect to A and B:
+  double dSdA = B / pow(B - A * A, 1.5);
+  double dSdB = -0.5 * A / pow(B - A * A, 1.5);
 
-    _grad = (sumdRt * dSdA + sumRtdRt * dSdB) * (-1.0) + thetab * _traits.lambda();
-  }
+  // finally we can compute the sharpe ratio derivative:
+  _grad = (sumdRt * dSdA + sumRtdRt * dSdB) * (-1.0);
 
-  // Compute the cost regularization:
-  _cost = -sr + 0.5 * _traits.lambda() * (theta.norm2() - theta[0] * theta[0]);
+  // Compute the current sharpe ratio:
+  double sr = A / MathSqrt(B - A * A);
+  _cost = -sr;
 }

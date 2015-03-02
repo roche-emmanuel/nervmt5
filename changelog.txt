@@ -53,3 +53,4 @@
 02/27/15-15:09:54: Fixed computation of dFtdw. This didnt help.
 02/27/15-15:26:25: Added suport for warmUp phase.
 02/28/15-11:08:07: Added implementation for costFunction_SR.
+03/02/15-09:45:25: Testing many things. Added trainMode support.

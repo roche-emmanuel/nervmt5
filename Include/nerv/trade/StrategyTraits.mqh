@@ -13,6 +13,9 @@ protected:
   ENUM_TIMEFRAMES _period;
   double _transactionCost;
   int _warmUpLength;
+  int _signalMeanLength;
+  double _signalAdaptation;
+  double _signalThreshold;
 
 public:
   /* Default constructor,
@@ -49,6 +52,24 @@ public:
 
   /* Retrieve the desired length of the warmup phase. */
   int warmUpLength() const;
+
+  /* Assign the signal mean vector length. */
+  nvStrategyTraits* signalMeanLength(int len);
+
+  /* Retrieve the signal mean vector length. */
+  int signalMeanLength() const;
+
+  /* Assign the signal adaptation value. */
+  nvStrategyTraits* signalAdaptation(double coeff);
+
+  /* Retrieve the signal adaptation value. */
+  double signalAdaptation() const;
+
+  /* Specify the signal threshold. */
+  nvStrategyTraits* signalThreshold(double tau);
+
+  /* Retrieve the signal threshold. */
+  double signalThreshold() const;
 };
 
 
@@ -59,6 +80,9 @@ nvStrategyTraits::nvStrategyTraits()
     _period(PERIOD_M1),
     _transactionCost(0.00001),
     _warmUpLength(0),
+    _signalMeanLength(100),
+    _signalAdaptation(0.01),
+    _signalThreshold(0.0),
     nvBaseTraits()
 {
 }
@@ -75,6 +99,9 @@ nvStrategyTraits *nvStrategyTraits::operator=(const nvStrategyTraits &rhs)
   _period = rhs._period;
   _transactionCost = rhs._transactionCost;
   _warmUpLength = rhs._warmUpLength;
+  _signalAdaptation = rhs._signalAdaptation;
+  _signalMeanLength = rhs._signalMeanLength;
+  _signalThreshold = rhs._signalThreshold;
   return THIS;
 }
 
@@ -120,4 +147,37 @@ nvStrategyTraits *nvStrategyTraits::warmUpLength(int len)
 int nvStrategyTraits::warmUpLength() const
 {
   return _warmUpLength;
+}
+
+nvStrategyTraits* nvStrategyTraits::signalMeanLength(int len)
+{
+  _signalMeanLength = len;
+  return THIS;
+}
+
+int nvStrategyTraits::signalMeanLength() const
+{
+  return _signalMeanLength;
+}
+
+nvStrategyTraits* nvStrategyTraits::signalAdaptation(double coeff)
+{
+  _signalAdaptation = coeff;
+  return THIS;
+}
+
+double nvStrategyTraits::signalAdaptation() const
+{
+  return _signalAdaptation;
+}
+
+nvStrategyTraits* nvStrategyTraits::signalThreshold(double tau)
+{
+  _signalThreshold = tau;
+  return THIS;
+}
+
+double nvStrategyTraits::signalThreshold() const
+{
+  return _signalThreshold;
 }

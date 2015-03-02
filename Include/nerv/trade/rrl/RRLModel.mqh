@@ -3,7 +3,7 @@
 #include <nerv/math.mqh>
 #include <nerv/trades.mqh>
 #include "RRLModelTraits.mqh"
-#include "RRLTrainTraits.mqh"
+#include "RRLCostFunction_SR.mqh"
 
 struct nvRRLOnlineTrainingContext
 {
@@ -97,6 +97,9 @@ protected:
 
   /* Method used to perform a minimal simple batch training. */
   void performBatchTraining_simple();
+
+  /* Method used to evaluate the performances on this model on a given return serie. */
+  void evaluate(const nvVecd& returns, nvVecd& rets);
 };
 
 
@@ -105,12 +108,6 @@ protected:
 
 nvRRLModel::nvRRLModel(nvRRLModelTraits *traits)
   : _traits(NULL),
-    _currentSignal(0.0),
-    _returnMean(0.0),
-    _returnDev(0.0),
-    _wealth(0.0),
-    _evalCount(0),
-    _batchTrainNeeded(true),
     nvTradeModel(NULL)
 {
   if (traits != NULL) {
@@ -136,6 +133,13 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
   RELEASE_PTR(_traits);
   _traits = traits;
+
+  _currentSignal = 0.0;
+  _returnMean = 0.0;
+  _returnDev = 0.0;
+  _wealth = 0.0;
+  _evalCount = 0;
+  _batchTrainNeeded = true;
 
   int ni = _traits.numInputReturns();
   int blen = _traits.batchTrainLength();
@@ -314,9 +318,18 @@ void nvRRLModel::addPriceReturn(double rt)
   _evalReturns.push_back(rt);
   _lastReturns.push_back(rt);
 
-  // We can compute the returns mean and deviation right here:
-  _returnMean = _lastReturns.mean();
-  _returnDev = _lastReturns.deviation();
+  if (_traits.batchTrainLength() < 0) {
+    // We do not update the mean and deviation when using batch training.
+    // We can compute the returns mean and deviation right here:
+    _returnMean = _lastReturns.mean();
+    _returnDev = _lastReturns.deviation();
+  }
+
+  if (_traits.returnsMeanDevFixed())
+  {
+    _returnMean = _traits.returnsMean();
+    _returnDev = _traits.returnsDev();
+  }
 }
 
 void nvRRLModel::computeWeightDelta(nvRRLOnlineTrainingContext &ctx, const nvVecd &rvec, double Ft_1)
@@ -369,7 +382,7 @@ void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext &ctx)
   // Compute the delta corresponding to the current sample:
   computeWeightDelta(ctx, _evalReturns, Ft_1);
 
-  // Uupdate Theta vector:
+  // Update Theta vector:
   double learningRate = 0.01; // TODO: provide as trait.
   _theta += ctx.dDt * learningRate;
 
@@ -379,7 +392,24 @@ void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext &ctx)
 
 void nvRRLModel::performBatchTraining()
 {
-	// Should use a cost function to perform training here.
+  // Should use a cost function to perform training here.
+  nvRRLCostFunction_SR costfunc(_traits, _batchTrainReturns);
+  nvVecd initx(_theta);
+  initx.fill(1.0);
+  double cost = costfunc.train(initx, _theta);
+  logDEBUG("Acheived best cost: " << cost);
+
+  if (!_traits.returnsMeanDevFixed())
+  {
+    _returnMean = _batchTrainReturns.mean();
+    _returnDev = _batchTrainReturns.deviation();
+  }
+
+  // Check the results by computing the sharpe ratio:
+  nvVecd rets;
+  evaluate(_batchTrainReturns,rets);
+  double sr = nv_sharpe_ratio(rets);
+  logDEBUG("Computed training sharpe ratio: " << sr);
 }
 
 void nvRRLModel::performBatchTraining_simple()
@@ -449,5 +479,45 @@ void nvRRLModel::validateThetaNorm()
   double maxNorm = 5.0;
   if (tn > maxNorm) {
     _theta *= exp(-tn / maxNorm + 1);
+  }
+}
+
+void nvRRLModel::evaluate(const nvVecd& returns, nvVecd& rets)
+{
+  int ni = _traits.numInputReturns();
+  nvVecd rvec(ni);
+
+  double Ft_1 = 0.0;
+  double Ft,Rt,rt;
+
+  double tcost = _traits.transactionCost();
+
+  nvVecd params(ni + 2);
+  params.set(0, 1.0);
+
+  int num = (int)returns.size();
+
+  for(int i=0;i<num;++i)
+  {
+    rt = returns[i];
+    rvec.push_back(rt);
+    if(i<ni-1) {
+      continue; // Not enough data yet.
+    }
+
+    // We have enough data, evaluate the new position:
+    params.set(1, Ft_1);
+    params.set(2, (rvec - _returnMean) / _returnDev);
+
+    Ft = predict(params, _theta);
+
+    // Compute the return:
+    Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
+
+    // Add the new return to the list:
+    rets.push_back(Rt);
+
+    // Update previous signal:
+    Ft_1 = Ft;
   }
 }

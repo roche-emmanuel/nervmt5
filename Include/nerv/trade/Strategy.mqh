@@ -32,6 +32,12 @@ protected:
   /* Current wealth of this agent. */
   double _currentWealth;
 
+  /* Variable used to store the latest signals received so far. */
+  nvVecd _signals;
+
+  /* Variable used to store the exponential mean of the signal received so far. */
+  double _signalMean;
+
 public:
   /* Constructor taking the strategy traits.*/
   nvStrategy(const nvStrategyTraits &traits);
@@ -58,13 +64,15 @@ public:
   virtual double getCurrentPosition();
 
   /* Retrieve the history map for this strategy. */
-  virtual nvHistoryMap* getHistoryMap();
+  virtual nvHistoryMap *getHistoryMap();
 };
 
 
 nvStrategy::nvStrategy(const nvStrategyTraits &traits)
   : _currentPosition(0.0),
-  _currentWealth(0.0)
+    _currentWealth(0.0),
+    _signals(traits.signalMeanLength()),
+    _signalMean(0.0)
 {
   _traits = traits;
 
@@ -131,26 +139,38 @@ void nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePredicti
   // We assume that there is no change in the agent position
   // So there is no transaction cost evolved by default:
   double rt = _digestTraits.priceReturn();
-  double Rt = Ft_1*rt; 
+  double Rt = Ft_1 * rt;
 
   // If the prediction is valid then we can use it to actually compute a return:
-  if (valid && _digestTraits.barCount()>_traits.warmUpLength()) {
+  if (valid) {
     // Retrieve the current signal which is predicted.
     double Ft = pred.signal();
-	
-		// We cannot use "partial" transactions, so we need to ensure Ft
-		// is either -1, 0 or 1:
-		//Ft = Ft > 0.5 ? 1.0 : Ft < -0.5 ? -1.0 : 0.0;
-		
-    // Compute the return according to the model:
-    // TODO: we could use the actual transaction cost instead here (retrieve the spread from the latest bar)
-    double tcost = _traits.transactionCost();
 
-    Rt = Ft_1*rt - tcost * MathAbs(Ft - Ft_1);
+    _signals.push_back(Ft);
+    _signalMean += _traits.signalAdaptation()*(Ft-_signalMean);
 
-    // Assign the new position:
-    // _currentPosition = Ft > 0.5 ? 1 : Ft < -0.5 ? -1 : 0;
-    _currentPosition = Ft;
+    if (_digestTraits.barCount() > _traits.warmUpLength()) {
+      // We cannot use "partial" transactions, so we need to ensure Ft
+      // is either -1, 0 or 1:
+      //Ft = Ft > 0.5 ? 1.0 : Ft < -0.5 ? -1.0 : 0.0;
+
+      // Use a threshold on the mean signal to decide what should be the actual signal to use:
+      double tau = _traits.signalThreshold();
+      if(tau>0.0) {
+        Ft = _signals.mean();
+        Ft = Ft > tau ? 1.0 : Ft < -tau ? -1.0 : 0.0;
+      }
+
+      // Compute the return according to the model:
+      // TODO: we could use the actual transaction cost instead here (retrieve the spread from the latest bar)
+      double tcost = _traits.transactionCost();
+
+      Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
+
+      // Assign the new position:
+      // _currentPosition = Ft > 0.5 ? 1 : Ft < -0.5 ? -1 : 0;
+      _currentPosition = Ft;
+    }
   }
 
   // Add the Return to the total wealth:
@@ -162,6 +182,10 @@ void nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePredicti
 
     // And compute the total wealth:
     _history.add("strategy_wealth", _currentWealth);
+
+    _history.add("signal_geo_mean",_signals.mean());
+    _history.add("signal_exp_mean",_signalMean);
+    _history.add("strategy_position",_currentPosition);
   }
 }
 
@@ -204,7 +228,7 @@ double nvStrategy::getCurrentPosition()
   return _currentPosition;
 }
 
-nvHistoryMap* nvStrategy::getHistoryMap()
+nvHistoryMap *nvStrategy::getHistoryMap()
 {
   return GetPointer(_history);
 }

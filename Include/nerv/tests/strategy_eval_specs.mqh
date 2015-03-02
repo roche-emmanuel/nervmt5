@@ -10,20 +10,34 @@ BEGIN_TEST_PACKAGE(strategy_eval_specs)
 BEGIN_TEST_SUITE("Strategy evaluation")
 
 BEGIN_TEST_CASE("should support evaluation of strategy")
+
   nvStrategyTraits straits;
  	straits.symbol("EURUSD").period(PERIOD_M15);
   straits.historyLength(0);
   straits.autoWriteHistory(false); 
   straits.id("test1_eur");
-	straits.warmUpLength(3000);
 	
   // Prepare the model traits:
   nvRRLModelTraits mtraits;
+
   // Keep history:
   mtraits.historyLength(0);
   // Do not write history data to disk.
   mtraits.autoWriteHistory(false); 
   mtraits.id("test1_eur");
+
+  // Settings:
+  double tcost = 0.00001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.8);
+  straits.transactionCost(tcost);
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
 
   // int offset = 0;
   datetime starttime = D'21.02.2015 12:00:00';

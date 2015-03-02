@@ -576,4 +576,26 @@ public:
 
     FileClose(handle);
   }
+
+  nvVecd abs() const
+  {
+    nvVecd res(_len);
+    for (uint i = 0; i < _len; ++i)
+    {
+      res._data[i] = MathAbs(_data[i]);
+    }
+    return res;
+  }
+
+  nvVecd div(const nvVecd &rhs) const
+  {
+    CHECK(_len == rhs._len, "Mismatch in lengths");
+    nvVecd res(this);
+    for (uint i = 0; i < _len; ++i)
+    {
+      res._data[i] /= rhs._data[i];
+    }
+    return res;
+  }
+
 };

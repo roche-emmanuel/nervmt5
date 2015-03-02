@@ -29,6 +29,16 @@ nvVecd nv_get_return_prices(int count, string symbol = "EURUSD", ENUM_TIMEFRAMES
   return cur_prices - prev_prices;
 }
 
+/* Compute the sharpe ratio for a series of returns.
+it is assumed that the returns vector contains at least 2 elements
+otherwise an error will be thrown. */
+double nv_sharpe_ratio(const nvVecd& rets)
+{
+  double A = rets.mean();
+  double B = rets.norm2()/rets.size();
+  return A/sqrt(B-A*A);
+}
+
 /* Retrieve the bar duration in seconds depending on the selected period. */
 ulong getBarDuration(ENUM_TIMEFRAMES period)
 {

@@ -382,6 +382,28 @@ BEGIN_TEST_CASE("should provide writeTo method")
   REQUIRE_EQUAL(vec1,vec2);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should provide abs method")
+  double arr1[] = {1,2.2,3.3,4.4,5.5};
+  double arr2[] = {1,-2.2,-3.3,4.4,-5.5};
+  
+  nvVecd vec1(arr1);
+  nvVecd vec2(arr2);
+  
+  REQUIRE_EQUAL(vec1,vec2.abs());
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should provide div method")
+  double arr1[] = {1,2.2,3.3,4.4,5.5};
+  double arr2[] = {1,-2.2,-3.3,4.4,-5.5};
+  double arr3[] = {1,-1.0,-1.0,1.0,-1.0};
+  
+  nvVecd vec1(arr1);
+  nvVecd vec2(arr2);
+  nvVecd vec3(arr3);
+  
+  REQUIRE_EQUAL(vec1.div(vec2),vec3);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_SUITE()

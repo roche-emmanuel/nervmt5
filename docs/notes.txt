@@ -24,3 +24,22 @@ St. Wealth mean: -0.05935754022858003
 St. Wealth deviation: 0.02676160052919921
 St. Max DrawDown mean: 0.06841811194285298
 St. Max DrawDown deviation: 0.02465865822919882
+
+- With usage of signal threshold set to 0.8 (no warmup):
+
+  double tcost = 0.00001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.8);
+  straits.transactionCost(tcost);
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
+
+St. Wealth mean: -0.01557291925465809
+St. Wealth deviation: 0.01968032852591378
+St. Max DrawDown mean: 0.04085105590062114
+St. Max DrawDown deviation: 0.01564622508160748
