@@ -61,3 +61,4 @@
 03/02/15-16:15:12: Removed some obsolete methods.
 03/02/15-16:26:36: Removed initOnlineContext()
 03/02/15-16:38:32: Added vectors for trailing signals and return moments.
+03/02/15-20:48:17: Tested stochastic training with dFt_1 = 0.0 at start.
