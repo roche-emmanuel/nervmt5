@@ -77,7 +77,7 @@ protected:
   virtual void addPriceReturn(double rt);
 
   /* perform online training. */
-  virtual void performOnlineTraining(nvRRLOnlineTrainingContext &ctx);
+  virtual void performOnlineTraining();
 
   /* perform batch training. */
   virtual void performBatchTraining();
@@ -93,9 +93,6 @@ protected:
 
   /* Ensure that the norm of the theta vector is not becoming too big. */
   virtual void validateThetaNorm();
-
-  /* Method used to compute the delta on the weights for a given sample. */
-  void computeWeightDelta(nvRRLOnlineTrainingContext &ctx, const nvVecd &rvec, double Ft_1);
 
   /* Method used to perform a minimal simple batch training. */
   void performBatchTraining_simple();
@@ -232,7 +229,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     {
       // perform the online training.
       logDEBUG("Performing online training at bcount=" << bcount);
-      performOnlineTraining(_onlineContext);
+      performOnlineTraining();
     }
 
     // perform the evaluation:
@@ -250,6 +247,12 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     pred.confidence(confidence);
   }
 
+  // Compute the Return of the model:
+    // Also compute the theoritical return:
+    double Ft = getCurrentSignal();
+    double tcost = _traits.transactionCost();
+    double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
+
   // Write the history data if requested:
   if (_traits.keepHistory()) {
     _history.add("close_prices", price);
@@ -261,10 +264,6 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     _history.add("return_mean", _returnMean);
     _history.add("return_dev", _returnDev);
 
-    // Also compute the theoritical return:
-    double Ft = getCurrentSignal();
-    double tcost = _traits.transactionCost();
-    double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
     _history.add("theoretical_returns", Rt);
 
     // And compute the total wealth:
@@ -335,68 +334,35 @@ void nvRRLModel::addPriceReturn(double rt)
   }
 }
 
-void nvRRLModel::computeWeightDelta(nvRRLOnlineTrainingContext &ctx, const nvVecd &rvec, double Ft_1)
-{
-  double A = ctx.A;
-  double B = ctx.B;
-
-  ctx.params.set(0, 1.0);
-  ctx.params.set(1, Ft_1);
-  ctx.params.set(2, (rvec - _returnMean) / _returnDev);
-
-  double rt = rvec.back();
-
-  double Ft = predict(ctx.params, _theta);
-  double tcost = _traits.transactionCost();
-  double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
-
-  if (B - A * A != 0.0) {
-    // We can perform the training.
-    // 1. Compute the new value of dFt/dw
-    ctx.dFt = (ctx.params + ctx.dFt_1 * _theta[1]) * (1 - Ft * Ft);
-
-    // 2. compute dRt/dw
-    double dsign = tcost * nv_sign(Ft - Ft_1);
-    ctx.dRt = ctx.dFt_1 * (rt + dsign) - ctx.dFt * dsign;
-
-    // 3. compute dDt/dw
-    ctx.dDt = ctx.dRt * (B - A * Rt) / MathPow(B - A * A, 1.5);
-
-    //logDEBUG("New theta norm: "<< _theta.norm());
-
-    // Advance one step:
-    ctx.dFt_1 = ctx.dFt;
-  }
-  else {
-    ctx.dDt.fill(0.0);
-  }
-
-  // Use Rt to update A and B:
-  double adapt = 0.01; // TODO: Provide as trait.
-  ctx.A = A + adapt * (Rt - A);
-  ctx.B = B + adapt * (Rt * Rt - B);
-}
-
-void nvRRLModel::performOnlineTraining(nvRRLOnlineTrainingContext &ctx)
+void nvRRLModel::performOnlineTraining()
 {
   // For now we just use the current return vector to perform the training.
-  double Ft_1 = getCurrentSignal();
+  _context.Ft_1 = getCurrentSignal();
 
-  // Compute the delta corresponding to the current sample:
-  computeWeightDelta(ctx, _evalReturns, Ft_1);
+  nvRRLCostFunction_SR costfunc(_traits);
 
-  // Update Theta vector:
-  double learningRate = 0.01; // TODO: provide as trait.
-  _theta += ctx.dDt * learningRate;
+  costfunc.setTrainContext(_context);
+  costfunc.setReturns(_evalReturns);
 
-  // Validate the norm of the theta vector:
-  validateThetaNorm();
+  costfunc.performStochasticTraining(_theta,_theta,_traits.learningRate());
+
+  logDEBUG("New theta norm after online training: "<< _theta.norm());
+  double A = _context.A;
+  double B = _context.B;
+  if(B-A*A!=0.0) {
+    logDEBUG("New SR: "<<(A/sqrt(B-A*A)));
+  }
 }
 
 void nvRRLModel::performBatchTraining()
 {
   // Should use a cost function to perform training here.
   nvRRLCostFunction_SR costfunc(_traits);
+
+  //_context.Ft_1 = getCurrentSignal();
+  // _context.reset();
+  // _context.Ft_1 = 0.0;
+  // _context.dFt_1.fill(0.0);
 
   costfunc.setTrainContext(_context);
   costfunc.setReturns(_batchTrainReturns);
@@ -417,50 +383,10 @@ void nvRRLModel::performBatchTraining()
   }
 
   // Check the results by computing the sharpe ratio:
-  nvVecd rets;
-  evaluate(_batchTrainReturns, rets);
-  double sr = nv_sharpe_ratio(rets);
-  logDEBUG("Computed training sharpe ratio: " << sr);
-}
-
-void nvRRLModel::performBatchTraining_simple()
-{
-  // We use the batch training vector ne times:
-  int numEpochs = 10;
-  int num = (int)_batchTrainReturns.size();
-  int ni = _traits.numInputReturns();
-  nvVecd rvec(ni);
-  nvVecd totaldDt(_theta.size());
-
-  for (int i = 0; i < numEpochs; ++i) {
-
-    // Prepare the per epoch data:
-    double Ft_1 = 0.0;
-    _onlineContext.dFt_1.fill(0);
-    totaldDt.fill(0);
-
-    for (int j = 0; j < num; ++j) {
-      rvec.push_back(_batchTrainReturns[j]);
-      if (j < ni - 1) {
-        continue;
-      }
-
-      // The vector is ready for usage:
-      computeWeightDelta(_onlineContext, rvec, Ft_1);
-
-      // Add the delta to the total:
-      totaldDt += _onlineContext.dDt;
-      Ft_1 = predict(_onlineContext.params, _theta);
-    }
-
-    // Update the theta vector:
-    // Uupdate Theta vector:
-    double learningRate = 0.01; // TODO: provide as trait.
-    _theta += totaldDt * learningRate / num;
-
-    // Validate the norm of the theta vector:
-    validateThetaNorm();
-  }
+  // nvVecd rets;
+  // evaluate(_batchTrainReturns, rets);
+  // double sr = nv_sharpe_ratio(rets);
+  // logDEBUG("Computed training sharpe ratio: " << sr);
 }
 
 double nvRRLModel::evaluate(double &confidence)

@@ -240,7 +240,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
       // 3. compute dDt/dw
       _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow(B - A * A, 1.5);
 
-      //logDEBUG("New theta norm: "<< _theta.norm());
+      // logDEBUG("New theta norm: "<< _theta.norm());
 
       // Advance one step:
       _ctx.dFt_1 = _ctx.dFt;
