@@ -168,6 +168,7 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 void nvRRLModel::reset()
 {
   logDEBUG("Resetting RRLModel.")
+  _context.init(_traits);
   initOnlineContext(_onlineContext);
 }
 

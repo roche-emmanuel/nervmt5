@@ -4,24 +4,11 @@
 #include <nerv/trade/rrl/RRLModelTraits.mqh>
 #include <nerv/trade/rrl/RRLTrainContext_SR.mqh>
 
-class nvRRLOnlineContext_SR
-{
-  nvVecd dFt_1;
-  nvVecd dFt;
-  nvVecd dRt;
-  nvVecd dDt;
-  nvVecd params;
-
-  double Ft_1;
-  double A;
-  double B;
-};
-
 class nvRRLCostFunction_SR : public nvCostFunctionBase
 {
 protected:
   nvRRLModelTraits _traits;
-  nvRRLTrainContext_SR *_context;
+  nvRRLTrainContext_SR *_ctx;
 
   nvVecd _returns;
   nvVecd _nrets;
@@ -34,6 +21,8 @@ public:
 
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
+
+  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore = false);
 };
 
 
@@ -42,12 +31,12 @@ nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits)
   : nvCostFunctionBase(traits.numInputReturns() + 2)
 {
   _traits = traits;
-  _context = NULL;
+  _ctx = NULL;
 }
 
 void nvRRLCostFunction_SR::setTrainContext(nvRRLTrainContext_SR &context)
 {
-  _context = GetPointer(context);
+  _ctx = GetPointer(context);
 }
 
 void nvRRLCostFunction_SR::setReturns(const nvVecd &returns)
@@ -194,4 +183,107 @@ void nvRRLCostFunction_SR::computeCost()
 
   // Compute the cost regularization:
   _cost = -sr + 0.5 * _traits.lambda() * (theta.norm2() - theta[0] * theta[0]);
+}
+
+double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore)
+{
+  CHECK_PTR(_ctx, "Invalid context pointer.");
+
+  // Assign the A and B value from the initial variables:
+  double initialA = _ctx.A;
+  double initialB = _ctx.B;
+  double initialF = _ctx.Ft_1;
+
+  double A = _ctx.A;
+  double B = _ctx.B;
+
+  int size = (int)_returns.size();
+  double rtn, rt;
+
+  double tcost = _traits.transactionCost();
+  double maxNorm = 5.0; // TODO: provide as trait.
+  double adapt = 0.01; // TODO: Provide as trait.
+
+  nvVecd theta = x;
+  int nm = (int)theta.size();
+  int ni = nm - 2;
+
+  nvVecd rvec(ni);
+
+  _ctx.params.set(0, 1.0);
+
+  for (int i = 0; i < size; ++i)
+  {
+    rtn = _nrets[i];
+    rt = _returns[i];
+
+    rvec.push_back(rtn);
+    if (i < ni - 1)
+      continue;
+
+    _ctx.params.set(1, _ctx.Ft_1);
+    _ctx.params.set(2, rvec);
+
+    double Ft = nv_tanh(_ctx.params * theta);
+
+    double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
+
+    if (B - A * A != 0.0) {
+      // We can perform the training.
+      // 1. Compute the new value of dFt/dw
+      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * (1 - Ft * Ft);
+
+      // 2. compute dRt/dw
+      double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
+      _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;
+
+      // 3. compute dDt/dw
+      _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow(B - A * A, 1.5);
+
+      //logDEBUG("New theta norm: "<< _theta.norm());
+
+      // Advance one step:
+      _ctx.dFt_1 = _ctx.dFt;
+    }
+    else {
+      _ctx.dDt.fill(0.0);
+    }
+
+    // Now we apply the learning:
+    theta += _ctx.dDt * learningRate;
+
+    // Validate the norm of the theta vector:
+    validateNorm(theta, maxNorm);
+	
+		// Update previsou signal:
+		_ctx.Ft_1 = Ft;
+		
+    // Use Rt to update A and B:
+    A = A + adapt * (Rt - A);
+    B = B + adapt * (Rt * Rt - B);
+  }
+
+  // Once done we the training we provide the final value of theta:
+  result = theta;
+  //logDEBUG("Theta norm after Stochastic training: "<< theta.norm());
+
+  // Compute the final sharpe ratio:
+  double sr = 0.0;
+  if(B - A * A != 0.0) {
+    sr = A/sqrt(B - A*A);
+  }
+
+  if(restore) {
+    // We need to restore the context variables:
+    _ctx.A = initialA;
+    _ctx.B = initialB;
+    _ctx.Ft_1 = initialF;
+    _ctx.dFt_1.fill(0.0);
+  }
+  else {
+    _ctx.A = A;
+    _ctx.B = B;
+  }
+
+  return -sr;
 }

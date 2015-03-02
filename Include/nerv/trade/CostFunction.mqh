@@ -38,12 +38,18 @@ public:
 
   /* Compute the cost only. */
   double computeCost(const nvVecd &x);
-	
+
   /* Method that should be overriden to provide the concrete implementation. */
   //virtual double train(const nvVecd &initx, nvVecd &xresult, const nvVecd& returns);
 
   /* Debug method sued to compute numerical gradients. */
-  void computeNumericalGradient(const nvVecd& x, nvVecd& grad, double eps = 1e-6);
+  void computeNumericalGradient(const nvVecd &x, nvVecd &grad, double eps = 1e-6);
+
+  /* Method should be overriden to provide stochastic training support. */
+  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore = false);
+
+  /* Method used to constraint the norm of the trained theta vector. */
+  void validateNorm(nvVecd& theta, double maxNorm);
 
 protected:
   /* Method that should be overriden to provide the concrete implementation. */
@@ -59,7 +65,7 @@ protected:
   double train_gd(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult);
 
   /* Online training method. */
-  double train_gd_online(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult);
+  double train_sgd(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult);
 };
 
 
@@ -131,17 +137,17 @@ void nvCostFunctionBase::computeCost()
 
 double nvCostFunctionBase::dispatch_train(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult)
 {
-  switch(traits.trainMode())
+  switch (traits.trainMode())
   {
   case TRAIN_BATCH_CONJUGATE_GRADIENT:
-    return train_cg(traits,initx,xresult);
+    return train_cg(traits, initx, xresult);
   case TRAIN_BATCH_GRADIENT_DESCENT:
-    return train_gd(traits,initx,xresult);
+    return train_gd(traits, initx, xresult);
   case TRAIN_STOCHASTIC_GRADIENT_DESCENT:
-    return train_gd_online(traits,initx,xresult);
+    return train_sgd(traits, initx, xresult);
   }
 
-  THROW("Unsupported train method: "<<(int)traits.trainMode());
+  THROW("Unsupported train method: " << (int)traits.trainMode());
   return 0.0;
 }
 
@@ -171,7 +177,7 @@ double nvCostFunctionBase::train_cg(const nvTradeModelTraits &traits, const nvVe
 double nvCostFunctionBase::train_gd(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult)
 {
   // Number of epochs:
-  int ne = traits.numEpochs(); 
+  int ne = traits.numEpochs();
 
   // learning rate:
   double rho = traits.learningRate();
@@ -180,11 +186,11 @@ double nvCostFunctionBase::train_gd(const nvTradeModelTraits &traits, const nvVe
   double cost;
   nvVecd grad;
 
-  for(int i=0;i<ne;++i)
+  for (int i = 0; i < ne; ++i)
   {
     // compute the current gradient
-    cost = computeCost(x,grad);
-    logDEBUG("Cost at epoch "<<i<<": "<<cost);
+    cost = computeCost(x, grad);
+    logDEBUG("Cost at epoch " << i << ": " << cost);
 
     // Update the x vector:
     x -= grad * rho;
@@ -192,16 +198,56 @@ double nvCostFunctionBase::train_gd(const nvTradeModelTraits &traits, const nvVe
 
   // Compute the final cost:
   cost = computeCost(x);
-  logDEBUG("Final cost after training: "<<cost);
+  logDEBUG("Final cost after training: " << cost);
 
   // Now save the result:
   xresult = x;
   return cost;
 }
 
-double nvCostFunctionBase::train_gd_online(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult)
+double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvVecd &initx, nvVecd &xresult)
 {
-  return 0.0;
+  int ne = traits.numEpochs();
+  nvVecd x = initx;
+
+  double learningRate = traits.learningRate();
+
+  double best_cost = 1e10;
+  double cost;
+  double lr;
+
+  nvVecd result;
+
+  bool restore;
+  int maxCount = 6; // will arrive to lr=1.291467969e-005
+  int count;
+
+  for (int i = 0; i < ne; ++i) {
+    lr = learningRate;
+    restore = i<ne-1;
+
+    // perform stochastic training:
+    // We restore the settings as long as we are not on the latest epoch:
+    cost = performStochasticTraining(x,result,lr,restore);
+    count = 0;
+    while(cost > best_cost && restore && count<maxCount) {
+      lr *= 0.33;
+      count++;
+      //logDEBUG("Found too big cost "<<cost<<" retrying with lr="<<lr<<" (count="<<count<<")");
+      cost = performStochasticTraining(x,result,lr,restore);
+    }
+
+    if(cost < best_cost) {
+      // This iteration result is valid, so we use it:
+      x = result;
+      best_cost = cost;
+    }
+
+    logDEBUG("Cost at epoch " << i << ": " << best_cost);
+  }
+
+  xresult = result;
+  return best_cost;
 }
 
 // double nvCostFunctionBase::train(const nvVecd &initx, nvVecd &xresult, const nvVecd& returns)
@@ -210,21 +256,36 @@ double nvCostFunctionBase::train_gd_online(const nvTradeModelTraits &traits, con
 //   return 0.0;
 // }
 
-void nvCostFunctionBase::computeNumericalGradient(const nvVecd& x, nvVecd& grad, double eps = 1e-6)
+void nvCostFunctionBase::computeNumericalGradient(const nvVecd &x, nvVecd &grad, double eps = 1e-6)
 {
   int num = (int)x.size();
   grad.resize(num);
   nvVecd perturb(num);
 
-  for(int i=0;i<num;++i)
+  for (int i = 0; i < num; ++i)
   {
-    perturb.set(i,eps);
-    
-    double cost1 = computeCost(x-perturb);
-    double cost2 = computeCost(x+perturb);
-    
-    grad.set(i,(cost2-cost1)/(2.0*eps));
+    perturb.set(i, eps);
 
-    perturb.set(i,0.0);
+    double cost1 = computeCost(x - perturb);
+    double cost2 = computeCost(x + perturb);
+
+    grad.set(i, (cost2 - cost1) / (2.0 * eps));
+
+    perturb.set(i, 0.0);
+  }
+}
+
+double nvCostFunctionBase::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore)
+{
+  THROW("This method should be overriden.");
+  return 0.0;
+}
+
+void nvCostFunctionBase::validateNorm(nvVecd& theta, double maxNorm)
+{
+  double tn = theta.norm();
+  if (tn > maxNorm) {
+    // theta *= MathMin(exp(-tn / maxNorm + 1),0.75);
+    theta *= 0.75;
   }
 }

@@ -96,7 +96,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   straits.autoWriteHistory(true);
   straits.id("test1_eur");
   straits.warmUpLength(0);
-  straits.signalThreshold(0.8);
+  straits.signalThreshold(0.0);
   
   double tcost = 0.00001;
   straits.transactionCost(tcost);
@@ -107,8 +107,12 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   traits.batchTrainLength(2000);
   traits.batchTrainFrequency(500);
   traits.onlineTrainLength(-1);
-  traits.lambda(0.001);
-  
+  traits.lambda(0.0);
+  traits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  traits.warmInit(true);
+  traits.numEpochs(30);
+  traits.learningRate(0.01);
+
   // Keep history:
   traits.historyLength(0);
   // Do not write history data to disk.
@@ -131,6 +135,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
 
   nvVecd rets = prices.subvec(1,prices.size()-1) - prices.subvec(0,prices.size()-1);
   logDEBUG("Global returns mean: "<<rets.mean()<<", dev:"<<rets.deviation());
+  
   traits.fixReturnsMeanDev(rets.mean(),rets.deviation());
 
   {
