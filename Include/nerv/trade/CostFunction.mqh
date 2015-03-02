@@ -243,7 +243,7 @@ double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvV
       best_cost = cost;
     }
 
-    logDEBUG("Cost at epoch " << i << ": " << best_cost);
+    //logDEBUG("Cost at epoch " << i << ": " << best_cost);
   }
 
   xresult = result;

@@ -31,6 +31,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   straits.warmUpLength(0);
   straits.signalThreshold(0.8);
   straits.transactionCost(tcost);
+  
   mtraits.transactionCost(tcost);  
   mtraits.batchTrainLength(2000);
   mtraits.batchTrainFrequency(500);
@@ -38,6 +39,11 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   mtraits.lambda(0.0);
   mtraits.numInputReturns(10);
   mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
 
   // int offset = 0;
   datetime starttime = D'21.02.2015 12:00:00';
@@ -53,6 +59,11 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
 
   // build a vector from the prices:
   nvVecd all_prices(arr);
+
+  nvVecd rets = all_prices.subvec(1,all_prices.size()-1) - all_prices.subvec(0,all_prices.size()-1);
+  logDEBUG("Global returns mean: "<<rets.mean()<<", dev:"<<rets.deviation());
+  
+  mtraits.fixReturnsMeanDev(rets.mean(),rets.deviation());
 
   // nvVecd final_wealth;
   // nvVecd max_dd;

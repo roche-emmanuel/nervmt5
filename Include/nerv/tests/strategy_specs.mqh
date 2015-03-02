@@ -110,7 +110,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   traits.lambda(0.0);
   traits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
   traits.warmInit(true);
-  traits.numEpochs(30);
+  traits.numEpochs(15);
   traits.learningRate(0.01);
 
   // Keep history:
