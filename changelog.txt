@@ -64,3 +64,4 @@
 03/02/15-20:48:17: Tested stochastic training with dFt_1 = 0.0 at start.
 03/03/15-09:10:27: Tested with proper initial context settings before training.
 03/03/15-09:33:18: Added variable for number of transactions. Using signal threshold of 0.8 for simple strategy test.
+03/03/15-09:38:40: Added support for num deals computation in strategy eval.

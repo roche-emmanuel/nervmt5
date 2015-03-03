@@ -69,7 +69,8 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   // nvVecd max_dd;
   nvVecd st_final_wealth;
   nvVecd st_max_dd;
-  
+  nvVecd st_num_deals;
+
   int tsize = 20000;
   int step = 500;
   int numit = 1+(count - tsize)/step;
@@ -120,6 +121,15 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
       logDEBUG("Acheived St. max drawdown "<<dd);
       st_max_dd.push_back(dd);
     }
+
+    {
+      // Retrieve the number of deals performed:
+      nvVecd* ndeals = (nvVecd*)st.getHistoryMap().get("strategy_num_deals");
+      REQUIRE_VALID_PTR(ndeals);
+      double nd = ndeals.back();
+      logDEBUG("Acheived St. num deals: "<<nd);
+      st_num_deals.push_back(nd);      
+    }
   }
 
   // logDEBUG("Th. Wealth mean: "<< final_wealth.mean());
@@ -137,6 +147,10 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   logDEBUG("St. Max DrawDown mean: "<< st_max_dd.mean());
   logDEBUG("St. Max DrawDown deviation: "<< st_max_dd.deviation());
   st_max_dd.writeTo("max_drawdown.txt");
+
+  logDEBUG("St. Num deals mean: "<< st_num_deals.mean());
+  logDEBUG("St. Num deals deviation: "<< st_num_deals.deviation());
+  st_num_deals.writeTo("num_deals.txt");
 END_TEST_CASE()
 
 END_TEST_SUITE()
