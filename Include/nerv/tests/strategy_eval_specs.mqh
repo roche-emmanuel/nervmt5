@@ -31,7 +31,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   straits.warmUpLength(0);
   straits.signalThreshold(0.8);
   straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
-  straits.signalMeanLength(50);
+  straits.signalMeanLength(100);
   straits.transactionCost(tcost);
   
   mtraits.transactionCost(tcost);  

@@ -8,7 +8,7 @@ class nvRRLCostFunction_SR : public nvCostFunctionBase
 {
 protected:
   nvRRLModelTraits _traits;
-  nvRRLTrainContext_SR *_ctx;
+  nvRRLTrainContext_SR _ctx;
 
   nvVecd _returns;
   nvVecd _nrets;
@@ -17,7 +17,7 @@ public:
   nvRRLCostFunction_SR(const nvRRLModelTraits &traits);
 
   virtual void setReturns(const nvVecd &returns);
-  virtual void setTrainContext(nvTrainContext &context);
+  virtual nvTrainContext* getTrainContext() const;
 
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
@@ -31,13 +31,12 @@ nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits)
   : nvCostFunctionBase(traits.numInputReturns() + 2)
 {
   _traits = traits;
-  _ctx = NULL;
+  _ctx.init(traits);
 }
 
-void nvRRLCostFunction_SR::setTrainContext(nvTrainContext &context)
+nvTrainContext* nvRRLCostFunction_SR::getTrainContext() const
 {
-  _ctx = (nvRRLTrainContext_SR*)GetPointer(context);
-  CHECK_PTR(_ctx, "Invalid train context pointer.");
+  return GetPointer(_ctx);
 }
 
 void nvRRLCostFunction_SR::setReturns(const nvVecd &returns)
@@ -54,6 +53,15 @@ void nvRRLCostFunction_SR::setReturns(const nvVecd &returns)
 
 double nvRRLCostFunction_SR::train(const nvVecd &initx, nvVecd &xresult)
 {
+  // Initialize the context here:
+
+  // To be accurate this training should start with the state that we had at the beginning
+  // of the training phase.
+  // Say the input vector contains on numInputReturns() elements
+  // This means we should train with the latest values observed so far. (at _returnsMoment1.size()-1)
+  // Otherwise, for each additional element we move one step back in time.
+  _ctx.loadState((int)xresult.size()-_traits.numInputReturns());
+
   return dispatch_train(_traits, initx, xresult);
 }
 

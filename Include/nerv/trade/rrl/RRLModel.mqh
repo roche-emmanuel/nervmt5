@@ -20,18 +20,12 @@ private:
 
   nvVecd _theta;
 
-  nvVecd _returnMoment1;
-  nvVecd _returnMoment2;
-  nvVecd _signals;
-
   double _currentSignal;
   double _returnMean;
   double _returnDev;
   double _wealth;
 
   bool _batchTrainNeeded;
-
-  nvRRLTrainContext_SR _context;
 
   int _evalCount;
 
@@ -141,10 +135,6 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   _theta.resize(ni + 2, 1.0);
   _batchTrainReturns.resize(MathMax(blen, 1));
   
-  _returnMoment1.resize(MathMax(blen, 1));
-  _returnMoment2.resize(MathMax(blen, 1));
-  _signals.resize(MathMax(blen, 1));
-
   _onlineTrainReturns.resize(MathMax(olen, 1));
   _evalReturns.resize(ni);
   _lastReturns.resize(rlen);
@@ -156,7 +146,6 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 void nvRRLModel::reset()
 {
   logDEBUG("Resetting RRLModel.")
-  _context.init(_traits);
 }
 
 bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
@@ -243,16 +232,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
   double tcost = _traits.transactionCost();
   double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
 
-  // now we can compute the new exponential moving averages:
-  double A = _returnMoment1.back();
-  double B = _returnMoment2.back();
-  double eta = 0.01; // TODO: provide as traits.
-  A += eta * (Rt - A);
-  B += eta * (Rt * Rt - B);
-
-  _returnMoment1.push_back(A);
-  _returnMoment2.push_back(B);
-  _signals.push_back(Ft);
+  _costfunc.getTrainContext().pushState(Ft, Rt);
 
   // Write the history data if requested:
   if (_traits.keepHistory()) {
@@ -272,12 +252,8 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     _history.add("theoretical_wealth", _wealth);
 
     // Also write the expoential moving average version of the sharpe ratio:
-    double eSR = 0.0;
-    A = _returnMoment1.back();
-    B = _returnMoment2.back();
-    if (B - A * A != 0.0) {
-      eSR = A / MathSqrt(B - A * A);
-    }
+    double eSR = _costfunc.getTrainContext().getSharpeRatioEMA();
+
     _history.add("ema_SR", eSR);
 
     // Also write the norm of the theta vector:
@@ -338,44 +314,23 @@ void nvRRLModel::addPriceReturn(double rt)
 void nvRRLModel::performOnlineTraining()
 {
   // For now we just use the current return vector to perform the training.
-  _context.Ft_1 = getCurrentSignal();
+  // _context.Ft_1 = getCurrentSignal();
 
-  _costfunc.setTrainContext(_context);
   _costfunc.setReturns(_evalReturns);
 
   _costfunc.performStochasticTraining(_theta, _theta, _traits.learningRate());
 
   logDEBUG("New theta norm after online training: " << _theta.norm());
-  double A = _context.A;
-  double B = _context.B;
-  if (B - A * A != 0.0) {
-    logDEBUG("New SR: " << (A / sqrt(B - A * A)));
-  }
+  // double A = _context.A;
+  // double B = _context.B;
+  // if (B - A * A != 0.0) {
+  //   logDEBUG("New SR: " << (A / sqrt(B - A * A)));
+  // }
 }
 
 void nvRRLModel::performBatchTraining()
 {
   // Should use a cost function to perform training here.
-
-  // To be accurate this training should start with the state that we had at the beginning
-  // of the training phase.
-  _context.A = _returnMoment1.front();
-  _context.B = _returnMoment2.front();
-  _context.Ft_1 = _signals.front();
-  _context.dFt_1.fill(0.0); // This is not completely correct.
-  // logDEBUG("Initial DFt_1 norm: "<< _context.dFt_1.norm());
-
-  //_context.Ft_1 = getCurrentSignal();
-  // _context.reset();
-  // _context.Ft_1 = 0.0;
-  // _context.dFt_1.fill(0.0);
-  // double A = _context.A;
-  // double B = _context.B;
-  // if(B-A*A!=0.0) {
-  //   logDEBUG("Initial SR: "<<(A/sqrt(B-A*A)));
-  // }
-
-  _costfunc.setTrainContext(_context);
   _costfunc.setReturns(_batchTrainReturns);
 
   nvVecd initx(_theta);

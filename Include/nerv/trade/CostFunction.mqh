@@ -55,7 +55,7 @@ public:
   virtual void setReturns(const nvVecd &returns);
 
   /* Method that should be overriden to provide th online train context. */
-  virtual void setTrainContext(nvTrainContext &context);
+  virtual nvTrainContext* getTrainContext() const;
 
 protected:
   /* Method that should be overriden to provide the concrete implementation. */
@@ -301,8 +301,9 @@ void nvCostFunctionBase::setReturns(const nvVecd &returns)
   NO_IMPL();
 }
 
-void nvCostFunctionBase::setTrainContext(nvTrainContext &context)
+nvTrainContext* nvCostFunctionBase::getTrainContext() const
 {
   NO_IMPL();
+  return NULL;
 }
 
