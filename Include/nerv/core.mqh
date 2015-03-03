@@ -29,6 +29,7 @@
 
 #define CHECK(val,msg) if(!(val)) THROW(__FILE__ << "(" << __LINE__ <<") :" << msg)
 #define CHECK_PTR(ptr, msg) CHECK(IS_VALID_POINTER(ptr),msg)
+#define NO_IMPL(arg) THROW("This method is not implemented.");
 
 #include <Object.mqh>
 #include <Arrays/List.mqh>

@@ -16,8 +16,8 @@ protected:
 public:
   nvRRLCostFunction_SR(const nvRRLModelTraits &traits);
 
-  void setReturns(const nvVecd &returns);
-  void setTrainContext(nvRRLTrainContext_SR &context);
+  virtual void setReturns(const nvVecd &returns);
+  virtual void setTrainContext(nvTrainContext &context);
 
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
@@ -34,9 +34,10 @@ nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits)
   _ctx = NULL;
 }
 
-void nvRRLCostFunction_SR::setTrainContext(nvRRLTrainContext_SR &context)
+void nvRRLCostFunction_SR::setTrainContext(nvTrainContext &context)
 {
-  _ctx = GetPointer(context);
+  _ctx = (nvRRLTrainContext_SR*)GetPointer(context);
+  CHECK_PTR(_ctx, "Invalid train context pointer.");
 }
 
 void nvRRLCostFunction_SR::setReturns(const nvVecd &returns)
