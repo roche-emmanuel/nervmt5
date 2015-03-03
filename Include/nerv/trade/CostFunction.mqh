@@ -40,7 +40,7 @@ public:
   double computeCost(const nvVecd &x);
 
   /* Method that should be overriden to provide the concrete implementation. */
-  //virtual double train(const nvVecd &initx, nvVecd &xresult, const nvVecd& returns);
+  virtual double train(const nvVecd &initx, nvVecd &xresult);
 
   /* Debug method sued to compute numerical gradients. */
   void computeNumericalGradient(const nvVecd &x, nvVecd &grad, double eps = 1e-6);
@@ -50,6 +50,12 @@ public:
 
   /* Method used to constraint the norm of the trained theta vector. */
   void validateNorm(nvVecd& theta, double maxNorm);
+
+  /* Method that should be overriden to provide the returns array. */
+  virtual void setReturns(const nvVecd &returns);
+
+  /* Method that should be overriden to provide th online train context. */
+  virtual void setTrainContext(nvTrainContext &context);
 
 protected:
   /* Method that should be overriden to provide the concrete implementation. */
@@ -250,11 +256,11 @@ double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvV
   return best_cost;
 }
 
-// double nvCostFunctionBase::train(const nvVecd &initx, nvVecd &xresult, const nvVecd& returns)
-// {
-//   THROW("This method should be overriden.");
-//   return 0.0;
-// }
+double nvCostFunctionBase::train(const nvVecd &initx, nvVecd &xresult)
+{
+  THROW("This method should be overriden.");
+  return 0.0;
+}
 
 void nvCostFunctionBase::computeNumericalGradient(const nvVecd &x, nvVecd &grad, double eps = 1e-6)
 {
@@ -289,3 +295,14 @@ void nvCostFunctionBase::validateNorm(nvVecd& theta, double maxNorm)
     theta *= 0.75;
   }
 }
+
+void nvCostFunctionBase::setReturns(const nvVecd &returns)
+{
+  NO_IMPL();
+}
+
+void nvCostFunctionBase::setTrainContext(nvTrainContext &context)
+{
+  NO_IMPL();
+}
+

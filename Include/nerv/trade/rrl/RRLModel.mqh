@@ -11,6 +11,8 @@ class nvRRLModel : public nvTradeModel
 private:
   nvRRLModelTraits *_traits;
 
+  nvCostFunctionBase* _costfunc;
+
   nvVecd _batchTrainReturns;
   nvVecd _onlineTrainReturns;
   nvVecd _evalReturns;
@@ -146,6 +148,9 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   _onlineTrainReturns.resize(MathMax(olen, 1));
   _evalReturns.resize(ni);
   _lastReturns.resize(rlen);
+
+  RELEASE_PTR(_costfunc);
+  _costfunc = new nvRRLCostFunction_SR(_traits);
 }
 
 void nvRRLModel::reset()
@@ -335,12 +340,10 @@ void nvRRLModel::performOnlineTraining()
   // For now we just use the current return vector to perform the training.
   _context.Ft_1 = getCurrentSignal();
 
-  nvRRLCostFunction_SR costfunc(_traits);
+  _costfunc.setTrainContext(_context);
+  _costfunc.setReturns(_evalReturns);
 
-  costfunc.setTrainContext(_context);
-  costfunc.setReturns(_evalReturns);
-
-  costfunc.performStochasticTraining(_theta, _theta, _traits.learningRate());
+  _costfunc.performStochasticTraining(_theta, _theta, _traits.learningRate());
 
   logDEBUG("New theta norm after online training: " << _theta.norm());
   double A = _context.A;
@@ -353,7 +356,6 @@ void nvRRLModel::performOnlineTraining()
 void nvRRLModel::performBatchTraining()
 {
   // Should use a cost function to perform training here.
-  nvRRLCostFunction_SR costfunc(_traits);
 
   // To be accurate this training should start with the state that we had at the beginning
   // of the training phase.
@@ -373,8 +375,8 @@ void nvRRLModel::performBatchTraining()
   //   logDEBUG("Initial SR: "<<(A/sqrt(B-A*A)));
   // }
 
-  costfunc.setTrainContext(_context);
-  costfunc.setReturns(_batchTrainReturns);
+  _costfunc.setTrainContext(_context);
+  _costfunc.setReturns(_batchTrainReturns);
 
   nvVecd initx(_theta);
   if (!_traits.warmInit()) {
@@ -382,7 +384,7 @@ void nvRRLModel::performBatchTraining()
     initx.fill(1.0);
   }
 
-  double cost = costfunc.train(initx, _theta);
+  double cost = _costfunc.train(initx, _theta);
   logDEBUG("Acheived best cost: " << cost);
 
   if (!_traits.returnsMeanDevFixed())

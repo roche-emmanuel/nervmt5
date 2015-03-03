@@ -67,3 +67,4 @@
 03/03/15-09:38:40: Added support for num deals computation in strategy eval.
 03/03/15-11:27:03: Tested training with recomputation of Ft and Rt after theta update.
 03/03/15-17:36:55: Tested with signal adaptation set to 0.02 => This has no effect (it is not used.).
+03/03/15-20:14:45: Adding generic implementation of costfunction.
