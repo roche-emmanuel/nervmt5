@@ -38,6 +38,9 @@ protected:
   /* Variable used to store the exponential mean of the signal received so far. */
   double _signalMean;
 
+  /* Variable used to record the number of transactions performed so far. */
+  int _numTransactions;
+
 public:
   /* Constructor taking the strategy traits.*/
   nvStrategy(const nvStrategyTraits &traits);
@@ -72,7 +75,8 @@ nvStrategy::nvStrategy(const nvStrategyTraits &traits)
   : _currentPosition(0.0),
     _currentWealth(0.0),
     _signals(traits.signalMeanLength()),
-    _signalMean(0.0)
+    _signalMean(0.0),
+    _numTransactions(0)
 {
   _traits = traits;
 
@@ -167,6 +171,12 @@ void nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePredicti
 
       Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
 
+      // Check if we need to perform a transaction:
+      if(_currentPosition != Ft)
+      {
+        _numTransactions++;
+      }
+
       // Assign the new position:
       // _currentPosition = Ft > 0.5 ? 1 : Ft < -0.5 ? -1 : 0;
       _currentPosition = Ft;
@@ -186,6 +196,7 @@ void nvStrategy::handleBar(const MqlRates &rates, ulong elapsed, nvTradePredicti
     _history.add("signal_geo_mean",_signals.mean());
     _history.add("signal_exp_mean",_signalMean);
     _history.add("strategy_position",_currentPosition);
+    _history.add("strategy_num_deals",_numTransactions);
   }
 }
 

@@ -96,7 +96,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   straits.autoWriteHistory(true);
   straits.id("test1_eur");
   straits.warmUpLength(0);
-  straits.signalThreshold(0.0);
+  straits.signalThreshold(0.8);
   
   double tcost = 0.00001;
   straits.transactionCost(tcost);
