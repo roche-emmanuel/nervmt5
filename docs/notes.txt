@@ -151,3 +151,36 @@ St. Max DrawDown mean: 0.03092347826086955
 St. Max DrawDown deviation: 0.02615331419723945
 St. Num deals mean: 47.52795031055901
 St. Num deals deviation: 38.92131728599424
+
+- Tested with signal adaptation set to 0.02:
+
+  // Settings:
+  double tcost = 0.00001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.8);
+  straits.signalAdaptation(0.02);
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
+
+St. Wealth mean: 0.007832608695652246
+St. Wealth deviation: 0.0346516469362683
+St. Max DrawDown mean: 0.03298962732919253
+St. Max DrawDown deviation: 0.02673557121245007
+St. Num deals mean: 54.98757763975155
+St. Num deals deviation: 43.60989056753405
+
+=> This has absolutely no effect since we don't use the the EMA of the signals but just the MA for now.
+
+

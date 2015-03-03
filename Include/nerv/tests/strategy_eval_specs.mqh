@@ -30,6 +30,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   double tcost = 0.00001;
   straits.warmUpLength(0);
   straits.signalThreshold(0.8);
+  straits.signalAdaptation(0.02); // This as no effect for now => Signal EMA not used.
   straits.transactionCost(tcost);
   
   mtraits.transactionCost(tcost);  
