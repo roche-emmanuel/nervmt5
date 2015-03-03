@@ -124,3 +124,30 @@ St. Wealth deviation: 0.0346516469362683
 St. Max DrawDown mean: 0.03298962732919253
 St. Max DrawDown deviation: 0.02673557121245007
 
+- Tested with recomputation of Ft and Rt after theta update:
+
+  // Settings:
+  double tcost = 0.00001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.8);
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
+
+St. Wealth mean: 0.004436645962732959
+St. Wealth deviation: 0.03677024515625876
+St. Max DrawDown mean: 0.03092347826086955
+St. Max DrawDown deviation: 0.02615331419723945
+St. Num deals mean: 47.52795031055901
+St. Num deals deviation: 38.92131728599424
