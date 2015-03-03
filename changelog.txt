@@ -71,3 +71,4 @@
 03/03/15-21:19:48: Tested with signal mean length set to 50 -> This will reduce the final wealth.
 03/03/15-21:21:35: Merged changes.
 03/04/15-00:12:48: Added proper implementation for generic cost function and train context.
+03/04/15-00:43:42: Minor lyaout update.

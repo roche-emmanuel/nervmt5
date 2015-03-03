@@ -35,7 +35,7 @@ public:
   {
     _traits = traits;
 
-    int nm = traits.numInputReturns()+2;
+    int nm = traits.numInputReturns() + 2;
     A = 0.0;
     B = 0.0;
     Ft_1 = 0.0;
@@ -73,8 +73,8 @@ public:
   virtual void loadState(int offset)
   {
     int index = (int)_returnMoment1.size() - 1 - offset;
-    
-    CHECK(index>=0,"Invalid index: "<<index);
+
+    CHECK(index >= 0, "Invalid index: " << index);
 
     // For now we force the index to zero to simulate the previous implementation:
     index = 0;
