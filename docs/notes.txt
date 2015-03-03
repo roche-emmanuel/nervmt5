@@ -96,3 +96,31 @@ St. Wealth mean: 0.006209192546583827
 St. Wealth deviation: 0.03458192658990308
 St. Max DrawDown mean: 0.03403161490683229
 St. Max DrawDown deviation: 0.02550882151252917
+
+- With proper initial context setting before training (for A, B and Ft_1) and dFt_1=0.0:
+
+  // Settings:
+  double tcost = 0.00001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.8);
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
+
+
+St. Wealth mean: 0.007832608695652246
+St. Wealth deviation: 0.0346516469362683
+St. Max DrawDown mean: 0.03298962732919253
+St. Max DrawDown deviation: 0.02673557121245007
+

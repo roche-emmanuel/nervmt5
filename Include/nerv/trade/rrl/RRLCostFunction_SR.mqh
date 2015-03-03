@@ -193,6 +193,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
   double initialA = _ctx.A;
   double initialB = _ctx.B;
   double initialF = _ctx.Ft_1;
+  nvVecd initialdFt = _ctx.dFt_1;
 
   double A = _ctx.A;
   double B = _ctx.B;
@@ -255,6 +256,8 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     // Validate the norm of the theta vector:
     validateNorm(theta, maxNorm);
 	
+    // TODO: here we could re-compute the value of Ft anf Rt using the new value of theta.
+    
 		// Update previsou signal:
 		_ctx.Ft_1 = Ft;
 		
@@ -278,7 +281,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     _ctx.A = initialA;
     _ctx.B = initialB;
     _ctx.Ft_1 = initialF;
-    _ctx.dFt_1.fill(0.0);
+    _ctx.dFt_1 = initialdFt;
   }
   else {
     _ctx.A = A;

@@ -357,9 +357,9 @@ void nvRRLModel::performBatchTraining()
 
   // To be accurate this training should start with the state that we had at the beginning
   // of the training phase.
-  //_context.A = _returnMoment1.front();
-  // _context.B = _returnMoment2.front();
-  // _context.Ft_1 = 0.0; //_signals.back();
+  _context.A = _returnMoment1.front();
+  _context.B = _returnMoment2.front();
+  _context.Ft_1 = _signals.front();
   _context.dFt_1.fill(0.0); // This is not completely correct.
   // logDEBUG("Initial DFt_1 norm: "<< _context.dFt_1.norm());
 
@@ -372,7 +372,6 @@ void nvRRLModel::performBatchTraining()
   // if(B-A*A!=0.0) {
   //   logDEBUG("Initial SR: "<<(A/sqrt(B-A*A)));
   // }
-
 
   costfunc.setTrainContext(_context);
   costfunc.setReturns(_batchTrainReturns);
