@@ -60,7 +60,7 @@ double nvRRLCostFunction_SR::train(const nvVecd &initx, nvVecd &xresult)
   // Say the input vector contains on numInputReturns() elements
   // This means we should train with the latest values observed so far. (at _returnsMoment1.size()-1)
   // Otherwise, for each additional element we move one step back in time.
-  _ctx.loadState((int)_returns.size() - _traits.numInputReturns());
+  _ctx.loadState((int)_returns.size());
 
   return dispatch_train(_traits, initx, xresult);
 }
@@ -198,21 +198,15 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 {
   CHECK_PTR(_ctx, "Invalid context pointer.");
 
-  // Assign the A and B value from the initial variables:
-  double initialA = _ctx.A;
-  double initialB = _ctx.B;
-  double initialF = _ctx.Ft_1;
-  nvVecd initialdFt = _ctx.dFt_1;
-
-  double A = _ctx.A;
-  double B = _ctx.B;
-
   int size = (int)_returns.size();
+  _ctx.loadState(size);
+
   double rtn, rt;
 
   double tcost = _traits.transactionCost();
   double maxNorm = 5.0; // TODO: provide as trait.
   double adapt = 0.01; // TODO: Provide as trait.
+  double A,B;
 
   nvVecd theta = x;
   int nm = (int)theta.size();
@@ -237,6 +231,9 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     double Ft = nv_tanh(_ctx.params * theta);
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
+    
+    A = _ctx.A;
+    B = _ctx.B;
 
     if (B - A * A != 0.0) {
       // We can perform the training.
@@ -276,8 +273,11 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     _ctx.Ft_1 = Ft;
 
     // Use Rt to update A and B:
-    A = A + adapt * (Rt - A);
-    B = B + adapt * (Rt * Rt - B);
+    _ctx.A = _ctx.A + adapt * (Rt - _ctx.A);
+    _ctx.B = _ctx.B + adapt * (Rt * Rt - _ctx.B);
+
+    // Save the current state of the train context:
+    _ctx.pushState();
   }
 
   // Once done we the training we provide the final value of theta:
@@ -286,20 +286,11 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
   // Compute the final sharpe ratio:
   double sr = 0.0;
+  A = _ctx.A;
+  B = _ctx.B;
+
   if (B - A * A != 0.0) {
     sr = A / sqrt(B - A * A);
-  }
-
-  if (restore) {
-    // We need to restore the context variables:
-    _ctx.A = initialA;
-    _ctx.B = initialB;
-    _ctx.Ft_1 = initialF;
-    _ctx.dFt_1 = initialdFt;
-  }
-  else {
-    _ctx.A = A;
-    _ctx.B = B;
   }
 
   return -sr;

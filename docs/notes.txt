@@ -214,3 +214,32 @@ St. Num deals mean: 132.1987577639752
 St. Num deals deviation: 74.77023769964771
 
 
+- Initial test with embedded Train Context:
+
+  // Settings:
+  double tcost = 0.00001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.8);
+  straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  straits.signalMeanLength(100);
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
+
+St. Wealth mean: 0.003813788819875747
+St. Wealth deviation: 0.03625977960960859
+St. Max DrawDown mean: 0.02984770186335405
+St. Max DrawDown deviation: 0.026094184619879
+St. Num deals mean: 50.36024844720497
+St. Num deals deviation: 42.36635311583698

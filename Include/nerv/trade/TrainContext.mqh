@@ -4,12 +4,12 @@
 class nvTrainContext : public nvObject
 {
 public:
-  virtual void pushState(double Ft, double Rt)
+  virtual void pushState()
   {
     NO_IMPL();
   }
 
-  virtual void loadState(int offset)
+  virtual void loadState(int nrets)
   {
     NO_IMPL();
   }

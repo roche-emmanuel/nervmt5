@@ -17,11 +17,16 @@ protected:
   int _reserveSize;
 
 public:
+  nvVecd()
+  {
+    resize(0,0.0,false);
+  }
+
   /** Vector constructor:
   \param len: length of the vector.
   \param val: default element value.
   */
-  nvVecd(uint len = 0, double val = 0.0, bool dynamic = false)
+  nvVecd(uint len, double val = 0.0, bool dynamic = false)
   {
     resize(len, val, dynamic);
   };

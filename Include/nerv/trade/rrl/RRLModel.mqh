@@ -223,6 +223,8 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     signal = evaluate(confidence);
     _evalCount++;
 
+    _costfunc.getTrainContext().pushState();
+
     if (_traits.batchTrainFrequency() > 0 && _evalCount % _traits.batchTrainFrequency() == 0)
     {
       _batchTrainNeeded = true;
@@ -239,8 +241,6 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
   double Ft = getCurrentSignal();
   double tcost = _traits.transactionCost();
   double Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
-
-  _costfunc.getTrainContext().pushState(Ft, Rt);
 
   // Write the history data if requested:
   if (_traits.keepHistory()) {
