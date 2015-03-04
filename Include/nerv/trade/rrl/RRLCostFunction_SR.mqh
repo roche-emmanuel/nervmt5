@@ -60,7 +60,7 @@ double nvRRLCostFunction_SR::train(const nvVecd &initx, nvVecd &xresult)
   // Say the input vector contains on numInputReturns() elements
   // This means we should train with the latest values observed so far. (at _returnsMoment1.size()-1)
   // Otherwise, for each additional element we move one step back in time.
-  _ctx.loadState((int)xresult.size() - _traits.numInputReturns());
+  _ctx.loadState((int)_returns.size() - _traits.numInputReturns());
 
   return dispatch_train(_traits, initx, xresult);
 }

@@ -73,3 +73,4 @@
 03/04/15-00:12:48: Added proper implementation for generic cost function and train context.
 03/04/15-00:43:42: Minor lyaout update.
 03/04/15-02:04:10: Added initial implementation for DDR cost function. Preparing test for proper index in loadState.
+03/04/15-11:52:38: Fixed input to loadState. Still testing with initial implementation.

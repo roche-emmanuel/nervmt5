@@ -76,10 +76,11 @@ public:
   {
     int index = (int)_returnMoment1.size() - 1 - offset;
 
-    CHECK(index >= 0, "Invalid index: " << index);
-
     // For now we force the index to zero to simulate the previous implementation:
     //index = 0;
+    index -= _traits.numInputReturns();
+
+    CHECK(index >= 0, "Invalid index: " << index);
 
     A = _returnMoment1[index];
     B = _returnMoment2[index];

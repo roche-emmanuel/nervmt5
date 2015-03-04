@@ -37,6 +37,9 @@ public:
   of the traits so that they can be assigned to this model. */
   nvRRLModel(const nvRRLModelTraits &traits);
 
+  /* Destructor. */
+  virtual ~nvRRLModel();
+
   /* Assign the model traits. */
   virtual void setTraits(nvRRLModelTraits *traits);
 
@@ -100,6 +103,11 @@ nvRRLModel::nvRRLModel(const nvRRLModelTraits &traits)
   setTraits(copy);
 }
 
+nvRRLModel::~nvRRLModel()
+{
+  RELEASE_PTR(_costfunc);
+}
+
 void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 {
   // call parent implementation:
@@ -134,7 +142,7 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
   _theta.resize(ni + 2, 1.0);
   _batchTrainReturns.resize(MathMax(blen, 1));
-  
+
   _onlineTrainReturns.resize(MathMax(olen, 1));
   _evalReturns.resize(ni);
   _lastReturns.resize(rlen);
