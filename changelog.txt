@@ -75,3 +75,4 @@
 03/04/15-02:04:10: Added initial implementation for DDR cost function. Preparing test for proper index in loadState.
 03/04/15-11:52:38: Fixed input to loadState. Still testing with initial implementation.
 03/04/15-20:56:21: Added long strategy evaluation test.
+03/04/15-22:01:05: Added long test with signal threshold set to 0.0.

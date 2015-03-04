@@ -174,7 +174,7 @@ BEGIN_TEST_CASE("should support computing long term profit")
   // Settings:
   double tcost = 0.00001;
   straits.warmUpLength(0);
-  straits.signalThreshold(0.8);
+  straits.signalThreshold(0.0);
   straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
   straits.signalMeanLength(100);
   straits.transactionCost(tcost);
@@ -193,7 +193,7 @@ BEGIN_TEST_CASE("should support computing long term profit")
   mtraits.learningRate(0.01);
 
   // int offset = 0;
-  datetime starttime = D'21.12.2014 12:00:00';
+  datetime starttime = D'21.10.2014 12:00:00';
   // logDEBUG("Current time GMT: "<<TimeGMT());
   // logDEBUG("Current time Local: "<<TimeLocal());
 
@@ -240,6 +240,8 @@ BEGIN_TEST_CASE("should support computing long term profit")
     double nd = ndeals.back();
     logDEBUG("Long St. num deals: "<<nd);
   }
+
+  all_prices.writeTo("long_strategy_prices.txt");
 
 END_TEST_CASE()
 
