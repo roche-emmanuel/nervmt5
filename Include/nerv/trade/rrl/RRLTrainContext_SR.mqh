@@ -31,7 +31,7 @@ public:
 
   }
 
-  void init(const nvRRLModelTraits &traits)
+  virtual void init(const nvRRLModelTraits &traits)
   {
     _traits = traits;
 
@@ -53,22 +53,24 @@ public:
   virtual void pushState(double Ft, double Rt)
   {
     // now we can compute the new exponential moving averages:
-    double AA = _returnMoment1.back();
-    double BB = _returnMoment2.back();
+    A = _returnMoment1.back();
+    B = _returnMoment2.back();
     double eta = 0.01; // TODO: provide as traits.
-    AA += eta * (Rt - AA);
-    BB += eta * (Rt * Rt - BB);
+    A += eta * (Rt - A);
+    B += eta * (Rt * Rt - B);
+    
+    Ft_1 = Ft;
 
-    _returnMoment1.push_back(AA);
-    _returnMoment2.push_back(BB);
+    _returnMoment1.push_back(A);
+    _returnMoment2.push_back(B);
     _signals.push_back(Ft);
   }
 
-  void reset()
-  {
-    Ft_1 = 0.0;
-    dFt_1.fill(0.0);
-  }
+  // void reset()
+  // {
+  //   Ft_1 = 0.0;
+  //   dFt_1.fill(0.0);
+  // }
 
   virtual void loadState(int offset)
   {
@@ -77,7 +79,7 @@ public:
     CHECK(index >= 0, "Invalid index: " << index);
 
     // For now we force the index to zero to simulate the previous implementation:
-    index = 0;
+    //index = 0;
 
     A = _returnMoment1[index];
     B = _returnMoment2[index];
