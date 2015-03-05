@@ -260,7 +260,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     _history.add("theoretical_wealth", _wealth);
 
     // Also write the expoential moving average version of the sharpe ratio:
-    double eSR = _costfunc.getTrainContext().getSharpeRatioEMA();
+    double eSR = _costfunc.getTrainContext().getSR();
 
     _history.add("ema_SR", eSR);
 

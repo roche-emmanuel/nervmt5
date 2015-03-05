@@ -22,7 +22,7 @@ public:
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
 
-  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore = false);
+  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
 };
 
 
@@ -194,7 +194,7 @@ void nvRRLCostFunction_SR::computeCost()
   _cost = -sr + 0.5 * _traits.lambda() * (theta.norm2() - theta[0] * theta[0]);
 }
 
-double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore)
+double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate)
 {
   CHECK_PTR(_ctx, "Invalid context pointer.");
 
@@ -205,7 +205,6 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
   double tcost = _traits.transactionCost();
   double maxNorm = 5.0; // TODO: provide as trait.
-  double adapt = 0.01; // TODO: Provide as trait.
   double A,B;
 
   nvVecd theta = x;
@@ -273,8 +272,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     _ctx.Ft_1 = Ft;
 
     // Use Rt to update A and B:
-    _ctx.A = _ctx.A + adapt * (Rt - _ctx.A);
-    _ctx.B = _ctx.B + adapt * (Rt * Rt - _ctx.B);
+    _ctx.addReturn(Rt);
 
     // Save the current state of the train context:
     _ctx.pushState();
@@ -285,13 +283,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
   //logDEBUG("Theta norm after Stochastic training: "<< theta.norm());
 
   // Compute the final sharpe ratio:
-  double sr = 0.0;
-  A = _ctx.A;
-  B = _ctx.B;
-
-  if (B - A * A != 0.0) {
-    sr = A / sqrt(B - A * A);
-  }
+  double sr = _ctx.getSR();
 
   return -sr;
 }

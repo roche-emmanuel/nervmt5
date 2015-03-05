@@ -46,7 +46,7 @@ public:
   void computeNumericalGradient(const nvVecd &x, nvVecd &grad, double eps = 1e-6);
 
   /* Method should be overriden to provide stochastic training support. */
-  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore = false);
+  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
 
   /* Method used to constraint the norm of the trained theta vector. */
   void validateNorm(nvVecd& theta, double maxNorm);
@@ -224,23 +224,23 @@ double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvV
 
   nvVecd result;
 
-  bool restore;
   int maxCount = 6; // will arrive to lr=1.291467969e-005
   int count;
+  bool restore;
 
   for (int i = 0; i < ne; ++i) {
     lr = learningRate;
-    restore = i<ne-1;
-
+    restore = i < ne-1;
+    
     // perform stochastic training:
     // We restore the settings as long as we are not on the latest epoch:
-    cost = performStochasticTraining(x,result,lr,restore);
+    cost = performStochasticTraining(x,result,lr);
     count = 0;
     while(cost > best_cost && restore && count<maxCount) {
       lr *= 0.33;
       count++;
       //logDEBUG("Found too big cost "<<cost<<" retrying with lr="<<lr<<" (count="<<count<<")");
-      cost = performStochasticTraining(x,result,lr,restore);
+      cost = performStochasticTraining(x,result,lr);
     }
 
     if(cost < best_cost) {
@@ -281,7 +281,7 @@ void nvCostFunctionBase::computeNumericalGradient(const nvVecd &x, nvVecd &grad,
   }
 }
 
-double nvCostFunctionBase::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore)
+double nvCostFunctionBase::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate)
 {
   THROW("This method should be overriden.");
   return 0.0;

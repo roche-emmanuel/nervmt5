@@ -14,7 +14,13 @@ public:
     NO_IMPL();
   }
 
-  virtual double getSharpeRatioEMA() const
+  virtual double getSR() const
+  {
+    NO_IMPL();
+    return 0.0;
+  }
+
+  virtual double getDDR() const
   {
     NO_IMPL();
     return 0.0;

@@ -22,7 +22,7 @@ public:
   virtual void computeCost();
   virtual double train(const nvVecd &initx, nvVecd &xresult);
 
-  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore = false);
+  virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
 };
 
 
@@ -70,7 +70,7 @@ void nvRRLCostFunction_DDR::computeCost()
   NO_IMPL();
 }
 
-double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate, bool restore)
+double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate)
 {
   CHECK_PTR(_ctx, "Invalid context pointer.");
 

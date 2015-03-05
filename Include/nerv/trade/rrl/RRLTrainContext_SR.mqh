@@ -121,12 +121,17 @@ public:
     loadStateIndex(index);
   }
 
-  virtual double getSharpeRatioEMA() const
+  virtual void addReturn(double Rt)
   {
-    double AA = _returnMoment1.back();
-    double BB = _returnMoment2.back();
-    if (BB - AA * AA != 0.0) {
-      return AA / MathSqrt(BB - AA * AA);
+    double adapt = 0.01;
+    A = A + adapt * (Rt - A);
+    B = B + adapt * (Rt * Rt - B);
+  }
+
+  virtual double getSR() const
+  {
+    if (B - A * A != 0.0) {
+      return A / MathSqrt(B - A * A);
     }
     return 0.0;
   }
