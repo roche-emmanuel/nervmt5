@@ -57,6 +57,12 @@ public:
   /* Method that should be overriden to provide th online train context. */
   virtual nvTrainContext* getTrainContext() const;
 
+  /* Method used to compute a prediction from parameters and theta vector. */
+  virtual double predict(const nvVecd &params, const nvVecd &theta);
+
+  /* Retrieve the number of dimensions for the theta vector. */
+  virtual int getNumDimensions() const;
+
 protected:
   /* Method that should be overriden to provide the concrete implementation. */
   virtual void computeCost();
@@ -307,3 +313,14 @@ nvTrainContext* nvCostFunctionBase::getTrainContext() const
   return NULL;
 }
 
+double nvCostFunctionBase::predict(const nvVecd &params, const nvVecd &theta)
+{
+  double val = theta * params;
+  return nv_tanh(val);
+}
+
+int nvCostFunctionBase::getNumDimensions() const
+{
+  NO_IMPL();
+  return 0
+}

@@ -81,3 +81,4 @@
 03/05/15-13:52:49: Started cleaning of TrainContext implementation.
 03/05/15-16:31:40: Added implementation for DDR cost function.
 03/05/15-15:06:20: Added Test 14 for 14 input returns.
+03/05/15-19:09:44: Added test 15 with DDR cost function. Adding predict method in cost function.

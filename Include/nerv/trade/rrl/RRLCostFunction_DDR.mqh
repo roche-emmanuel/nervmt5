@@ -23,6 +23,8 @@ public:
   virtual double train(const nvVecd &initx, nvVecd &xresult);
 
   virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
+
+  virtual int getNumDimensions() const;  
 };
 
 
@@ -103,7 +105,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     _ctx.params.set(1, _ctx.Ft_1);
     _ctx.params.set(2, rvec);
 
-    double Ft = nv_tanh(_ctx.params * theta);
+    double Ft = predict(_ctx.params, theta);
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
 
@@ -169,4 +171,9 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
   double ddr = _ctx.getDDR();
 
   return -ddr;
+}
+
+int nvRRLCostFunction_DDR::getNumDimensions() const
+{
+  return _traits.numInputReturns()+2;
 }

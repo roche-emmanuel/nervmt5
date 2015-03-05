@@ -55,7 +55,8 @@ public:
 
 protected:
   /* Method used to build the prediction from a parameter vector and the
-  current theta vector. */
+  current theta vector. This will call the cost function implementation
+  As the handling of theta may depend on the selected algorithm. */
   virtual double predict(const nvVecd &params, const nvVecd &theta);
 
   /* Method used to get a prediction using the current context and
@@ -141,7 +142,6 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
   CHECK(_traits.transactionCost() > 0, "Invalid transaction cost.");
 
-  _theta.resize(ni + 2, 1.0);
   _batchTrainReturns.resize(MathMax(blen, 1));
 
   _onlineTrainReturns.resize(MathMax(olen, 1));
@@ -151,6 +151,7 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   RELEASE_PTR(_costfunc);
   // _costfunc = new nvRRLCostFunction_SR(_traits);
   _costfunc = new nvRRLCostFunction_DDR(_traits);
+  _theta.resize(_costfunc.getNumDimensions(), 1.0);
 }
 
 void nvRRLModel::reset()
@@ -275,8 +276,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 
 double nvRRLModel::predict(const nvVecd &params, const nvVecd &theta)
 {
-  double val = theta * params;
-  return nv_tanh(val);
+  return _costfunc.predict(params,theta);
 }
 
 double nvRRLModel::predict(const nvVecd &rvec, double &confidence)
