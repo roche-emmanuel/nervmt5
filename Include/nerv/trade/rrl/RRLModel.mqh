@@ -149,8 +149,10 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   _lastReturns.resize(rlen);
 
   RELEASE_PTR(_costfunc);
-  _costfunc = new nvRRLCostFunction_SR(_traits);
-  //_costfunc = new nvRRLCostFunction_DDR(_traits);
+
+  //_costfunc = new nvRRLCostFunction_SR(_traits);
+  _costfunc = new nvRRLCostFunction_DDR(_traits);
+
   _theta.resize(_costfunc.getNumDimensions(), 1.0);
 }
 

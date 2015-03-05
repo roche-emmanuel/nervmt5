@@ -84,3 +84,4 @@
 03/05/15-19:09:44: Added test 15 with DDR cost function. Adding predict method in cost function.
 03/05/15-17:46:19: Added test 16: evaluation with DDR cost function and 14 input returns.
 03/05/15-20:38:17: Added test 17 - SR cost function with 20 input returns.
+03/05/15-22:43:10: Merged files

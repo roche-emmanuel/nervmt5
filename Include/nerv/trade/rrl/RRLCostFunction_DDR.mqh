@@ -146,13 +146,6 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     // Validate the norm of the theta vector:
     validateNorm(theta, maxNorm);
 
-    // As suggested by [Dempster - 2004] here we can re-compute the value of Ft anf Rt
-    // using the *supposedly* better value of theta:
-    // Note: this change does not provide a positive feedback and instead will
-    // reduce the final wealth.
-    // Ft = nv_tanh(_ctx.params * theta);
-    // Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
-
     // Update previsou signal:
     _ctx.Ft_1 = Ft;
 
