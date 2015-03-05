@@ -150,8 +150,18 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
   RELEASE_PTR(_costfunc);
 
-  //_costfunc = new nvRRLCostFunction_SR(_traits);
-  _costfunc = new nvRRLCostFunction_DDR(_traits);
+  switch (_traits.trainAlgorithm())
+  {
+  case TRAIN_SR:
+    _costfunc = new nvRRLCostFunction_SR(_traits);
+    break;
+  case TRAIN_DDR:
+    _costfunc = new nvRRLCostFunction_DDR(_traits);
+    break;
+  default:
+    THROW("Unsupported training algorithm: "<<(int)_traits.trainAlgorithm());
+    break;
+  }
 
   _theta.resize(_costfunc.getNumDimensions(), 1.0);
 }
@@ -278,7 +288,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 
 double nvRRLModel::predict(const nvVecd &params, const nvVecd &theta)
 {
-  return _costfunc.predict(params,theta);
+  return _costfunc.predict(params, theta);
 }
 
 double nvRRLModel::predict(const nvVecd &rvec, double &confidence)

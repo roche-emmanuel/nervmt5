@@ -96,7 +96,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   straits.autoWriteHistory(true);
   straits.id("test1_eur");
   straits.warmUpLength(0);
-  straits.signalThreshold(0.8);
+  straits.signalThreshold(0.0);
   
   double tcost = 0.00001;
   straits.transactionCost(tcost);
@@ -109,6 +109,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   traits.onlineTrainLength(-1);
   traits.lambda(0.0);
   traits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  traits.trainAlgorithm(TRAIN_SR);
   traits.warmInit(true);
   traits.numEpochs(15);
   traits.learningRate(0.01);
@@ -123,7 +124,7 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   datetime starttime = D'21.02.2015 12:00:00';
 
   int offset = 80000;
-  int count = 10000;
+  int count = 20000;
 
   double arr[];
   int res = CopyClose(straits.symbol(), straits.period(), starttime, count, arr);

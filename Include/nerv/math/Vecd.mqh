@@ -603,4 +603,20 @@ public:
     return res;
   }
 
+  bool isValid() const
+  {
+    if(_len==0)
+    {
+      return false;
+    }
+
+    for(uint i=0;i<_len;++i)
+    {
+      if(!MathIsValidNumber(_data[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 };

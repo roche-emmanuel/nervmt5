@@ -10,6 +10,12 @@ enum TrainingMode
   TRAIN_STOCHASTIC_GRADIENT_DESCENT
 };
 
+enum TrainingAlgorithm
+{
+  TRAIN_SR,
+  TRAIN_DDR
+};
+
 /*
 Base class representing the data that can be passed to the RRL model class.
 */
@@ -32,6 +38,8 @@ protected:
   TrainingMode _trainMode;
 
   bool _warmInit;
+
+  TrainingAlgorithm _trainAlgorithm;
 
 public:
   /* Default constructor,
@@ -110,6 +118,12 @@ public:
 
   /* Retrieve the warm initialization parameter. */
   bool warmInit() const;
+
+  /* Assign the training algorithm. */
+  nvTradeModelTraits* trainAlgorithm(TrainingAlgorithm algo);
+
+  /* Retrieve the training algorithm. */
+  TrainingAlgorithm trainAlgorithm() const;
 };
 
 
@@ -128,6 +142,7 @@ nvTradeModelTraits::nvTradeModelTraits()
     _numEpochs(20),
     _trainMode(TRAIN_BATCH_CONJUGATE_GRADIENT),
     _warmInit(false),
+    _trainAlgorithm(TRAIN_SR),
     nvBaseTraits()
 {
 }
@@ -152,6 +167,7 @@ nvTradeModelTraits *nvTradeModelTraits::operator=(const nvTradeModelTraits &rhs)
   _numEpochs = rhs._numEpochs;
   _trainMode = rhs._trainMode;
   _warmInit = rhs._warmInit;
+  _trainAlgorithm = rhs._trainAlgorithm;
   return THIS;
 }
 
@@ -275,4 +291,15 @@ nvTradeModelTraits* nvTradeModelTraits::warmInit(bool enable)
 bool nvTradeModelTraits::warmInit() const
 {
   return _warmInit;
+}
+
+nvTradeModelTraits* nvTradeModelTraits::trainAlgorithm(TrainingAlgorithm algo)
+{
+  _trainAlgorithm = algo;
+  return THIS;
+}
+
+TrainingAlgorithm nvTradeModelTraits::trainAlgorithm() const
+{
+  return _trainAlgorithm;
 }

@@ -221,7 +221,8 @@ double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvV
 {
   int ne = traits.numEpochs();
   nvVecd x = initx;
-
+	CHECK(x.isValid(),"Invalid vector detected.");
+	
   double learningRate = traits.learningRate();
 
   double best_cost = 1e10;
