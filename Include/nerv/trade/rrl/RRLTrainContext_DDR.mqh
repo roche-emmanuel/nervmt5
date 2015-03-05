@@ -46,14 +46,12 @@ public:
     _downsideDeviation.push_back(DD2);
   }
 
-  virtual void loadState(int offset)
+  virtual void loadStateIndex(int index)
   {
-    nvRRLTrainContext_SR::loadState(offset);
 
-    int index = (int)_returnMoment1.size() - 1 - offset;
+    nvRRLTrainContext_SR::loadStateIndex(index);
 
-    CHECK(index >= 0, "Invalid index: " << index);
-
-    DD2 = _downsideDeviation[index];
+    CHECK(index >= 1, "Invalid index: " << index);
+    DD2 = _downsideDeviation[index-1];
   }
 };

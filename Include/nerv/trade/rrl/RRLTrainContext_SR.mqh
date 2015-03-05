@@ -84,15 +84,8 @@ public:
     }
   }
 
-  virtual void loadState(int nrets)
+  virtual void loadStateIndex(int index)
   {
-    int offset = nrets - _traits.numInputReturns();
-    int index = _len - 1 - offset;
-
-    // For now we force the index to zero to simulate the previous implementation:
-    //index = 0;
-    // index = index - _traits.numInputReturns() + 1;
-
     CHECK(index >= 1, "Invalid index: " << index);
 
     A = _returnMoment1[index-1];
@@ -115,6 +108,17 @@ public:
     // if(B-A*A!=0.0) {
     //   logDEBUG("Initial SR: "<<(A/sqrt(B-A*A)));
     // }
+  }
+
+  virtual void loadState(int nrets)
+  {
+    int offset = nrets - _traits.numInputReturns();
+    int index = _len - 1 - offset;
+
+    // For now we force the index to zero to simulate the previous implementation:
+    //index = 0;
+    // index = index - _traits.numInputReturns() + 1;
+    loadStateIndex(index);
   }
 
   virtual double getSharpeRatioEMA() const

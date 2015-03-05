@@ -9,7 +9,7 @@ BEGIN_TEST_PACKAGE(strategy_eval_specs)
 
 BEGIN_TEST_SUITE("Strategy evaluation")
 
-BEGIN_TEST_CASE("should support evaluation of strategy")
+XBEGIN_TEST_CASE("should support evaluation of strategy")
 
   nvStrategyTraits straits;
  	straits.symbol("EURUSD").period(PERIOD_M1);
@@ -144,15 +144,15 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
 
   logDEBUG("St. Wealth mean: "<< st_final_wealth.mean());
   logDEBUG("St. Wealth deviation: "<< st_final_wealth.deviation());
-  st_final_wealth.writeTo("final_wealth.txt");
+  st_final_wealth.writeTo("test_final_wealth.txt");
 
   logDEBUG("St. Max DrawDown mean: "<< st_max_dd.mean());
   logDEBUG("St. Max DrawDown deviation: "<< st_max_dd.deviation());
-  st_max_dd.writeTo("max_drawdown.txt");
+  st_max_dd.writeTo("test_max_drawdown.txt");
 
   logDEBUG("St. Num deals mean: "<< st_num_deals.mean());
   logDEBUG("St. Num deals deviation: "<< st_num_deals.deviation());
-  st_num_deals.writeTo("num_deals.txt");
+  st_num_deals.writeTo("test_num_deals.txt");
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should support computing long term profit")
@@ -226,7 +226,7 @@ BEGIN_TEST_CASE("should support computing long term profit")
     REQUIRE_VALID_PTR(wealth);
     double fw = wealth.back();
     logDEBUG("Long St. final wealth: "<<fw);
-    wealth.writeTo("long_strategy_wealth.txt");
+    wealth.writeTo("test_long_strategy_wealth.txt");
 
     // Compute the max drawndown of this run:
     double dd = computeMaxDrawnDown(wealth);
@@ -241,7 +241,7 @@ BEGIN_TEST_CASE("should support computing long term profit")
     logDEBUG("Long St. num deals: "<<nd);
   }
 
-  all_prices.writeTo("long_strategy_prices.txt");
+  all_prices.writeTo("test_long_strategy_prices.txt");
 
 END_TEST_CASE()
 
