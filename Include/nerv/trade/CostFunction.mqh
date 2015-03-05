@@ -322,5 +322,5 @@ double nvCostFunctionBase::predict(const nvVecd &params, const nvVecd &theta)
 int nvCostFunctionBase::getNumDimensions() const
 {
   NO_IMPL();
-  return 0
+  return 0;
 }

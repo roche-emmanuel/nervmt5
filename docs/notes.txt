@@ -379,3 +379,37 @@ St. Num deals deviation: 1421.975792253388
 Long St. final wealth: 0.005318806741972
 Long St. max drawdown 0.05701201473896354
 Long St. num deals: 97912
+
+Test 17 - Tested with SR cost function and 20 inputs:
+
+  // Settings:
+  double tcost = 0.000001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.0);
+  straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  straits.signalMeanLength(100);
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(20);
+  mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
+  
+St. Wealth mean: 0.008912936111501785
+St. Wealth deviation: 0.02097967641224153
+St. Max DrawDown mean: 0.02721985355965014
+St. Max DrawDown deviation: 0.01051807004251002
+St. Num deals mean: 17985.05590062112
+St. Num deals deviation: 1421.873878560766
+
+Long St. final wealth: 0.03448182444207787
+Long St. max drawdown 0.03529035832082134
+Long St. num deals: 97913
