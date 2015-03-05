@@ -9,7 +9,7 @@ BEGIN_TEST_PACKAGE(strategy_eval_specs)
 
 BEGIN_TEST_SUITE("Strategy evaluation")
 
-XBEGIN_TEST_CASE("should support evaluation of strategy")
+BEGIN_TEST_CASE("should support evaluation of strategy")
 
   nvStrategyTraits straits;
  	straits.symbol("EURUSD").period(PERIOD_M1);
@@ -39,7 +39,7 @@ XBEGIN_TEST_CASE("should support evaluation of strategy")
   mtraits.batchTrainFrequency(500);
   mtraits.onlineTrainLength(-1);
   mtraits.lambda(0.0);
-  mtraits.numInputReturns(10);
+  mtraits.numInputReturns(14);
   mtraits.maxIterations(30);
 
   mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
@@ -184,7 +184,7 @@ BEGIN_TEST_CASE("should support computing long term profit")
   mtraits.batchTrainFrequency(500);
   mtraits.onlineTrainLength(-1);
   mtraits.lambda(0.0);
-  mtraits.numInputReturns(10);
+  mtraits.numInputReturns(14);
   mtraits.maxIterations(30);
 
   mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
