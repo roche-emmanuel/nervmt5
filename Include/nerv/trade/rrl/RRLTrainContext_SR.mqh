@@ -98,8 +98,9 @@ public:
     A = _returnMoment1[index-1];
     B = _returnMoment2[index-1];
     Ft_1 = _signals[index-1];
-    dFt_1 = _dFts[index-1];
-
+    // dFt_1 = _dFts[index-1];
+    dFt_1.fill(0.0);
+    
     // We write to the next position:
     _pos = index;
 

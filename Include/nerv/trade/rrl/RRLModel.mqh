@@ -206,7 +206,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
   if (ready) {
     if (_traits.batchTrainLength() >= 0 && _batchTrainNeeded)
     {
-      logDEBUG("Performing batch training at bcount=" << bcount);
+      // logDEBUG("Performing batch training at bcount=" << bcount);
       _batchTrainNeeded = false;
       performBatchTraining();
       _evalCount = 0;
@@ -348,7 +348,7 @@ void nvRRLModel::performBatchTraining()
   }
 
   double cost = _costfunc.train(initx, _theta);
-  logDEBUG("Acheived best cost: " << cost);
+  // logDEBUG("Acheived best cost: " << cost);
 
   if (!_traits.returnsMeanDevFixed())
   {

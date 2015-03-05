@@ -76,3 +76,4 @@
 03/04/15-11:52:38: Fixed input to loadState. Still testing with initial implementation.
 03/04/15-20:56:21: Added long strategy evaluation test.
 03/04/15-22:01:05: Added long test with signal threshold set to 0.0.
+03/05/15-10:42:29: Performed test 13 with M1 and tcost=0.000001, threshold=0.0.

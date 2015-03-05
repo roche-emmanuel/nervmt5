@@ -1,31 +1,31 @@
 - To add support for comment in MQL5 files in sublimetext:
   Add the "source.mq5" in the list of the "Comments (C++).tmPreferences" file (in the C++ package folder)
 
-- 26/02/2015 - Current best results:
+Test 1 - 26/02/2015 - Current best results:
 Wealth mean: 0.01062900110988672
 Wealth deviation: 0.03249276241142517
 Max DrawDown mean: 0.01575850521331251
 Max DrawDown deviation: 0.008988242442272629
 
-- 27/02/2015 - Current real results (worst):
+Test 2 - 27/02/2015 - Current real results (worst):
 St. Wealth mean: -0.05596329466185773
 St. Wealth deviation: 0.0386016283685143
 St. Max DrawDown mean: 0.06892669452989293
 St. Max DrawDown deviation: 0.0341479098543477
 
-- When fixed the computation of dFt/dw (adding the (1 - Ft*Ft) multiplier) we get:
+Test 3 - When fixed the computation of dFt/dw (adding the (1 - Ft*Ft) multiplier) we get:
 St. Wealth mean: -0.06721611303258085
 St. Wealth deviation: 0.02731523565676583
 St. Max DrawDown mean: 0.07601671241499514
 St. Max DrawDown deviation: 0.02598442805397161
 
-- With the addition of the warmUp phase of 3000 bars:
+Test 4 - With the addition of the warmUp phase of 3000 bars:
 St. Wealth mean: -0.05935754022858003
 St. Wealth deviation: 0.02676160052919921
 St. Max DrawDown mean: 0.06841811194285298
 St. Max DrawDown deviation: 0.02465865822919882
 
-- With usage of signal threshold set to 0.8 (no warmup):
+Test 5 - With usage of signal threshold set to 0.8 (no warmup):
 
   double tcost = 0.00001;
   straits.warmUpLength(0);
@@ -45,7 +45,7 @@ St. Max DrawDown mean: 0.04085105590062114
 St. Max DrawDown deviation: 0.01564622508160748
 
 
-- With Stochastic training:
+Test 6 - With Stochastic training:
 
   // Settings:
   double tcost = 0.00001;
@@ -71,7 +71,7 @@ St. Wealth deviation: 0.03661317893373261
 St. Max DrawDown mean: 0.03675329192546587
 St. Max DrawDown deviation: 0.02805614569735988
 
-- With context dFt_1 set to 0.0 before training:
+Test 7 - With context dFt_1 set to 0.0 before training:
 
   // Settings:
   double tcost = 0.00001;
@@ -97,7 +97,7 @@ St. Wealth deviation: 0.03458192658990308
 St. Max DrawDown mean: 0.03403161490683229
 St. Max DrawDown deviation: 0.02550882151252917
 
-- With proper initial context setting before training (for A, B and Ft_1) and dFt_1=0.0:
+Test 8 - With proper initial context setting before training (for A, B and Ft_1) and dFt_1=0.0:
 
   // Settings:
   double tcost = 0.00001;
@@ -124,7 +124,7 @@ St. Wealth deviation: 0.0346516469362683
 St. Max DrawDown mean: 0.03298962732919253
 St. Max DrawDown deviation: 0.02673557121245007
 
-- Tested with recomputation of Ft and Rt after theta update:
+Test 9 - Tested with recomputation of Ft and Rt after theta update:
 
   // Settings:
   double tcost = 0.00001;
@@ -152,7 +152,7 @@ St. Max DrawDown deviation: 0.02615331419723945
 St. Num deals mean: 47.52795031055901
 St. Num deals deviation: 38.92131728599424
 
-- Tested with signal adaptation set to 0.02:
+Test 10 - Tested with signal adaptation set to 0.02:
 
   // Settings:
   double tcost = 0.00001;
@@ -183,7 +183,7 @@ St. Num deals deviation: 43.60989056753405
 
 => This has absolutely no effect since we don't use the the EMA of the signals but just the MA for now.
 
-- Tested with signal mean length = 50:
+Test 11 - Tested with signal mean length = 50:
 
   // Settings:
   double tcost = 0.00001;
@@ -214,7 +214,7 @@ St. Num deals mean: 132.1987577639752
 St. Num deals deviation: 74.77023769964771
 
 
-- Initial test with embedded Train Context:
+Test 12 - Initial test with embedded Train Context:
 
   // Settings:
   double tcost = 0.00001;
@@ -243,3 +243,37 @@ St. Max DrawDown mean: 0.02984770186335405
 St. Max DrawDown deviation: 0.026094184619879
 St. Num deals mean: 50.36024844720497
 St. Num deals deviation: 42.36635311583698
+
+Test 13 - Test on M1 period, with cost=0.000001 and no signal threshold
+
+  // Settings:
+  double tcost = 0.000001;
+  straits.warmUpLength(0);
+  straits.signalThreshold(0.0);
+  straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  straits.signalMeanLength(100);
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(2000);
+  mtraits.batchTrainFrequency(500);
+  mtraits.onlineTrainLength(-1);
+  mtraits.lambda(0.0);
+  mtraits.numInputReturns(10);
+  mtraits.maxIterations(30);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.warmInit(true);
+  mtraits.numEpochs(15);
+  mtraits.learningRate(0.01);
+
+St. Wealth mean: 0.01222949752322139
+St. Wealth deviation: 0.03370584626539808
+St. Max DrawDown mean: 0.02905012660711684
+St. Max DrawDown deviation: 0.01603572960850632
+St. Num deals mean: 17986.87577639752
+St. Num deals deviation: 1422.01255205229
+
+Long St. final wealth: 0.077110503752798
+Long St. max drawdown 0.03450120444391518
+Long St. num deals: 97887
