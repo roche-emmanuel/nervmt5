@@ -4,6 +4,7 @@
 #include <nerv/trades.mqh>
 #include "RRLModelTraits.mqh"
 #include "RRLCostFunction_SR.mqh"
+#include "RRLCostFunction_DDR.mqh"
 
 /* Base class used to represent an RRL trading model. */
 class nvRRLModel : public nvTradeModel
@@ -148,7 +149,8 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
   _lastReturns.resize(rlen);
 
   RELEASE_PTR(_costfunc);
-  _costfunc = new nvRRLCostFunction_SR(_traits);
+  // _costfunc = new nvRRLCostFunction_SR(_traits);
+  _costfunc = new nvRRLCostFunction_DDR(_traits);
 }
 
 void nvRRLModel::reset()

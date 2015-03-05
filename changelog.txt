@@ -79,3 +79,4 @@
 03/05/15-10:42:29: Performed test 13 with M1 and tcost=0.000001, threshold=0.0.
 03/05/15-12:55:05: Removed vector test files from repository.
 03/05/15-13:52:49: Started cleaning of TrainContext implementation.
+03/05/15-16:31:40: Added implementation for DDR cost function.

@@ -42,6 +42,8 @@ public:
       _downsideDeviation.push_back(DD2);
     }
 
+    // We call the parent implementation **after**
+    // doing our changes, since it might change the target position _pos.
     nvRRLTrainContext_SR::pushState();
   }
 
@@ -51,6 +53,15 @@ public:
 
     CHECK(index >= 1, "Invalid index: " << index);
     DD2 = _downsideDeviation[index-1];
+  }
+
+  virtual void addReturn(double Rt)
+  {
+    nvRRLTrainContext_SR::addReturn(Rt);    
+      
+    double adapt = 0.01;
+    double val = MathMin(Rt,0);
+    DD2 = DD2 + adapt * (val * val - DD2);
   }
 
   virtual double getDDR() const

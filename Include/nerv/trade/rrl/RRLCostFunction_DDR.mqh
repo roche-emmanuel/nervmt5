@@ -60,7 +60,7 @@ double nvRRLCostFunction_DDR::train(const nvVecd &initx, nvVecd &xresult)
   // Say the input vector contains on numInputReturns() elements
   // This means we should train with the latest values observed so far. (at _returnsMoment1.size()-1)
   // Otherwise, for each additional element we move one step back in time.
-  _ctx.loadState((int)_returns.size() - _traits.numInputReturns());
+  _ctx.loadState((int)_returns.size());
 
   return dispatch_train(_traits, initx, xresult);
 }
@@ -74,21 +74,14 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 {
   CHECK_PTR(_ctx, "Invalid context pointer.");
 
-  // Assign the A and B value from the initial variables:
-  double initialA = _ctx.A;
-  double initialDD2 = _ctx.DD2;
-  double initialF = _ctx.Ft_1;
-  nvVecd initialdFt = _ctx.dFt_1;
-
-  double A = _ctx.A;
-  double DD2 = _ctx.DD2;
-
   int size = (int)_returns.size();
+  _ctx.loadState(size);
+
   double rtn, rt;
 
   double tcost = _traits.transactionCost();
   double maxNorm = 5.0; // TODO: provide as trait.
-  double adapt = 0.01; // TODO: Provide as trait.
+  double A, DD2, DD;
 
   nvVecd theta = x;
   int nm = (int)theta.size();
@@ -114,6 +107,9 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
 
+    DD2 = _ctx.DD2;
+		A = _ctx.A;
+		
     if (DD2 != 0.0) {
       // We can perform the training.
       // 1. Compute the new value of dFt/dw
@@ -123,7 +119,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
       _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;
 
-      double DD = sqrt(DD2);
+      DD = sqrt(DD2);
 
       // 3. compute dDt/dw
       if (Rt > 0.0) {
@@ -159,9 +155,10 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     _ctx.Ft_1 = Ft;
 
     // Use Rt to update A and B:
-    A = A + adapt * (Rt - A);
-    double val = MathMin(Rt,0);
-    DD2 = DD2 + adapt * (val * val - DD2);
+    _ctx.addReturn(Rt);
+
+    // Save the current state of the train context:
+    _ctx.pushState();    
   }
 
   // Once done we the training we provide the final value of theta:
@@ -169,22 +166,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
   //logDEBUG("Theta norm after Stochastic training: "<< theta.norm());
 
   // Compute the final sharpe ratio:
-  double ddr = 0.0;
-  if (DD2 != 0.0) {
-    ddr = A / sqrt(DD2);
-  }
-
-  if (restore) {
-    // We need to restore the context variables:
-    _ctx.A = initialA;
-    _ctx.DD2 = initialDD2;
-    _ctx.Ft_1 = initialF;
-    _ctx.dFt_1 = initialdFt;
-  }
-  else {
-    _ctx.A = A;
-    _ctx.DD2 = DD2;
-  }
+  double ddr = _ctx.getDDR();
 
   return -ddr;
 }
