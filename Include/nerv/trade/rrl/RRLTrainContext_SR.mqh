@@ -49,7 +49,7 @@ public:
     // +2 below is because we also want to store the initial value of the training context data.
     _len = _traits.batchTrainLength() - _traits.numInputReturns() + 2;
     //CHECK(_len>0,"Invalid array length.");
-    _len = MathMax(_len, 1);
+    _len = MathMax(_len, 2);
 
     _returnMoment1.resize(_len);
     _returnMoment2.resize(_len);

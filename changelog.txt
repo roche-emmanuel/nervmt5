@@ -86,3 +86,4 @@
 03/05/15-20:38:17: Added test 17 - SR cost function with 20 input returns.
 03/05/15-22:43:10: Merged files
 03/06/15-00:02:58: Added train algorithm support.
+03/06/15-01:36:38: Minimal correction on _len in TrainContext to for online training support.
