@@ -98,13 +98,16 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   straits.warmUpLength(0);
   straits.signalThreshold(0.0);
   
-  double tcost = 0.00001;
+  //double tcost = 0.00001;
+  double tcost = 0.00300;
+
   straits.transactionCost(tcost);
 
   // Assign a model to the strategy:
   nvRRLModelTraits traits;
   traits.transactionCost(tcost);  
   traits.batchTrainLength(2000);
+  // traits.batchTrainLength(1000);
   traits.batchTrainFrequency(500);
   traits.onlineTrainLength(-1);
   traits.lambda(0.0);
@@ -126,12 +129,14 @@ BEGIN_TEST_CASE("should support dryrun with price serie from MT5")
   int offset = 80000;
   int count = 20000;
 
-  double arr[];
-  int res = CopyClose(straits.symbol(), straits.period(), starttime, count, arr);
-  REQUIRE_EQUAL(res,count);
+  // double arr[];
+  // int res = CopyClose(straits.symbol(), straits.period(), starttime, count, arr);
+  // REQUIRE_EQUAL(res,count);
 
   // build a vector from the prices:
-  nvVecd prices(arr);
+  // nvVecd prices(arr);
+
+  nvVecd prices = nv_generatePrices(count, 0.9, 3.0, 0.5, 1.2);
 
 
   nvVecd rets = prices.subvec(1,prices.size()-1) - prices.subvec(0,prices.size()-1);

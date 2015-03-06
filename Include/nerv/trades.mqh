@@ -100,3 +100,34 @@ double computeMaxDrawnDown(const nvVecd& wealth)
 
   return max_dd;
 }
+
+nvVecd nv_generatePrices(int num, double alpha, double k, double mini = 1.0, double maxi = 1.4)
+{
+  nvVecd result;
+
+  double p = nv_random_real(1.0,10.0);
+  double beta = nv_random_real(1.0,10.0);
+
+  SimpleRNG rng1;
+  SimpleRNG rng2;
+  rng2.SetSeed(1234,987654);
+
+  for(int i=0;i<num;++i)
+  {
+    p = p + beta + k* rng1.GetNormal();
+    beta = alpha * beta + rng2.GetNormal();
+    result.push_back(p);
+  }
+  
+  double R = result.max() - result.min();
+  result /= R;
+
+  result = result.exp();
+
+  R = result.max() - result.min();
+  result -= result.min();
+  result *= (maxi - mini)/R;
+  result += mini;
+  
+  return result;
+}

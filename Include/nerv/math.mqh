@@ -1,6 +1,7 @@
 
 #include <nerv/core.mqh>
 #include <nerv/math/Vecd.mqh>
+#include <nerv/math/SimpleRNG.mqh>
 #include <Math/Alglib/alglib.mqh>
 
 #include <nerv/math/lbfgs.mqh>
