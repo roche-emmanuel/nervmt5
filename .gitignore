@@ -11,4 +11,5 @@ Logs/*
 Files/test*
 Files/TestResults.html
 Files/RRL_Results.html
+Files/*_Results.html
 Files/test.log

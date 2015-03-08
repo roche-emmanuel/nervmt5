@@ -152,6 +152,12 @@ BEGIN_TEST_CASE("should support deleting a pointer twice")
   delete obj;
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should be able to format time")
+  ulong secs = 60;
+  string res = formatTime(secs);
+  REQUIRE_EQUAL(res,"00:01:00");
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

@@ -61,3 +61,11 @@ string nvReadFile(string filename, int flags = FILE_ANSI)
   return content;
 }
 
+string formatTime(ulong secs)
+{
+  ulong hours = (ulong)MathFloor(secs/3600.0);
+  secs -= hours*3600;
+  ulong mins = (ulong)MathFloor(secs/60);
+  secs -= mins*60;
+  return StringFormat("%02d:%02d:%02d",hours,mins,secs);
+}

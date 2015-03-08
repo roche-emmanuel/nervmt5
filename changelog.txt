@@ -89,3 +89,4 @@
 03/06/15-01:36:38: Minimal correction on _len in TrainContext to for online training support.
 03/06/15-14:01:43: Added SImpleRNG class. Doing some tests on generated prices.
 03/07/15-23:49:09: Merged changes on SimpleRNG integration.
+03/08/15-13:47:40: Restructured strategy evaluation method.

@@ -235,30 +235,19 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     
     A = _ctx.A;
     B = _ctx.B;
-	
-		double mult = (B - A * Rt) / MathPow(B - A * A, 1.5);
 		
-    if (MathIsValidNumber(mult)) {
+    if (B - A*A != 0.0) {
       // We can perform the training.
       // 1. Compute the new value of dFt/dw
-      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]); // * (1 - Ft * Ft);
-      if(_ctx.dFt.norm()>1.0)
-      {
-        _ctx.dFt.normalize();
-      }
-
-      CHECK(_ctx.dFt.isValid(),"Invalid vector detected.");
-
+      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * (1 - Ft * Ft);
 
       // 2. compute dRt/dw
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
       _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;
-      CHECK(_ctx.dRt.isValid(),"Invalid vector detected.");
 
       // 3. compute dDt/dw    
+      double mult = (B - A * Rt) / MathPow(B - A * A, 1.5);
       _ctx.dDt = _ctx.dRt * mult;
-      CHECK(_ctx.dDt.isValid(),"Invalid vector detected.");
-
       // logDEBUG("New theta norm: "<< _theta.norm());
 
       // Advance one step:
