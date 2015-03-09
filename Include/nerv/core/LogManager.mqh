@@ -55,6 +55,9 @@ protected:
     ArrayResize(_levelFlags,NUM_SEV_LEVELS);
     ArrayFill(_levelFlags,0,NUM_SEV_LEVELS,0);
     Print("Creating LogManager.");
+
+    // Add a console sink here:
+    _sinks.Add(new nvConsoleLogger("default_console_sink")); // add a console logger by default.
   };
 
   ~nvLogManager(void)
