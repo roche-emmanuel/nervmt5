@@ -143,7 +143,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   // logDEBUG("Current time Local: "<<TimeLocal());
 
   int count = 100000;
-  //int count = 23000;
+  //int count = 21000;
 
   double arr[];
   // int res = CopyClose(symbol, period, offset, count, arr);

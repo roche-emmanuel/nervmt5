@@ -205,9 +205,14 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
   double rtn, rt;
 
-  double tcost = _traits.transactionCost();
+  // ratio of conversion used to avoid precision issues:
+  // we just count the returns in units 0.1 of pips (eg. 5 decimals):
+  // This could be turned of by using a ratio of 1.0 instead.
+  double ratio = 0.00001;
+
+  double tcost = _traits.transactionCost()/ratio;
   double maxNorm = 5.0; // TODO: provide as trait.
-  double A,B;
+  double A, B;
 
   nvVecd theta = x;
   int nm = (int)theta.size();
@@ -220,7 +225,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
   for (int i = 0; i < size; ++i)
   {
     rtn = _nrets[i];
-    rt = _returns[i];
+    rt = _returns[i]/ratio;
 
     rvec.push_back(rtn);
     if (i < ni - 1)
@@ -232,22 +237,26 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     double Ft = predict(_ctx.params, theta);
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
-    
+
     A = _ctx.A;
     B = _ctx.B;
-		
-    if (B - A*A != 0.0) {
+
+    if (B - A * A != 0.0) {
       // We can perform the training.
       // 1. Compute the new value of dFt/dw
-      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * (1 - Ft * Ft);
+      // Note: replacing (1 - Ft^2) with (1-Ft)*(1+Ft) to avoid precision issues.
+      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
 
       // 2. compute dRt/dw
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
       _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;
 
-      // 3. compute dDt/dw    
-      double mult = (B - A * Rt) / MathPow(B - A * A, 1.5);
-      _ctx.dDt = _ctx.dRt * mult;
+      // 3. compute dDt/dw
+      double sqB = sqrt(B);
+
+      // _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow(B - A * A, 1.5);
+      // Note: replacing initial multiplier with enhanced formula to avoid precision issues:
+      _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5);
       // logDEBUG("New theta norm: "<< _theta.norm());
 
       // Advance one step:
@@ -259,7 +268,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
     // Now we apply the learning:
     theta += _ctx.dDt * learningRate;
-    CHECK(theta.isValid(),"Invalid vector detected.");
+    CHECK(theta.isValid(), "Invalid vector detected.");
 
     // Validate the norm of the theta vector:
     validateNorm(theta, maxNorm);
@@ -293,5 +302,5 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
 int nvRRLCostFunction_SR::getNumDimensions() const
 {
-  return _traits.numInputReturns()+2;
+  return _traits.numInputReturns() + 2;
 }
