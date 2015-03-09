@@ -99,3 +99,4 @@
 03/09/15-20:39:40: Added Console logger to log manager by default. Added proper implementation of strategy evaluator.
 03/09/15-22:00:42: Adding optimization on gradient descent.
 03/09/15-22:07:07: Additional cleaning of optimization code.
+03/09/15-23:13:34: Additional optimization on SR cost computation.

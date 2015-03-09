@@ -75,10 +75,13 @@ public:
 
   nvVecd *operator=(const double &rhs[])
   {
-    _len = ArraySize(rhs);
     _dynamic = false;
     _reserveSize = 0;
-    CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
+    if(_len != ArraySize(rhs))
+    {
+      _len = ArraySize(rhs);
+      CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
+    }
 
     int count = ArrayCopy(_data, rhs, 0, 0);
     CHECK(count == _len, "Invalid array copy count: " << count);
