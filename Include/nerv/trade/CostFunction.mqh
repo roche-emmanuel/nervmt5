@@ -191,21 +191,45 @@ double nvCostFunctionBase::train_gd(const nvTradeModelTraits &traits, const nvVe
   // Number of epochs:
   int ne = traits.numEpochs();
 
-  // learning rate:
-  double rho = traits.learningRate();
-
   nvVecd x = initx;
-  double cost;
   nvVecd grad;
 
+  double learningRate = traits.learningRate();
+
+  double best_cost = 1e10;
+  double cost;
+  double lr;
+  int count;
+  int maxCount = 10;
+
+  nvVecd result;
+
+  lr = learningRate;
+  
   for (int i = 0; i < ne; ++i)
   {
-    // compute the current gradient
-    cost = computeCost(x, grad);
-    logDEBUG("Cost at epoch " << i << ": " << cost);
+    //lr = learningRate;
 
-    // Update the x vector:
-    x -= grad * rho;
+    // compute the current gradient
+    computeCost(x, grad);
+
+    // We restore the settings as long as we are not on the latest epoch:
+    count = 0;
+    cost = computeCost(x - grad * lr);
+
+    while (cost > best_cost && count < maxCount) {
+      lr *= 0.33;
+      count++;
+      // logDEBUG("Found too big cost "<<cost<<" retrying with lr="<<lr<<" (count="<<count<<")");
+      cost = computeCost(x - grad * lr);
+    }
+
+    if (cost < best_cost) {
+      // This iteration result is valid, so we use it:
+      x = x - grad * lr;
+      best_cost = cost;
+      // logDEBUG("Best cost so far at " << i << ": " << cost);
+    }
   }
 
   // Compute the final cost:
@@ -221,8 +245,8 @@ double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvV
 {
   int ne = traits.numEpochs();
   nvVecd x = initx;
-	CHECK(x.isValid(),"Invalid vector detected.");
-	
+  CHECK(x.isValid(), "Invalid vector detected.");
+
   double learningRate = traits.learningRate();
 
   double best_cost = 1e10;
@@ -237,20 +261,20 @@ double nvCostFunctionBase::train_sgd(const nvTradeModelTraits &traits, const nvV
 
   for (int i = 0; i < ne; ++i) {
     lr = learningRate;
-    restore = i < ne-1;
-    
+    restore = i < ne - 1;
+
     // perform stochastic training:
     // We restore the settings as long as we are not on the latest epoch:
-    cost = performStochasticTraining(x,result,lr);
+    cost = performStochasticTraining(x, result, lr);
     count = 0;
-    while(cost > best_cost && restore && count<maxCount) {
+    while (cost > best_cost && restore && count < maxCount) {
       lr *= 0.33;
       count++;
       //logDEBUG("Found too big cost "<<cost<<" retrying with lr="<<lr<<" (count="<<count<<")");
-      cost = performStochasticTraining(x,result,lr);
+      cost = performStochasticTraining(x, result, lr);
     }
 
-    if(cost < best_cost) {
+    if (cost < best_cost) {
       // This iteration result is valid, so we use it:
       x = result;
       best_cost = cost;

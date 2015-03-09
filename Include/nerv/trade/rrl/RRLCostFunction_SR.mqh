@@ -69,8 +69,13 @@ double nvRRLCostFunction_SR::train(const nvVecd &initx, nvVecd &xresult)
 
 void nvRRLCostFunction_SR::computeCost()
 {
-  // Train the model with the given inputs for a given number of epochs.
-  double tcost = _traits.transactionCost();
+  // CHECK_PTR(_ctx, "Invalid context pointer.");
+
+  // int size = (int)_returns.size();
+  // _ctx.loadState(size);
+
+  double ratio = 0.00001;
+  double tcost = _traits.transactionCost() / ratio;
   uint size = _returns.size();
 
   nvVecd theta = _x;
@@ -105,7 +110,7 @@ void nvRRLCostFunction_SR::computeCost()
   for (uint i = 0; i < size; ++i)
   {
     rtn = _nrets[i];
-    rt = _returns[i];
+    rt = _returns[i] / ratio;
 
     // push a new value on the rvec:
     rvec.push_back(rtn);
@@ -126,7 +131,7 @@ void nvRRLCostFunction_SR::computeCost()
     // The rvec is ready for usage, so we build a prediction:
     //double val = params*theta;
     //logDEBUG("Pre-tanh value: "<<val);
-    Ft = nv_tanh(params * theta);
+    Ft = predict(params, theta);
     //logDEBUG("Prediction at "<<i<<" is: Ft="<<Ft);
 
     // if (i == size - 1 && _traits.useFinalSignal()) {
@@ -145,7 +150,7 @@ void nvRRLCostFunction_SR::computeCost()
     if (_computeGradient)
     {
       // we can compute the new derivative dFtdw
-      dFt = (params + dFt_1 * theta[1]) * (1.0 - Ft * Ft);
+      dFt = (params + dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
 
       // Now we can compute dRtdw:
       dsign = tcost * nv_sign(Ft - Ft_1);
@@ -168,10 +173,13 @@ void nvRRLCostFunction_SR::computeCost()
   // Rescale A and B:
   A /= ns;
   B /= ns;
-  CHECK(B - A * A != 0.0, "Invalid values for A=" << A << " and B=" << B);
+  double sqB = sqrt(B);
+  double BmAA = (sqB - A) * (sqB + A);
+
+  CHECK( BmAA != 0.0, "Invalid values for A=" << A << " and B=" << B);
 
   // Compute the current sharpe ratio:
-  double sr = A / MathSqrt(B - A * A);
+  double sr = A / MathSqrt(BmAA);
 
   //logDEBUG("A="<<A<<", B="<<B);
 
@@ -182,8 +190,8 @@ void nvRRLCostFunction_SR::computeCost()
     sumRtdRt *= 2.0 / ns; // There is a factor of 2 to keep in mind here.
 
     // Now we can compute the derivatives of the sharpe ratio with respect to A and B:
-    double dSdA = B / pow(B - A * A, 1.5);
-    double dSdB = -0.5 * A / pow(B - A * A, 1.5);
+    double dSdA = B / pow(BmAA, 1.5);
+    double dSdB = -0.5 * A / pow(BmAA, 1.5);
 
     // finally we can compute the sharpe ratio derivative:
     nvVecd thetab(theta);
@@ -210,7 +218,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
   // This could be turned of by using a ratio of 1.0 instead.
   double ratio = 0.00001;
 
-  double tcost = _traits.transactionCost()/ratio;
+  double tcost = _traits.transactionCost() / ratio;
   double maxNorm = 5.0; // TODO: provide as trait.
   double A, B;
 
@@ -225,7 +233,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
   for (int i = 0; i < size; ++i)
   {
     rtn = _nrets[i];
-    rt = _returns[i]/ratio;
+    rt = _returns[i] / ratio;
 
     rvec.push_back(rtn);
     if (i < ni - 1)

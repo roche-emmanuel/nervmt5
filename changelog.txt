@@ -95,3 +95,4 @@
 03/09/15-14:24:08: Added test for default SR cost computation.
 03/09/15-14:37:31: Added requirements on default SR cost test.
 03/09/15-15:27:46: Updated default values.
+03/09/15-16:10:08: Implemented test for exact gradient computation.
