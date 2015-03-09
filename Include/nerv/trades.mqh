@@ -131,3 +131,10 @@ nvVecd nv_generatePrices(int num, double alpha, double k, double mini = 1.0, dou
   
   return result;
 }
+
+nvVecd nv_generate_returns(const nvVecd& prices)
+{
+  uint size = prices.size();
+  CHECK(size >= 2,"Not enough prices to compute returns");
+  return prices.subvec(1,size-1) - prices.subvec(0,size-1);;
+}

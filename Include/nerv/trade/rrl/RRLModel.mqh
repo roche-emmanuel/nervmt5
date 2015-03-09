@@ -212,7 +212,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     ready = false;
   }
 
-  if (bcount < _traits.returnsMeanLength())
+  if (bcount < _traits.returnsMeanLength() && !_traits.returnsMeanDevFixed())
   {
     // We don't have enough bars to compute the returns mean and deviation.
     ready = false;

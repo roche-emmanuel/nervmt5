@@ -92,3 +92,4 @@
 03/08/15-13:47:40: Restructured strategy evaluation method.
 03/09/15-10:34:33: Using ratio on return prices to avoid precision issues. Improved SR cost precision.
 03/09/15-12:48:40: Added test 18 with precise SR cost function and return ratio of 0.00001.
+03/09/15-14:24:08: Added test for default SR cost computation.
