@@ -161,35 +161,21 @@ BEGIN_TEST_CASE("Should provide constant results with default SR cost")
   nvVecd rets = nv_generate_returns(prices);
 
   nvStrategyTraits straits;
-  straits.symbol("EURUSD").period(PERIOD_M1);
   straits.historyLength(0);
-  straits.autoWriteHistory(true); 
-  straits.id("test1_eur");
-  
+
   nvRRLModelTraits mtraits;
   mtraits.historyLength(0);
-  mtraits.autoWriteHistory(true); 
-  mtraits.id("test1_eur");
 
   double tcost = 0.000001;
-  straits.warmUpLength(0);
-  straits.signalThreshold(0.0);
-  straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
-  straits.signalMeanLength(100);
   straits.transactionCost(tcost);
   
   mtraits.transactionCost(tcost);  
   mtraits.batchTrainLength(500);
   mtraits.batchTrainFrequency(200);
   mtraits.onlineTrainLength(-1);
-  mtraits.lambda(0.0);
-  mtraits.numInputReturns(10);
-  mtraits.maxIterations(30);
 
   mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
   mtraits.warmInit(true);
-  mtraits.numEpochs(15);
-  mtraits.learningRate(0.01);
   mtraits.fixReturnsMeanDev(rets.mean(),rets.deviation());
 
   {

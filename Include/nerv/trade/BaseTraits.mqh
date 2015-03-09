@@ -52,7 +52,7 @@ public:
 
 nvBaseTraits::nvBaseTraits()
   : _historyLength(-1),
-  _autoWriteHistory(true)
+  _autoWriteHistory(false)
 {
   _id = "";
 }

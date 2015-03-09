@@ -94,3 +94,4 @@
 03/09/15-12:48:40: Added test 18 with precise SR cost function and return ratio of 0.00001.
 03/09/15-14:24:08: Added test for default SR cost computation.
 03/09/15-14:37:31: Added requirements on default SR cost test.
+03/09/15-15:27:46: Updated default values.
