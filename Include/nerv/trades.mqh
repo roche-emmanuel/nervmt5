@@ -105,12 +105,12 @@ nvVecd nv_generatePrices(int num, double alpha, double k, double mini = 1.0, dou
 {
   nvVecd result;
 
-  double p = nv_random_real(1.0,10.0);
-  double beta = nv_random_real(1.0,10.0);
-
   SimpleRNG rng1;
   SimpleRNG rng2;
   rng2.SetSeed(1234,987654);
+
+  double p = rng1.GetUniform()*10.0; // nv_random_real(1.0,10.0);
+  double beta = rng1.GetUniform()*10.0; //nv_random_real(1.0,10.0);
 
   for(int i=0;i<num;++i)
   {

@@ -156,7 +156,7 @@ END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide constant results with default SR cost")
   
-  int count = 1000;
+  int count = 900;
   nvVecd prices = nv_generatePrices(count, 0.9, 3.0, 1.125, 1.15);
   nvVecd rets = nv_generate_returns(prices);
 
@@ -180,7 +180,7 @@ BEGIN_TEST_CASE("Should provide constant results with default SR cost")
   
   mtraits.transactionCost(tcost);  
   mtraits.batchTrainLength(500);
-  mtraits.batchTrainFrequency(100);
+  mtraits.batchTrainFrequency(200);
   mtraits.onlineTrainLength(-1);
   mtraits.lambda(0.0);
   mtraits.numInputReturns(10);
@@ -198,6 +198,18 @@ BEGIN_TEST_CASE("Should provide constant results with default SR cost")
     st.setModel(new nvRRLModel(mtraits));
 
     st.dryrun(prices);    
+
+    nvVecd* wealth = (nvVecd*)st.getHistoryMap().get("strategy_wealth");
+    nvVecd* ndeals = (nvVecd*)st.getHistoryMap().get("strategy_num_deals");
+
+    double w = wealth.back();
+    double dd = computeMaxDrawnDown(wealth);
+    double nd = ndeals.back();
+    // MESSAGE("Final wealth: "<<w<<", dd: "<<dd<<", nd: "<<nd);
+
+    REQUIRE_CLOSE(w,0.03752210414999378,1e-10);
+    REQUIRE_CLOSE(dd,0.002940529703623393,1e-10);
+    REQUIRE_EQUAL(nd,398);
   }
 END_TEST_CASE()
 
