@@ -1,6 +1,7 @@
 
 // To be defined if we are building a release version.
 //#define RELEASE_BUILD
+#define USE_OPTIMIZATIONS
 
 #define IS_DYN_POINTER(obj) (CheckPointer(GetPointer(obj))==POINTER_DYNAMIC)
 #define IS_AUTO_POINTER(obj) (CheckPointer(GetPointer(obj))==POINTER_AUTOMATIC)

@@ -168,7 +168,7 @@ void nvRRLModel::setTraits(nvRRLModelTraits *traits)
 
 void nvRRLModel::reset()
 {
-  logDEBUG("Resetting RRLModel.")
+  //logDEBUG("Resetting RRLModel.")
 }
 
 bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
@@ -177,7 +177,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
   pred.valid(false);
 
   if (dt.isFirst()) {
-    logDEBUG("Received first digest element, reseting RRLModel.");
+    //logDEBUG("Received first digest element, reseting RRLModel.");
     reset();
     return false;
   }

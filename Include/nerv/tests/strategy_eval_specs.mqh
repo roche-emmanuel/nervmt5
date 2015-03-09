@@ -55,7 +55,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("should support computing long term profit")
+XBEGIN_TEST_CASE("should support computing long term profit")
   nvStrategyTraits straits;
   straits.symbol("EURUSD").period(PERIOD_M1);
   straits.historyLength(0);

@@ -23,7 +23,7 @@ protected:
   nvVecd _returnMoment1;
   nvVecd _returnMoment2;
   nvVecd _signals;
-  nvVecd _dFts[];
+  // nvVecd _dFts[];
   int _len;
   int _pos; 
 
@@ -55,11 +55,11 @@ public:
     _returnMoment2.resize(_len);
     _signals.resize(_len);
 
-    CHECK(ArrayResize(_dFts, _len) == _len, "Invalid length for dFt list");
-    for(int i=0;i<_len;++i)
-    {
-      _dFts[i].resize(nm);
-    }
+    // CHECK(ArrayResize(_dFts, _len) == _len, "Invalid length for dFt list");
+    // for(int i=0;i<_len;++i)
+    // {
+    //   _dFts[i].resize(nm);
+    // }
   }
 
   virtual void pushState()
@@ -68,7 +68,7 @@ public:
       _returnMoment1.set(_pos, A);
       _returnMoment2.set(_pos, B);
       _signals.set(_pos, Ft_1);
-      _dFts[_pos] = dFt_1;
+      // _dFts[_pos] = dFt_1;
       _pos++;
     }
     else {
@@ -76,11 +76,11 @@ public:
       _returnMoment1.push_back(A);
       _returnMoment2.push_back(B);
       _signals.push_back(Ft_1);
-      for(int i=1;i<_len;++i)
-      {
-        _dFts[i-1] = _dFts[i];
-      }
-      _dFts[_len-1] = dFt_1;
+      // for(int i=1;i<_len;++i)
+      // {
+      //   _dFts[i-1] = _dFts[i];
+      // }
+      // _dFts[_len-1] = dFt_1;
     }
   }
 

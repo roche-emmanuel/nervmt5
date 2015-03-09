@@ -253,18 +253,45 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
       // We can perform the training.
       // 1. Compute the new value of dFt/dw
       // Note: replacing (1 - Ft^2) with (1-Ft)*(1+Ft) to avoid precision issues.
+#ifndef USE_OPTIMIZATIONS
       _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
+#else
+      // optimised version:
+      _ctx.dFt = _ctx.dFt_1;
+      _ctx.dFt *= theta[1];
+      _ctx.dFt += _ctx.params;
+      _ctx.dFt *= ((1 - Ft) * (1 + Ft));
+#endif
 
       // 2. compute dRt/dw
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
+#ifndef USE_OPTIMIZATIONS
       _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;
+#else
+			// optimized version:
+			_ctx.dRt = _ctx.dFt_1;
+			if(dsign==0.0) {
+				_ctx.dRt *= rt;
+			}
+			else {
+	      double rtdsign = 1.0 + rt/dsign;
+				_ctx.dRt *= rtdsign;
+				_ctx.dRt -= _ctx.dFt;
+				_ctx.dRt *= dsign;
+			}
+#endif
 
       // 3. compute dDt/dw
       double sqB = sqrt(B);
 
       // _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow(B - A * A, 1.5);
       // Note: replacing initial multiplier with enhanced formula to avoid precision issues:
+#ifndef USE_OPTIMIZATIONS
       _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5);
+#else
+			_ctx.dDt = _ctx.dRt;
+			_ctx.dDt *= ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5));
+#endif      
       // logDEBUG("New theta norm: "<< _theta.norm());
 
       // Advance one step:
@@ -275,8 +302,14 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     }
 
     // Now we apply the learning:
+#ifndef USE_OPTIMIZATIONS
     theta += _ctx.dDt * learningRate;
-    CHECK(theta.isValid(), "Invalid vector detected.");
+#else
+    _ctx.dDt *= learningRate;
+    theta += _ctx.dDt;
+#endif
+
+    //CHECK(theta.isValid(), "Invalid vector detected.");
 
     // Validate the norm of the theta vector:
     validateNorm(theta, maxNorm);
@@ -300,6 +333,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
   // Once done we the training we provide the final value of theta:
   result = theta;
+  CHECK(theta.isValid(), "Invalid vector detected.");
   //logDEBUG("Theta norm after Stochastic training: "<< theta.norm());
 
   // Compute the final sharpe ratio:

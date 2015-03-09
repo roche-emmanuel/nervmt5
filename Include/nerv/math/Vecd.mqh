@@ -19,7 +19,7 @@ protected:
 public:
   nvVecd()
   {
-    resize(0,0.0,false);
+    resize(0, 0.0, false);
   }
 
   /** Vector constructor:
@@ -61,11 +61,13 @@ public:
 
   nvVecd *operator=(const nvVecd &rhs)
   {
-    _len = rhs._len;
     _dynamic = rhs._dynamic;
     _reserveSize = rhs._reserveSize;
-    CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
-
+    if (_len != rhs._len) {
+      _len = rhs._len;
+      CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
+    }
+    
     int count = ArrayCopy(_data, rhs._data, 0, 0);
     CHECK(count == _len, "Invalid array copy count: " << count);
     return GetPointer(this);
@@ -615,14 +617,14 @@ public:
 
   bool isValid() const
   {
-    if(_len==0)
+    if (_len == 0)
     {
       return false;
     }
 
-    for(uint i=0;i<_len;++i)
+    for (uint i = 0; i < _len; ++i)
     {
-      if(!MathIsValidNumber(_data[i])) {
+      if (!MathIsValidNumber(_data[i])) {
         return false;
       }
     }
