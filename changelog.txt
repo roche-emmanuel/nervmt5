@@ -102,3 +102,4 @@
 03/09/15-23:13:34: Additional optimization on SR cost computation.
 03/09/15-23:33:49: Preparing config for standard test.
 03/10/15-23:12:46: Performing tests on multiplication precision.
+03/10/15-23:59:43: Validated long test result.

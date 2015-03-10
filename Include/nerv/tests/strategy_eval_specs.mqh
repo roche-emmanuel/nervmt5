@@ -46,9 +46,10 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   cfg.prices_mode = REAL_PRICES;
   cfg.prices_start_time =  D'21.02.2015 12:00:00';
   cfg.prices_step_size = 500;
-  cfg.num_prices = 10000;
-  // cfg.num_iterations = 160;
-  cfg.num_iterations = 4;
+  cfg.num_prices = 20000;
+  // cfg.num_prices = 10000;
+  cfg.num_iterations = 161;
+  // cfg.num_iterations = 4;
 
   cfg.sendReportMail = true;
 
