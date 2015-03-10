@@ -348,12 +348,15 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
       m1 = ((1 - Ft) * (1 + Ft));
       t1 = theta[1];
       d1 = rt + dsign;
-      m2 = learningRate * ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5));
+      // m2 = ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5)) * learningRate;
+      m2 = (B - A * Rt);
+      double m3 = MathPow((sqB - A) * (sqB + A), 1.5);
 
       for (int j = 0; j < nm; ++j) {
         param = j == 0 ? 1.0 : j == 1 ? _ctx.Ft_1 : _anrets[id+j - 2];
         adFt[j] = (param + adFt_1[j] * t1) * m1;
-        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2;
+        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2 / m3 * learningRate;
+        // theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2;
         adFt_1[j] = adFt[j];
       }
 #endif

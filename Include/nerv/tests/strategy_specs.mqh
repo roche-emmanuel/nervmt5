@@ -245,6 +245,56 @@ BEGIN_TEST_CASE("Should provide constant results on secondary test")
 END_TEST_CASE()
 
 
+BEGIN_TEST_CASE("Should provide expected results on long test")
+  
+  nvStrategyEvalConfig cfg;
+
+  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
+  cfg.straits.historyLength(0);
+  cfg.straits.autoWriteHistory(false); 
+  
+  cfg.mtraits.historyLength(0);
+  cfg.mtraits.autoWriteHistory(false); 
+
+  double tcost = 0.000001;
+  cfg.straits.warmUpLength(0);
+  cfg.straits.signalThreshold(0.0);
+  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  cfg.straits.signalMeanLength(100);
+  cfg.straits.transactionCost(tcost);
+  
+  cfg.mtraits.transactionCost(tcost);  
+  cfg.mtraits.batchTrainLength(2000);
+  cfg.mtraits.batchTrainFrequency(500);
+  cfg.mtraits.onlineTrainLength(-1);
+  cfg.mtraits.lambda(0.0);
+  cfg.mtraits.numInputReturns(10);
+  cfg.mtraits.maxIterations(30);
+
+  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  cfg.mtraits.warmInit(true);
+  cfg.mtraits.numEpochs(15);
+  cfg.mtraits.learningRate(0.01);
+
+  cfg.prices_mode = REAL_PRICES;
+  cfg.prices_start_time =  D'21.02.2015 12:00:00';
+  cfg.prices_step_size = 500;
+  cfg.num_prices = 10000;
+  // cfg.num_iterations = 160;
+  cfg.num_iterations = 4;
+
+  cfg.sendReportMail = false;
+
+  nvStrategyEvaluator::evaluate(cfg);
+
+  double wm = cfg.st_final_wealth.mean();
+  double wd = cfg.st_final_wealth.deviation();
+  MESSAGE("mean wealth: "<< wm <<", dev: "<<wd);
+
+  REQUIRE_CLOSE(wm,0.007449138410750811,1e-10);
+  REQUIRE_CLOSE(wd,0.007295675718685668,1e-10);
+END_TEST_CASE()
+
 BEGIN_TEST_CASE("Should provide constant results with SR cost and exact gradient descent")
   
   int count = 900;
