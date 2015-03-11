@@ -448,3 +448,43 @@ Long St. final wealth: -0.04106004964547217
 Long St. max drawdown 0.05440394324448007
 Long St. num deals: 97892
 
+
+Test 19 - Same test as #13 but with more precise SR cost function.
+
+  // Settings:
+  double tcost = 0.000001;
+  cfg.straits.warmUpLength(0);
+  cfg.straits.signalThreshold(0.0);
+  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  cfg.straits.signalMeanLength(100);
+  cfg.straits.transactionCost(tcost);
+  
+  cfg.mtraits.transactionCost(tcost);  
+  cfg.mtraits.batchTrainLength(2000);
+  cfg.mtraits.batchTrainFrequency(500);
+  cfg.mtraits.onlineTrainLength(-1);
+  cfg.mtraits.lambda(0.0);
+  cfg.mtraits.numInputReturns(10);
+  cfg.mtraits.maxIterations(30);
+
+  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  cfg.mtraits.warmInit(true);
+  cfg.mtraits.numEpochs(15);
+  cfg.mtraits.learningRate(0.01);
+
+  cfg.prices_mode = REAL_PRICES;
+  cfg.prices_start_time =  D'21.02.2015 12:00:00';
+  cfg.prices_step_size = 500;
+  cfg.num_prices = 20000;
+  cfg.num_iterations = 161;
+
+  cfg.sendReportMail = true;
+
+St. Wealth mean: 0.01332855162673021
+St. Wealth deviation: 0.03007288802109163
+St. Max DrawDown mean: 0.02859240318269713
+St. Max DrawDown deviation: 0.01419608462218881
+St. Num deals mean: 17987.34161490683
+St. Num deals deviation: 1422.046805186419
+
+Evaluation duration: 00:08:41
