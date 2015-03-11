@@ -103,3 +103,4 @@
 03/09/15-23:33:49: Preparing config for standard test.
 03/10/15-23:12:46: Performing tests on multiplication precision.
 03/10/15-23:59:43: Validated long test result.
+03/11/15-08:02:26: Improved results on long test with improved formula.
