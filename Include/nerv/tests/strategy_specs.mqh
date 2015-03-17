@@ -291,8 +291,8 @@ BEGIN_TEST_CASE("Should provide expected results on long test")
   double wd = cfg.st_final_wealth.deviation();
   MESSAGE("mean wealth: "<< wm <<", dev: "<<wd);
 
-  REQUIRE_CLOSE(wm,0.007449138410750811,1e-10);
-  REQUIRE_CLOSE(wd,0.007295675718685668,1e-10);
+  REQUIRE_CLOSE(wm,0.01094434111511507,1e-10);
+  REQUIRE_CLOSE(wd,0.0112888846551461,1e-10);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide constant results with SR cost and exact gradient descent")
