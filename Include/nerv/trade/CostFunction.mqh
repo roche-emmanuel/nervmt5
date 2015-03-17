@@ -234,7 +234,7 @@ double nvCostFunctionBase::train_gd(const nvTradeModelTraits &traits, const nvVe
 
   // Compute the final cost:
   cost = computeCost(x);
-  logDEBUG("Final cost after training: " << cost);
+  // logDEBUG("Final cost after training: " << cost);
 
   // Now save the result:
   xresult = x;

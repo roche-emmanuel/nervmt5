@@ -38,20 +38,23 @@ BEGIN_TEST_CASE("should support evaluation of strategy")
   cfg.mtraits.numInputReturns(10);
   cfg.mtraits.maxIterations(30);
 
-  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  // cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  cfg.mtraits.trainMode(TRAIN_BATCH_GRADIENT_DESCENT);
   cfg.mtraits.warmInit(true);
   cfg.mtraits.numEpochs(15);
-  cfg.mtraits.learningRate(0.01);
+  // cfg.mtraits.learningRate(0.01);
+  cfg.mtraits.learningRate(50.0);
 
   cfg.prices_mode = REAL_PRICES;
   cfg.prices_start_time =  D'21.02.2015 12:00:00';
   cfg.prices_step_size = 500;
-  cfg.num_prices = 20000;
-  // cfg.num_prices = 10000;
-  cfg.num_iterations = 161;
-  // cfg.num_iterations = 4;
+  // cfg.num_prices = 20000;
+  cfg.num_prices = 10000;
+  // cfg.num_iterations = 161;
+  cfg.num_iterations = 4;
 
-  cfg.sendReportMail = true;
+  // cfg.sendReportMail = true;
+  cfg.sendReportMail = false;
 
   nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()

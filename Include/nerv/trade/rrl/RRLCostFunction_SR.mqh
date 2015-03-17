@@ -86,11 +86,11 @@ void nvRRLCostFunction_SR::computeCost()
 
   double ratio = 0.00001;
   double tcost = _traits.transactionCost() / ratio;
-  uint size = _returns.size();
+  int size = (int)_returns.size();
 
   nvVecd theta = _x;
-  uint nm = theta.size();
-  uint ni = nm - 2;
+  int nm = (int)theta.size();
+  int ni = nm - 2;
 
   CHECK(size >= ni, "Not enough return values: " << size << "<" << ni);
 
@@ -101,9 +101,10 @@ void nvRRLCostFunction_SR::computeCost()
   // Initialize the rvec:
   nvVecd rvec(ni);
 
-  double Ft, Ft_1, rt, rtn, Rt, A, B, dsign;
+  double Ft, Ft_1, rt, Rt, A, B, dsign;
   Ft_1 = A = B = 0.0;
 
+#ifndef USE_OPTIMIZATIONS
   // dF0 is a zero vector.
   nvVecd dFt_1(nm);
   nvVecd dFt(nm);
@@ -115,39 +116,56 @@ void nvRRLCostFunction_SR::computeCost()
   nvVecd params(nm);
 
   params.set(0, 1.0);
+#else
+  double adFt[];
+  double adFt_1[];
+  double atheta[];
+  double sumdRt[];
+  double sumRtdRt[];
+  double agrad[];
+
+  theta.toArray(atheta);
+
+  ArrayResize(adFt, nm);
+  ArrayFill(adFt, 0, nm, 0.0);
+  ArrayResize(adFt_1, nm);
+  ArrayFill(adFt_1, 0, nm, 0.0);
+  ArrayResize(sumdRt, nm);
+  ArrayFill(sumdRt, 0, nm, 0.0);
+  ArrayResize(sumRtdRt, nm);
+  ArrayFill(sumRtdRt, 0, nm, 0.0);
+  ArrayResize(agrad, nm);
+
+  double param, m1, d1, t1, dRt;
+#endif
 
   // Iterate on each sample:
-  for (uint i = 0; i < size; ++i)
+  for (int i = 0; i < size; ++i)
   {
-    rtn = _nrets[i];
+#ifndef USE_OPTIMIZATIONS
     rt = _returns[i] / ratio;
-
-    // push a new value on the rvec:
-    rvec.push_back(rtn);
+    rvec.push_back(_nrets[i]);
     if (i < ni - 1)
       continue;
-
-    //logDEBUG("On iteration " << i <<" rt="<<rt<<", rtn="<<rtn);
-
-    // if (i == 0 && ctx.useInitialSignal) {
-    //   // Force the initial Ft_1 value:
-    //   Ft_1 = ctx.initialSignal;
-    // }
 
     // Prepare the parameter vector:
     params.set(1, Ft_1);
     params.set(2, rvec);
 
     // The rvec is ready for usage, so we build a prediction:
-    //double val = params*theta;
-    //logDEBUG("Pre-tanh value: "<<val);
-    Ft = predict(params, theta);
-    //logDEBUG("Prediction at "<<i<<" is: Ft="<<Ft);
+    Ft = nv_tanh(params * theta);
+#else
+    if (i < ni - 1)
+      continue;
+    rt = _arets[i] / ratio;
 
-    // if (i == size - 1 && _traits.useFinalSignal()) {
-    //   // Force the final Ft value:
-    //   Ft = _traits.finalSignal();
-    // }
+    int id = i - ni + 1;
+    Ft = atheta[0] + Ft_1 * atheta[1];
+    for (int j = 0; j < ni; ++j) {
+      Ft += _anrets[id+j] * atheta[j + 2];
+    }
+    Ft = nv_tanh(Ft);
+#endif
 
     // From that we can build the new return value:
     Rt = Ft_1 * rt - tcost * MathAbs(Ft - Ft_1);
@@ -159,11 +177,13 @@ void nvRRLCostFunction_SR::computeCost()
 
     if (_computeGradient)
     {
+      dsign = tcost * nv_sign(Ft - Ft_1);
+
+#ifndef USE_OPTIMIZATIONS      
       // we can compute the new derivative dFtdw
       dFt = (params + dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
 
       // Now we can compute dRtdw:
-      dsign = tcost * nv_sign(Ft - Ft_1);
       dRt = dFt_1 * (rt + dsign) - dFt * dsign;
 
       sumdRt += dRt;
@@ -171,6 +191,20 @@ void nvRRLCostFunction_SR::computeCost()
 
       // Update the recurrent values:
       dFt_1 = dFt;
+#else
+      m1 = ((1 - Ft) * (1 + Ft));
+      t1 = atheta[1];
+      d1 = rt + dsign;
+
+      for (int j = 0; j < nm; ++j) {
+        param = j == 0 ? 1.0 : j == 1 ? Ft_1 : _anrets[id+j - 2];
+        adFt[j] = (param + adFt_1[j] * t1) * m1;
+        dRt = (adFt_1[j] * d1 - adFt[j] * dsign);
+        sumdRt[j] += dRt;
+        sumRtdRt[j] += Rt * dRt;
+        adFt_1[j] = adFt[j];
+      }
+#endif      
     }
 
     Ft_1 = Ft;
@@ -195,19 +229,33 @@ void nvRRLCostFunction_SR::computeCost()
 
   if (_computeGradient)
   {
-    // Rescale sumdRt and sumRtdRt:
-    sumdRt *= 1.0 / ns;
-    sumRtdRt *= 2.0 / ns; // There is a factor of 2 to keep in mind here.
-
     // Now we can compute the derivatives of the sharpe ratio with respect to A and B:
     double dSdA = B / pow(BmAA, 1.5);
     double dSdB = -0.5 * A / pow(BmAA, 1.5);
 
-    // finally we can compute the sharpe ratio derivative:
-    nvVecd thetab(theta);
-    thetab.set(0, 0.0);
+#ifndef USE_OPTIMIZATIONS  
+    // Rescale sumdRt and sumRtdRt:
+    sumdRt *= 1.0 / ns;
+    sumRtdRt *= 2.0 / ns; // There is a factor of 2 to keep in mind here.
 
-    _grad = (sumdRt * dSdA + sumRtdRt * dSdB) * (-1.0) + thetab * _traits.lambda();
+    _grad = (sumdRt * dSdA + sumRtdRt * dSdB) * (-1.0);
+#else
+
+    for (int j = 0; j < nm; ++j) {
+      agrad[j] = - sumdRt[j]*dSdA - sumRtdRt[j]*dSdB;
+    }
+
+    _grad = agrad;
+#endif
+
+    // finally we can compute the sharpe ratio derivative:
+    if(_traits.lambda() > 0.0)
+    {
+      nvVecd thetab(theta);
+      thetab.set(0, 0.0);
+
+      _grad += thetab * _traits.lambda();      
+    }    
   }
 
   // Compute the cost regularization:
@@ -306,14 +354,15 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
       // 3. compute dDt/dw
       // _ctx.dDt = _ctx.dRt * (B - A * Rt) / MathPow(B - A * A, 1.5);
       // Note: replacing initial multiplier with enhanced formula to avoid precision issues:
-      _ctx.dDt = _ctx.dRt * ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5));
+      _ctx.dDt = _ctx.dRt; // * ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5));
 
+      double m2 = ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5)) * learningRate;
 
       // Advance one step:
       _ctx.dFt_1 = _ctx.dFt;
 
       // Now we apply the learning:
-      _ctx.dDt *= learningRate;
+      _ctx.dDt *= m2;
       theta += _ctx.dDt;
 #else
       // // 1. Compute the new value of dFt/dw
