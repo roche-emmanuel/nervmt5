@@ -120,8 +120,8 @@ void nvRRLCostFunction_SR::computeCost()
   double adFt[];
   double adFt_1[];
   double atheta[];
-  double sumdRt[];
-  double sumRtdRt[];
+  double asumdRt[];
+  double asumRtdRt[];
   double agrad[];
 
   theta.toArray(atheta);
@@ -130,13 +130,13 @@ void nvRRLCostFunction_SR::computeCost()
   ArrayFill(adFt, 0, nm, 0.0);
   ArrayResize(adFt_1, nm);
   ArrayFill(adFt_1, 0, nm, 0.0);
-  ArrayResize(sumdRt, nm);
-  ArrayFill(sumdRt, 0, nm, 0.0);
-  ArrayResize(sumRtdRt, nm);
-  ArrayFill(sumRtdRt, 0, nm, 0.0);
+  ArrayResize(asumdRt, nm);
+  ArrayFill(asumdRt, 0, nm, 0.0);
+  ArrayResize(asumRtdRt, nm);
+  ArrayFill(asumRtdRt, 0, nm, 0.0);
   ArrayResize(agrad, nm);
 
-  double param, m1, d1, t1, dRt;
+  double param, m1, d1, t1, vdRt;
 #endif
 
   // Iterate on each sample:
@@ -199,9 +199,9 @@ void nvRRLCostFunction_SR::computeCost()
       for (int j = 0; j < nm; ++j) {
         param = j == 0 ? 1.0 : j == 1 ? Ft_1 : _anrets[id+j - 2];
         adFt[j] = (param + adFt_1[j] * t1) * m1;
-        dRt = (adFt_1[j] * d1 - adFt[j] * dsign);
-        sumdRt[j] += dRt;
-        sumRtdRt[j] += Rt * dRt;
+        vdRt = (adFt_1[j] * d1 - adFt[j] * dsign);
+        asumdRt[j] += vdRt;
+        asumRtdRt[j] += Rt * vdRt;
         adFt_1[j] = adFt[j];
       }
 #endif      
@@ -242,7 +242,10 @@ void nvRRLCostFunction_SR::computeCost()
 #else
 
     for (int j = 0; j < nm; ++j) {
-      agrad[j] = - sumdRt[j]*dSdA - sumRtdRt[j]*dSdB;
+      asumdRt[j] *= 1.0/ns;
+      asumRtdRt[j] *= 2.0/ns;
+      
+      agrad[j] = - asumdRt[j]*dSdA - asumRtdRt[j]*dSdB;
     }
 
     _grad = agrad;
