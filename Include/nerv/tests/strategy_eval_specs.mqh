@@ -85,6 +85,35 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
   // St. Num deals deviation: 1422.046805186419
   // Evaluation duration: 00:12:10
 
+  // Result when using batchTrainFrequency=300 instead of 500:
+  // St. Wealth mean: 0.01368499026178819
+  // St. Wealth deviation: 0.02564139038809939
+  // St. Max DrawDown mean: 0.02836255613012985
+  // St. Max DrawDown deviation: 0.01360232434397006
+  // St. Num deals mean: 17987.74534161491
+  // St. Num deals deviation: 1422.080797268997
+  // Evaluation duration: 00:17:29
+
+  // Result when using batchTrainFrequency=250 instead of 500:
+  // St. Wealth mean: 0.01447008370349228
+  // St. Wealth deviation: 0.0274053195898624
+  // St. Max DrawDown mean: 0.02687834361395423
+  // St. Max DrawDown deviation: 0.012707858746699
+  // St. Num deals mean: 17987.29192546584
+  // St. Num deals deviation: 1422.043604490199
+  // Evaluation duration: 00:29:05
+
+
+  // Result when using batchTrainFrequency=200 instead of 500:
+  // St. Wealth mean: 0.01199606994438031
+  // St. Wealth deviation: 0.02356319480840596
+  // St. Max DrawDown mean: 0.02695655848904889
+  // St. Max DrawDown deviation: 0.01094712383696888
+  // St. Num deals mean: 17988.53416149068
+  // St. Num deals deviation: 1422.137065610318
+  // Evaluation duration: 00:25:51
+
+
   nvStrategyEvalConfig cfg;
 
   cfg.straits.symbol("EURUSD").period(PERIOD_M1);
@@ -108,7 +137,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
   
   cfg.mtraits.transactionCost(tcost);  
   cfg.mtraits.batchTrainLength(2000);
-  cfg.mtraits.batchTrainFrequency(100);
+  cfg.mtraits.batchTrainFrequency(200);
   cfg.mtraits.onlineTrainLength(-1);
   cfg.mtraits.lambda(0.0);
   cfg.mtraits.numInputReturns(10);
