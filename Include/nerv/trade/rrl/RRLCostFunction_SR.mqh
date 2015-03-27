@@ -276,7 +276,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
 
   // ratio of conversion used to avoid precision issues:
   // we just count the returns in units 0.1 of pips (eg. 5 decimals):
-  // This could be turned of by using a ratio of 1.0 instead.
+  // This could be turned off by using a ratio of 1.0 instead.
   double ratio = 0.00001;
 
   double tcost = _traits.transactionCost() / ratio;

@@ -342,6 +342,53 @@ BEGIN_TEST_CASE("Should provide constant results with SR cost and exact gradient
   }
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide constant results with default DDR cost")
+  
+  int count = 900;
+  nvVecd prices = nv_generatePrices(count, 0.9, 3.0, 1.125, 1.15);
+  nvVecd rets = nv_generate_returns(prices);
+
+  nvStrategyTraits straits;
+  straits.historyLength(0);
+
+  nvRRLModelTraits mtraits;
+  mtraits.historyLength(0);
+
+  double tcost = 0.000001;
+  straits.transactionCost(tcost);
+  
+  mtraits.transactionCost(tcost);  
+  mtraits.batchTrainLength(500);
+  mtraits.batchTrainFrequency(200);
+  mtraits.onlineTrainLength(-1);
+
+  mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  mtraits.trainAlgorithm(TRAIN_DDR);
+  mtraits.warmInit(true);
+  mtraits.fixReturnsMeanDev(rets.mean(),rets.deviation());
+
+  {
+    nvStrategy st(straits); 
+
+    st.setModel(new nvRRLModel(mtraits));
+
+    st.dryrun(prices);    
+
+    nvVecd* wealth = (nvVecd*)st.getHistoryMap().get("strategy_wealth");
+    nvVecd* ndeals = (nvVecd*)st.getHistoryMap().get("strategy_num_deals");
+
+    double w = wealth.back();
+    double dd = computeMaxDrawnDown(wealth);
+    double nd = ndeals.back();
+    MESSAGE("Final wealth: "<<w<<", dd: "<<dd<<", nd: "<<nd);
+
+    REQUIRE_CLOSE(w,0.03457721327131128,1e-10);
+    REQUIRE_CLOSE(dd,0.003553233395047152,1e-10);
+    REQUIRE_EQUAL(nd,400);
+  }
+END_TEST_CASE()
+
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

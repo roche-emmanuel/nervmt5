@@ -13,6 +13,11 @@ protected:
   nvVecd _returns;
   nvVecd _nrets;
 
+#ifdef USE_OPTIMIZATIONS
+  double _arets[];
+  double _anrets[];
+#endif
+
 public:
   nvRRLCostFunction_DDR(const nvRRLModelTraits &traits);
 
@@ -24,7 +29,7 @@ public:
 
   virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
 
-  virtual int getNumDimensions() const;  
+  virtual int getNumDimensions() const;
 };
 
 
@@ -51,6 +56,11 @@ void nvRRLCostFunction_DDR::setReturns(const nvVecd &returns)
   else {
     _nrets = returns.stdnormalize();
   }
+
+#ifdef USE_OPTIMIZATIONS
+  _returns.toArray(_arets);
+  _nrets.toArray(_anrets);
+#endif  
 }
 
 double nvRRLCostFunction_DDR::train(const nvVecd &initx, nvVecd &xresult)
@@ -79,26 +89,46 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
   int size = (int)_returns.size();
   _ctx.loadState(size);
 
-  double rtn, rt;
+  double rt;
 
-  double tcost = _traits.transactionCost();
+  // ratio of conversion used to avoid precision issues:
+  // we just count the returns in units 0.1 of pips (eg. 5 decimals):
+  // This could be turned off by using a ratio of 1.0 instead.
+  double ratio = 0.00001;
+
+  double tcost = _traits.transactionCost() / ratio;
   double maxNorm = 5.0; // TODO: provide as trait.
   double A, DD2, DD;
 
-  nvVecd theta = x;
-  int nm = (int)theta.size();
+  int nm = (int)x.size();
   int ni = nm - 2;
 
+#ifndef USE_OPTIMIZATIONS
+  nvVecd theta = x;
   nvVecd rvec(ni);
+#else
+  double adFt[];
+  double adFt_1[];
+  double theta[];
+
+  x.toArray(theta);
+
+  ArrayResize(adFt, nm);
+  ArrayFill(adFt, 0, nm, 0.0);
+  ArrayResize(adFt_1, nm);
+  ArrayFill(adFt_1, 0, nm, 0.0);
+
+  double param, m1, m2, d1, t1, norm;
+#endif
 
   _ctx.params.set(0, 1.0);
 
   for (int i = 0; i < size; ++i)
   {
-    rtn = _nrets[i];
-    rt = _returns[i];
 
-    rvec.push_back(rtn);
+#ifndef USE_OPTIMIZATIONS
+    rt = _returns[i] / ratio;
+    rvec.push_back(_nrets[i]);
     if (i < ni - 1)
       continue;
 
@@ -106,45 +136,88 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     _ctx.params.set(2, rvec);
 
     double Ft = predict(_ctx.params, theta);
+#else
+    if (i < ni - 1)
+      continue;
+    rt = _arets[i] / ratio;
+
+    int id = i - ni + 1;
+    double Ft = theta[0] + _ctx.Ft_1 * theta[1];
+    for (int j = 0; j < ni; ++j) {
+      Ft += _anrets[id + j] * theta[j + 2];
+    }
+    Ft = nv_tanh(Ft);
+#endif
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
 
     DD2 = _ctx.DD2;
-		A = _ctx.A;
-		
+    A = _ctx.A;
+
     if (DD2 != 0.0) {
+      // Needed variables:
+      double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
+      DD = sqrt(DD2);
+
+
       // We can perform the training.
+#ifndef USE_OPTIMIZATIONS
       // 1. Compute the new value of dFt/dw
-      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * (1 - Ft * Ft);
+      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
 
       // 2. compute dRt/dw
-      double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
       _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;
 
-      DD = sqrt(DD2);
 
       // 3. compute dDt/dw
       if (Rt > 0.0) {
         _ctx.dDt = _ctx.dRt * (1.0 / DD);
       }
       else {
-        _ctx.dDt = _ctx.dRt * ((DD2 - A * Rt) / (DD*DD2));
+        _ctx.dDt = _ctx.dRt * ((DD2 - A * Rt) / (DD * DD2));
       }
 
       // logDEBUG("New theta norm: "<< _theta.norm());
 
       // Advance one step:
       _ctx.dFt_1 = _ctx.dFt;
-    }
-    else {
-      _ctx.dDt.fill(0.0);
+
+      // Now we apply the learning:
+      theta += _ctx.dDt * learningRate;
+#else
+      m1 = ((1 - Ft) * (1 + Ft));
+      t1 = theta[1];
+      d1 = rt + dsign;
+      m2 = Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / (DD * DD2));
+      m2 *= learningRate;
+
+      for (int j = 0; j < nm; ++j) {
+        param = j == 0 ? 1.0 : j == 1 ? _ctx.Ft_1 : _anrets[id+j - 2];
+        adFt[j] = (param + adFt_1[j] * t1) * m1;
+        // theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2 / m3 * learningRate;
+        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2;
+        adFt_1[j] = adFt[j];
+      }
+#endif
     }
 
-    // Now we apply the learning:
-    theta += _ctx.dDt * learningRate;
 
     // Validate the norm of the theta vector:
+#ifndef USE_OPTIMIZATIONS    
     validateNorm(theta, maxNorm);
+#else
+    norm = 0.0;
+    for (int j = 0; j < nm; ++j) {
+      norm += theta[j] * theta[j];
+    }
+    norm = sqrt(norm);
+    if (norm > maxNorm) {
+      for (int j = 0; j < nm; ++j) {
+        theta[j] *= 0.75;
+      }
+      // theta *= MathMin(exp(-tn / maxNorm + 1),0.75);
+    }
+#endif
 
     // Update previsou signal:
     _ctx.Ft_1 = Ft;
@@ -153,11 +226,12 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     _ctx.addReturn(Rt);
 
     // Save the current state of the train context:
-    _ctx.pushState();    
+    _ctx.pushState();
   }
 
   // Once done we the training we provide the final value of theta:
   result = theta;
+  CHECK(result.isValid(), "Invalid vector detected.");
   //logDEBUG("Theta norm after Stochastic training: "<< theta.norm());
 
   // Compute the final sharpe ratio:
@@ -168,5 +242,5 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 
 int nvRRLCostFunction_DDR::getNumDimensions() const
 {
-  return _traits.numInputReturns()+2;
+  return _traits.numInputReturns() + 2;
 }

@@ -105,3 +105,4 @@
 03/10/15-23:59:43: Validated long test result.
 03/11/15-08:02:26: Improved results on long test with improved formula.
 03/11/15-09:01:03: Added evaluation report for test 19.
+03/27/15-17:14:10: Added optimized implementation for DDR cost function.

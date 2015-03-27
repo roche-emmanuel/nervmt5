@@ -488,3 +488,69 @@ St. Num deals mean: 17987.34161490683
 St. Num deals deviation: 1422.046805186419
 
 Evaluation duration: 00:08:41
+
+
+Test 20 - Testing "should support evaluation of strategy with stochastic SR" with various settings:
+
+Result when using batchTrainFrequency=500:
+St. Wealth mean: 0.01332855162673021
+St. Wealth deviation: 0.03007288802109163
+St. Max DrawDown mean: 0.02859240318269713
+St. Max DrawDown deviation: 0.01419608462218881
+St. Num deals mean: 17987.34161490683
+St. Num deals deviation: 1422.046805186419
+Evaluation duration: 00:12:10
+
+Result when using batchTrainFrequency=300 instead of 500:
+St. Wealth mean: 0.01368499026178819
+St. Wealth deviation: 0.02564139038809939
+St. Max DrawDown mean: 0.02836255613012985
+St. Max DrawDown deviation: 0.01360232434397006
+St. Num deals mean: 17987.74534161491
+St. Num deals deviation: 1422.080797268997
+Evaluation duration: 00:17:29
+
+Result when using batchTrainFrequency=275 instead of 500:
+St. Wealth mean: 0.01136068302281152
+St. Wealth deviation: 0.02553868536558681
+St. Max DrawDown mean: 0.02808696988774205
+St. Max DrawDown deviation: 0.01328528625758438
+St. Num deals mean: 17987.67080745341
+St. Num deals deviation: 1422.073984164756
+Evaluation duration: 00:15:10
+
+Result when using batchTrainFrequency=250 instead of 500:
+St. Wealth mean: 0.01447008370349228
+St. Wealth deviation: 0.0274053195898624
+St. Max DrawDown mean: 0.02687834361395423
+St. Max DrawDown deviation: 0.012707858746699
+St. Num deals mean: 17987.29192546584
+St. Num deals deviation: 1422.043604490199
+Evaluation duration: 00:29:05
+
+Result when using batchTrainFrequency=225 instead of 500:
+St. Wealth mean: 0.008806672178628083
+St. Wealth deviation: 0.02488048931053745
+St. Max DrawDown mean: 0.02831098055672611
+St. Max DrawDown deviation: 0.01251086701804364
+St. Num deals mean: 17988.21118012422
+St. Num deals deviation: 1422.115229773534
+Evaluation duration: 00:18:39
+
+Result when using batchTrainFrequency=200 instead of 500:
+St. Wealth mean: 0.01199606994438031
+St. Wealth deviation: 0.02356319480840596
+St. Max DrawDown mean: 0.02695655848904889
+St. Max DrawDown deviation: 0.01094712383696888
+St. Num deals mean: 17988.53416149068
+St. Num deals deviation: 1422.137065610318
+Evaluation duration: 00:25:51
+
+Result when using batchTrainFrequency=100 instead of 500:
+St. Wealth mean: 0.009071013145207772
+St. Wealth deviation: 0.02429265188916699
+St. Max DrawDown mean: 0.02895788852697343
+St. Max DrawDown deviation: 0.01270882317794025
+St. Num deals mean: 17988.49068322982
+St. Num deals deviation: 1422.132068622376
+Evaluation duration: 00:42:09

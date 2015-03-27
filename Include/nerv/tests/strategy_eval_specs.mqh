@@ -75,45 +75,7 @@ XBEGIN_TEST_CASE("should support evaluation of strategy with exact SR")
   nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
-  // Results of this test:
-  // St. Wealth mean: 0.01332855162673021
-  // St. Wealth deviation: 0.03007288802109163
-  // St. Max DrawDown mean: 0.02859240318269713
-  // St. Max DrawDown deviation: 0.01419608462218881
-  // St. Num deals mean: 17987.34161490683
-  // St. Num deals deviation: 1422.046805186419
-  // Evaluation duration: 00:12:10
-
-  // Result when using batchTrainFrequency=300 instead of 500:
-  // St. Wealth mean: 0.01368499026178819
-  // St. Wealth deviation: 0.02564139038809939
-  // St. Max DrawDown mean: 0.02836255613012985
-  // St. Max DrawDown deviation: 0.01360232434397006
-  // St. Num deals mean: 17987.74534161491
-  // St. Num deals deviation: 1422.080797268997
-  // Evaluation duration: 00:17:29
-
-  // Result when using batchTrainFrequency=250 instead of 500:
-  // St. Wealth mean: 0.01447008370349228
-  // St. Wealth deviation: 0.0274053195898624
-  // St. Max DrawDown mean: 0.02687834361395423
-  // St. Max DrawDown deviation: 0.012707858746699
-  // St. Num deals mean: 17987.29192546584
-  // St. Num deals deviation: 1422.043604490199
-  // Evaluation duration: 00:29:05
-
-
-  // Result when using batchTrainFrequency=200 instead of 500:
-  // St. Wealth mean: 0.01199606994438031
-  // St. Wealth deviation: 0.02356319480840596
-  // St. Max DrawDown mean: 0.02695655848904889
-  // St. Max DrawDown deviation: 0.01094712383696888
-  // St. Num deals mean: 17988.53416149068
-  // St. Num deals deviation: 1422.137065610318
-  // Evaluation duration: 00:25:51
-
-
+XBEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
   nvStrategyEvalConfig cfg;
 
   cfg.straits.symbol("EURUSD").period(PERIOD_M1);
@@ -137,7 +99,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
   
   cfg.mtraits.transactionCost(tcost);  
   cfg.mtraits.batchTrainLength(2000);
-  cfg.mtraits.batchTrainFrequency(200);
+  cfg.mtraits.batchTrainFrequency(225);
   cfg.mtraits.onlineTrainLength(-1);
   cfg.mtraits.lambda(0.0);
   cfg.mtraits.numInputReturns(10);
@@ -163,8 +125,8 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
     cfg.num_iterations = 4;
   }
 
-  // cfg.sendReportMail = true;
-  cfg.sendReportMail = false;
+  cfg.sendReportMail = true;
+  // cfg.sendReportMail = false;
 
   nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()
@@ -257,6 +219,63 @@ XBEGIN_TEST_CASE("should support computing long term profit")
 
   all_prices.writeTo("test_long_strategy_prices.txt");
 
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
+  nvStrategyEvalConfig cfg;
+
+  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
+  cfg.straits.historyLength(0);
+  cfg.straits.autoWriteHistory(false); 
+  cfg.straits.id("test1_eur");
+  
+  // Keep history:
+  cfg.mtraits.historyLength(0);
+  // Do not write history data to disk.
+  cfg.mtraits.autoWriteHistory(false); 
+  cfg.mtraits.id("test1_eur");
+
+  // Settings:
+  double tcost = 0.000001;
+  cfg.straits.warmUpLength(0);
+  cfg.straits.signalThreshold(0.0);
+  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  cfg.straits.signalMeanLength(100);
+  cfg.straits.transactionCost(tcost);
+  
+  cfg.mtraits.transactionCost(tcost);  
+  cfg.mtraits.batchTrainLength(2000);
+  cfg.mtraits.batchTrainFrequency(225);
+  cfg.mtraits.onlineTrainLength(-1);
+  cfg.mtraits.lambda(0.0);
+  cfg.mtraits.numInputReturns(10);
+  cfg.mtraits.maxIterations(30);
+
+  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  cfg.mtraits.trainAlgorithm(TRAIN_DDR);
+  cfg.mtraits.warmInit(true);
+  cfg.mtraits.numEpochs(15);
+  cfg.mtraits.learningRate(0.01);
+
+  cfg.prices_mode = REAL_PRICES;
+  cfg.prices_start_time =  D'21.02.2015 12:00:00';
+  cfg.prices_step_size = 500;
+  if(false)
+  {
+    // Long test:
+    cfg.num_prices = 20000;
+    cfg.num_iterations = 161;
+  }
+  else 
+  {
+    cfg.num_prices = 10000;
+    cfg.num_iterations = 4;
+  }
+
+  cfg.sendReportMail = true;
+  // cfg.sendReportMail = false;
+
+  nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()
 
 END_TEST_SUITE()
