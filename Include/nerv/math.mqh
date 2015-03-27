@@ -80,3 +80,13 @@ void nv_write_vecd(nvVecd* vec, string filename)
 
   FileClose(handle);
 }
+
+double nv_push_back(double &arr[], double val)
+{
+    double res = arr[0];
+    int len = ArraySize(arr);
+    int count = ArrayCopy(arr, arr, 0, 1, len - 1);
+    CHECK(count == len - 1, "Invalid array copy count: " << count);
+    arr[len - 1] = val;
+    return res;
+}

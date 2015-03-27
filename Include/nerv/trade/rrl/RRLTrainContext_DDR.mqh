@@ -11,7 +11,11 @@ public:
   double DD2;
 
 protected:
+#ifndef USE_OPTIMIZATIONS
   nvVecd _downsideDeviation;
+#else
+  double _downsideDeviation[];
+#endif
 
 public:
   nvRRLTrainContext_DDR()
@@ -26,11 +30,17 @@ public:
     nvRRLTrainContext_SR::init(traits);
      
     DD2 = 0.0;
+#ifndef USE_OPTIMIZATIONS
     _downsideDeviation.resize(_len);
+#else
+    CHECK(ArrayResize(_downsideDeviation, _len) == _len, "Invalid length for _signals");
+#endif
+
   }
 
   virtual void pushState()
   {
+#ifndef USE_OPTIMIZATIONS
     if (_pos < _len) {
       _downsideDeviation.set(_pos, DD2);      
       // Note that we don't update the position here,
@@ -41,6 +51,19 @@ public:
       // Need to push back on the vector:
       _downsideDeviation.push_back(DD2);
     }
+#else
+    if (_pos < _len) {
+      _downsideDeviation[_pos] = DD2;      
+      // Note that we don't update the position here,
+      // This will be taken care of by the parent implementation.
+      //_pos++;
+    }
+    else {
+      // Need to push back on the vector:
+      nv_push_back(_downsideDeviation,DD2);
+    }
+#endif
+
 
     // We call the parent implementation **after**
     // doing our changes, since it might change the target position _pos.

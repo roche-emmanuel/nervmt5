@@ -338,10 +338,13 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
     A = _ctx.A;
     B = _ctx.B;
 
-    if (B - A * A != 0.0) {
+    double sqB = sqrt(B);
+    double denom = MathPow((sqB - A) * (sqB + A), 1.5);
+
+    // if (B - A * A != 0.0) {
+    if (denom != 0.0) {
       // Needed variables:
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
-      double sqB = sqrt(B);
 
       // We can perform the training.
 
@@ -359,7 +362,7 @@ double nvRRLCostFunction_SR::performStochasticTraining(const nvVecd& x, nvVecd& 
       // Note: replacing initial multiplier with enhanced formula to avoid precision issues:
       _ctx.dDt = _ctx.dRt; // * ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5));
 
-      double m2 = ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5)) * learningRate;
+      double m2 = ((B - A * Rt) / denom) * learningRate;
 
       // Advance one step:
       _ctx.dFt_1 = _ctx.dFt;

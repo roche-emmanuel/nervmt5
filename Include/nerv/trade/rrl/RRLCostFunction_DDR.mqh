@@ -98,7 +98,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 
   double tcost = _traits.transactionCost() / ratio;
   double maxNorm = 5.0; // TODO: provide as trait.
-  double A, DD2, DD;
+  double A, DD2, DD, DD3;
 
   int nm = (int)x.size();
   int ni = nm - 2;
@@ -154,10 +154,12 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     DD2 = _ctx.DD2;
     A = _ctx.A;
 
-    if (DD2 != 0.0) {
+		DD = sqrt(DD2);
+		DD3 = DD2*DD;
+		
+    if (DD != 0.0 && DD3 != 0.0) {
       // Needed variables:
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
-      DD = sqrt(DD2);
 
 
       // We can perform the training.
@@ -174,7 +176,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
         _ctx.dDt = _ctx.dRt * (1.0 / DD);
       }
       else {
-        _ctx.dDt = _ctx.dRt * ((DD2 - A * Rt) / (DD * DD2));
+        _ctx.dDt = _ctx.dRt * ((DD2 - A * Rt) / DD3);
       }
 
       // logDEBUG("New theta norm: "<< _theta.norm());
@@ -188,7 +190,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
       m1 = ((1 - Ft) * (1 + Ft));
       t1 = theta[1];
       d1 = rt + dsign;
-      m2 = Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / (DD * DD2));
+      m2 = Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / DD3);
       m2 *= learningRate;
 
       for (int j = 0; j < nm; ++j) {

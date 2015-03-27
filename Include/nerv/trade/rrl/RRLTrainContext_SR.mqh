@@ -20,12 +20,20 @@ public:
 
 protected:
   nvRRLModelTraits _traits;
+
+#ifndef USE_OPTIMIZATIONS
   nvVecd _returnMoment1;
   nvVecd _returnMoment2;
   nvVecd _signals;
+#else
+  double _returnMoment1[];
+  double _returnMoment2[];
+  double _signals[];
+#endif
+
   // nvVecd _dFts[];
   int _len;
-  int _pos; 
+  int _pos;
 
 public:
   nvRRLTrainContext_SR()
@@ -51,9 +59,15 @@ public:
     //CHECK(_len>0,"Invalid array length.");
     _len = MathMax(_len, 2);
 
+#ifndef USE_OPTIMIZATIONS
     _returnMoment1.resize(_len);
     _returnMoment2.resize(_len);
     _signals.resize(_len);
+#else
+    CHECK(ArrayResize(_returnMoment1, _len) == _len, "Invalid length for _returnMoment1");
+    CHECK(ArrayResize(_returnMoment2, _len) == _len, "Invalid length for _returnMoment2");
+    CHECK(ArrayResize(_signals, _len) == _len, "Invalid length for _signals");
+#endif
 
     // CHECK(ArrayResize(_dFts, _len) == _len, "Invalid length for dFt list");
     // for(int i=0;i<_len;++i)
@@ -64,6 +78,7 @@ public:
 
   virtual void pushState()
   {
+#ifndef USE_OPTIMIZATIONS
     if (_pos < _len) {
       _returnMoment1.set(_pos, A);
       _returnMoment2.set(_pos, B);
@@ -82,18 +97,38 @@ public:
       // }
       // _dFts[_len-1] = dFt_1;
     }
+#else
+    if (_pos < _len) {
+      _returnMoment1[_pos] = A;
+      _returnMoment2[_pos] = B;
+      _signals[_pos] = Ft_1;
+      // _dFts[_pos] = dFt_1;
+      _pos++;
+    }
+    else {
+      // Need to push back on the vector:
+      nv_push_back(_returnMoment1,A);
+      nv_push_back(_returnMoment2,B);
+      nv_push_back(_signals,Ft_1);
+      // for(int i=1;i<_len;++i)
+      // {
+      //   _dFts[i-1] = _dFts[i];
+      // }
+      // _dFts[_len-1] = dFt_1;
+    }
+#endif
   }
 
   virtual void loadStateIndex(int index)
   {
     CHECK(index >= 1, "Invalid index: " << index);
 
-    A = _returnMoment1[index-1];
-    B = _returnMoment2[index-1];
-    Ft_1 = _signals[index-1];
+    A = _returnMoment1[index - 1];
+    B = _returnMoment2[index - 1];
+    Ft_1 = _signals[index - 1];
     // dFt_1 = _dFts[index-1];
     dFt_1.fill(0.0);
-    
+
     // We write to the next position:
     _pos = index;
 
