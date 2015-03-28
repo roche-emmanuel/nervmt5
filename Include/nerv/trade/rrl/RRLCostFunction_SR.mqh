@@ -7,9 +7,11 @@
 
 class nvRRLCostFunction_SR : public nvRRLCostFunction
 {
-
 public:
   nvRRLCostFunction_SR(const nvRRLModelTraits &traits);
+
+protected:
+  virtual double getCurrentCost() const;
 };
 
 
@@ -17,5 +19,10 @@ public:
 nvRRLCostFunction_SR::nvRRLCostFunction_SR(const nvRRLModelTraits &traits)
   : nvRRLCostFunction(traits)
 {
-  _ctx = new nvRRLTrainContext_SR(traits); 
+  _ctx = new nvRRLTrainContext_SR(traits);
+}
+
+double nvRRLCostFunction_SR::getCurrentCost() const
+{
+  return -_ctx.getSR();
 }

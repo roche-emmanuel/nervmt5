@@ -110,3 +110,4 @@
 03/28/15-08:24:23: Added support for log prices. Fixed left duration computation.
 03/28/15-10:48:24: Added RRLCostFunction as base for SR cost function.
 03/28/15-10:51:27: not using _ctx.params anymore in DDR cost function.
+03/28/15-12:35:22: Refactoring SR and DDR cost function to prepare merging.

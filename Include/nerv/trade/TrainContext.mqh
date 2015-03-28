@@ -40,4 +40,10 @@ public:
   {
     NO_IMPL();
   }
+
+  virtual double computeMultiplier(double learningRate, double Rt) const
+  {
+    NO_IMPL();
+    return 0.0;
+  }
 };  

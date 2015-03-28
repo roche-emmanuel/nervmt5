@@ -20,15 +20,22 @@ protected:
 public:
   nvRRLTrainContext_DDR()
     : DD2(0.0),
-    nvRRLTrainContext_SR()
+      nvRRLTrainContext_SR()
   {
 
+  }
+
+  nvRRLTrainContext_DDR(const nvRRLModelTraits &traits)
+    : DD2(0.0),
+      nvRRLTrainContext_SR()
+  {
+    init(traits);
   }
 
   virtual void init(const nvRRLModelTraits &traits)
   {
     nvRRLTrainContext_SR::init(traits);
-     
+
     DD2 = 0.0;
 #ifndef USE_OPTIMIZATIONS
     _downsideDeviation.resize(_len);
@@ -42,7 +49,7 @@ public:
   {
 #ifndef USE_OPTIMIZATIONS
     if (_pos < _len) {
-      _downsideDeviation.set(_pos, DD2);      
+      _downsideDeviation.set(_pos, DD2);
       // Note that we don't update the position here,
       // This will be taken care of by the parent implementation.
       //_pos++;
@@ -53,14 +60,14 @@ public:
     }
 #else
     if (_pos < _len) {
-      _downsideDeviation[_pos] = DD2;      
+      _downsideDeviation[_pos] = DD2;
       // Note that we don't update the position here,
       // This will be taken care of by the parent implementation.
       //_pos++;
     }
     else {
       // Need to push back on the vector:
-      nv_push_back(_downsideDeviation,DD2);
+      nv_push_back(_downsideDeviation, DD2);
     }
 #endif
 
@@ -75,23 +82,36 @@ public:
     nvRRLTrainContext_SR::loadStateIndex(index);
 
     CHECK(index >= 1, "Invalid index: " << index);
-    DD2 = _downsideDeviation[index-1];
+    DD2 = _downsideDeviation[index - 1];
   }
 
   virtual void addReturn(double Rt)
   {
-    nvRRLTrainContext_SR::addReturn(Rt);    
-      
+    nvRRLTrainContext_SR::addReturn(Rt);
+
     double adapt = 0.01;
-    double val = MathMin(Rt,0);
+    double val = MathMin(Rt, 0);
     DD2 = DD2 + adapt * (val * val - DD2);
   }
 
   virtual double getDDR() const
   {
-    if(DD2!=0.0) {
-      return A/MathSqrt(DD2);
+    if (DD2 != 0.0) {
+      return A / MathSqrt(DD2);
     }
+    return 0.0;
+  }
+
+  virtual double computeMultiplier(double learningRate, double Rt) const
+  {
+    double DD = sqrt(DD2);
+    double DD3 = DD2*DD;
+    
+    if(DD != 0.0 && DD3 != 0.0)
+    {
+      return  (Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / DD3))*learningRate;
+    }
+
     return 0.0;
   }
 };

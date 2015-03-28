@@ -2,79 +2,30 @@
 #include <nerv/core.mqh>
 #include <nerv/trades.mqh>
 #include <nerv/trade/rrl/RRLModelTraits.mqh>
+#include <nerv/trade/rrl/RRLCostFunction.mqh>
 #include <nerv/trade/rrl/RRLTrainContext_DDR.mqh>
 
-class nvRRLCostFunction_DDR : public nvCostFunctionBase
+class nvRRLCostFunction_DDR : public nvRRLCostFunction
 {
-protected:
-  nvRRLModelTraits _traits;
-  nvRRLTrainContext_DDR _ctx;
-
-  nvVecd _returns;
-  nvVecd _nrets;
-
-#ifdef USE_OPTIMIZATIONS
-  double _arets[];
-  double _anrets[];
-#endif
-
 public:
   nvRRLCostFunction_DDR(const nvRRLModelTraits &traits);
 
-  virtual void setReturns(const nvVecd &returns);
-  virtual nvTrainContext* getTrainContext() const;
-
   virtual void computeCost();
-  virtual double train(const nvVecd &initx, nvVecd &xresult);
 
   virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
 
   virtual int getNumDimensions() const;
+
+protected:
+  virtual double getCurrentCost() const;
 };
 
 
 //////////////////////////////////// implementation part ///////////////////////////
 nvRRLCostFunction_DDR::nvRRLCostFunction_DDR(const nvRRLModelTraits &traits)
-  : nvCostFunctionBase(traits.numInputReturns() + 2)
+  : nvRRLCostFunction(traits)
 {
-  _traits = traits;
-  _ctx.init(traits);
-}
-
-nvTrainContext* nvRRLCostFunction_DDR::getTrainContext() const
-{
-  return GetPointer(_ctx);
-}
-
-void nvRRLCostFunction_DDR::setReturns(const nvVecd &returns)
-{
-  _returns = returns;
-  if (_traits.returnsMeanDevFixed()) {
-    //logDEBUG("SR cost using mean: "<<_traits.returnsMean()<<", dev:"<<_traits.returnsDev());
-    _nrets = (returns - _traits.returnsMean()) / _traits.returnsDev();
-  }
-  else {
-    _nrets = returns.stdnormalize();
-  }
-
-#ifdef USE_OPTIMIZATIONS
-  _returns.toArray(_arets);
-  _nrets.toArray(_anrets);
-#endif  
-}
-
-double nvRRLCostFunction_DDR::train(const nvVecd &initx, nvVecd &xresult)
-{
-  // Initialize the context here:
-
-  // To be accurate this training should start with the state that we had at the beginning
-  // of the training phase.
-  // Say the input vector contains on numInputReturns() elements
-  // This means we should train with the latest values observed so far. (at _returnsMoment1.size()-1)
-  // Otherwise, for each additional element we move one step back in time.
-  _ctx.loadState((int)_returns.size());
-
-  return dispatch_train(_traits, initx, xresult);
+  _ctx = new nvRRLTrainContext_DDR(traits);
 }
 
 void nvRRLCostFunction_DDR::computeCost()
@@ -98,7 +49,6 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 
   double tcost = _traits.transactionCost() / ratio;
   double maxNorm = 5.0; // TODO: provide as trait.
-  double A, DD2, DD, DD3;
 
   int nm = (int)x.size();
   int ni = nm - 2;
@@ -121,7 +71,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
   ArrayResize(adFt_1, nm);
   ArrayFill(adFt_1, 0, nm, 0.0);
 
-  double param, m1, m2, d1, t1, norm;
+  double param, m1, d1, t1, norm;
 #endif
 
   for (int i = 0; i < size; ++i)
@@ -152,13 +102,9 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
 
-    DD2 = _ctx.DD2;
-    A = _ctx.A;
+    double mult = _ctx.computeMultiplier(learningRate,Rt);
 
-		DD = sqrt(DD2);
-		DD3 = DD2*DD;
-		
-    if (DD != 0.0 && DD3 != 0.0) {
+    if(mult!=0.0) {
       // Needed variables:
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
 
@@ -173,12 +119,16 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 
 
       // 3. compute dDt/dw
-      if (Rt > 0.0) {
-        _ctx.dDt = _ctx.dRt * (1.0 / DD);
-      }
-      else {
-        _ctx.dDt = _ctx.dRt * ((DD2 - A * Rt) / DD3);
-      }
+      // double m2 = Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / DD3);
+      // m2 *= learningRate;
+
+      // if (Rt > 0.0) {
+      //   _ctx.dDt = _ctx.dRt * (1.0 / DD);
+      // }
+      // else {
+      //   _ctx.dDt = _ctx.dRt * ((DD2 - A * Rt) / DD3);
+      // }
+      _ctx.dDt = _ctx.dRt;
 
       // logDEBUG("New theta norm: "<< _theta.norm());
 
@@ -186,19 +136,20 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
       _ctx.dFt_1 = _ctx.dFt;
 
       // Now we apply the learning:
-      theta += _ctx.dDt * learningRate;
+      _ctx.dDt *= mult;
+      theta += _ctx.dDt;
 #else
       m1 = ((1 - Ft) * (1 + Ft));
       t1 = theta[1];
       d1 = rt + dsign;
-      m2 = Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / DD3);
-      m2 *= learningRate;
+      // m2 = Rt > 0.0 ? (1.0 / DD) : ((DD2 - A * Rt) / DD3);
+      //m2 *= learningRate;
 
       for (int j = 0; j < nm; ++j) {
         param = j == 0 ? 1.0 : j == 1 ? _ctx.Ft_1 : _anrets[id+j - 2];
         adFt[j] = (param + adFt_1[j] * t1) * m1;
         // theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2 / m3 * learningRate;
-        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2;
+        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * mult;
         adFt_1[j] = adFt[j];
       }
 #endif
@@ -247,3 +198,10 @@ int nvRRLCostFunction_DDR::getNumDimensions() const
 {
   return _traits.numInputReturns() + 2;
 }
+
+double nvRRLCostFunction_DDR::getCurrentCost() const
+{
+  return -_ctx.getDDR();
+}
+
+

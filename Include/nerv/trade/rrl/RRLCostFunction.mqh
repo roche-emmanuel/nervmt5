@@ -29,6 +29,10 @@ public:
   virtual double performStochasticTraining(const nvVecd& x, nvVecd& result, double learningRate);
 
   virtual int getNumDimensions() const;
+
+protected:
+  virtual double getCurrentCost() const;
+  virtual bool prepareDerivativeMultiplier(double lr, double Rt);
 };
 
 
@@ -279,11 +283,9 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
 
   double tcost = _traits.transactionCost() / ratio;
   double maxNorm = 5.0; // TODO: provide as trait.
-  double A, B;
 
   int nm = (int)x.size();
   int ni = nm - 2;
-
 
 #ifndef USE_OPTIMIZATIONS
   nvVecd theta = x;
@@ -303,7 +305,7 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
   ArrayResize(adFt_1, nm);
   ArrayFill(adFt_1, 0, nm, 0.0);
 
-  double param, m1, m2, d1, t1, norm;
+  double param, m1, d1, t1, norm;
 #endif
 
   for (int i = 0; i < size; ++i)
@@ -334,14 +336,9 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
 
     double Rt = _ctx.Ft_1 * rt - tcost * MathAbs(Ft - _ctx.Ft_1);
 
-    A = _ctx.A;
-    B = _ctx.B;
+    double mult = _ctx.computeMultiplier(learningRate, Rt);
 
-    double sqB = sqrt(B);
-    double denom = MathPow((sqB - A) * (sqB + A), 1.5);
-
-    // if (B - A * A != 0.0) {
-    if (denom != 0.0) {
+    if(mult!=0.0) {
       // Needed variables:
       double dsign = tcost * nv_sign(Ft - _ctx.Ft_1);
 
@@ -361,13 +358,11 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
       // Note: replacing initial multiplier with enhanced formula to avoid precision issues:
       _ctx.dDt = _ctx.dRt; // * ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5));
 
-      double m2 = ((B - A * Rt) / denom) * learningRate;
-
       // Advance one step:
       _ctx.dFt_1 = _ctx.dFt;
 
       // Now we apply the learning:
-      _ctx.dDt *= m2;
+      _ctx.dDt *= mult;
       theta += _ctx.dDt;
 #else
       // // 1. Compute the new value of dFt/dw
@@ -402,7 +397,7 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
       m1 = ((1 - Ft) * (1 + Ft));
       t1 = theta[1];
       d1 = rt + dsign;
-      m2 = ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5)) * learningRate;
+      //m2 = ((B - A * Rt) / MathPow((sqB - A) * (sqB + A), 1.5)) * learningRate;
       // m2 = (B - A * Rt);
       // double m3 = MathPow((sqB - A) * (sqB + A), 1.5);
 
@@ -410,7 +405,7 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
         param = j == 0 ? 1.0 : j == 1 ? _ctx.Ft_1 : _anrets[id+j - 2];
         adFt[j] = (param + adFt_1[j] * t1) * m1;
         // theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2 / m3 * learningRate;
-        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * m2;
+        theta[j] += (adFt_1[j] * d1 - adFt[j] * dsign) * mult;
         adFt_1[j] = adFt[j];
       }
 #endif
@@ -459,13 +454,23 @@ double nvRRLCostFunction::performStochasticTraining(const nvVecd& x, nvVecd& res
   CHECK(result.isValid(), "Invalid vector detected.");
   //logDEBUG("Theta norm after Stochastic training: "<< theta.norm());
 
-  // Compute the final sharpe ratio:
-  double sr = _ctx.getSR();
-
-  return -sr;
+  // Compute the current cost:
+  return getCurrentCost();
 }
 
 int nvRRLCostFunction::getNumDimensions() const
 {
   return _traits.numInputReturns() + 2;
+}
+
+double nvRRLCostFunction::getCurrentCost() const
+{
+  NO_IMPL();
+  return 0.0;
+}
+
+bool nvRRLCostFunction::prepareDerivativeMultiplier(double lr, double Rt)
+{
+  NO_IMPL();
+  return false;
 }

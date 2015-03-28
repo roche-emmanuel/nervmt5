@@ -107,9 +107,9 @@ public:
     }
     else {
       // Need to push back on the vector:
-      nv_push_back(_returnMoment1,A);
-      nv_push_back(_returnMoment2,B);
-      nv_push_back(_signals,Ft_1);
+      nv_push_back(_returnMoment1, A);
+      nv_push_back(_returnMoment2, B);
+      nv_push_back(_signals, Ft_1);
       // for(int i=1;i<_len;++i)
       // {
       //   _dFts[i-1] = _dFts[i];
@@ -168,6 +168,19 @@ public:
     if (B - A * A != 0.0) {
       return A / MathSqrt(B - A * A);
     }
+    return 0.0;
+  }
+
+  virtual double computeMultiplier(double learningRate, double Rt) const
+  {
+    double sqB = sqrt(B);
+    double denom = MathPow((sqB - A) * (sqB + A), 1.5);
+
+    if (denom != 0.0)
+    {
+      return ((B - A * Rt) / denom) * learningRate;
+    }
+
     return 0.0;
   }
 
