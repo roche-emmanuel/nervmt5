@@ -111,3 +111,4 @@
 03/28/15-10:48:24: Added RRLCostFunction as base for SR cost function.
 03/28/15-10:51:27: not using _ctx.params anymore in DDR cost function.
 03/28/15-12:35:22: Refactoring SR and DDR cost function to prepare merging.
+03/28/15-12:38:44: Merged SR and DDR cost function.

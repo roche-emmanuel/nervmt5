@@ -30,8 +30,8 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
   cfg.straits.transactionCost(tcost);
   
   cfg.mtraits.transactionCost(tcost);  
-  cfg.mtraits.batchTrainLength(1000);
-  cfg.mtraits.batchTrainFrequency(100);
+  cfg.mtraits.batchTrainLength(2000);
+  cfg.mtraits.batchTrainFrequency(400);
   cfg.mtraits.onlineTrainLength(-1);
   cfg.mtraits.lambda(0.0);
   cfg.mtraits.numInputReturns(10);
