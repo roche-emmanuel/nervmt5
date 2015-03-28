@@ -38,6 +38,9 @@ struct nvStrategyEvalConfig
 
   // Selection of the prices mode.
   EvalPricesMode prices_mode;
+
+  // Usage of compounded return log:
+  bool use_log_prices;
 };
 
 class nvStrategyEvaluator
@@ -127,6 +130,11 @@ void nvStrategyEvaluator::evaluate(nvStrategyEvalConfig& cfg)
     THROW("Invalid prices mode: "<<(int)cfg.prices_mode);
   }
 
+  if(cfg.use_log_prices)
+  {
+    all_prices = all_prices.log();
+  }
+
   nvVecd rets = nv_generate_returns(all_prices);
   logDEBUG("Global returns mean: "<<rets.mean()<<", dev:"<<rets.deviation());
   
@@ -156,7 +164,9 @@ void nvStrategyEvaluator::evaluate(nvStrategyEvalConfig& cfg)
     datetime tick = TimeLocal();
     ulong elapsed = tick - startTime;
     ulong meanDuration = (ulong) ((double)elapsed / (double)(i+1));
-    datetime completionAt = (datetime)(startTime + meanDuration * (ulong)numit);
+    // datetime completionAt = (datetime)(startTime + meanDuration * (ulong)numit);
+    datetime completionAt = (datetime)(tick + meanDuration * (ulong)(numit-i+1));
+
     ulong left = completionAt - tick;
 
     // convert the number of seconds left to hours/min/secs:

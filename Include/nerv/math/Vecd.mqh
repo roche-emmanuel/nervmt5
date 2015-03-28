@@ -607,6 +607,16 @@ public:
     return res;
   }
 
+  nvVecd log() const
+  {
+    nvVecd res(_len);
+    for (uint i = 0; i < _len; ++i)
+    {
+      res._data[i] = MathLog(_data[i]);
+    }
+    return res;
+  }
+
   nvVecd div(const nvVecd &rhs) const
   {
     CHECK(_len == rhs._len, "Mismatch in lengths");

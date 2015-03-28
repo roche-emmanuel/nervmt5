@@ -7,6 +7,121 @@ BEGIN_TEST_PACKAGE(strategy_eval_specs)
 
 BEGIN_TEST_SUITE("Strategy evaluation")
 
+BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
+  nvStrategyEvalConfig cfg;
+
+  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
+  cfg.straits.historyLength(0);
+  cfg.straits.autoWriteHistory(false); 
+  cfg.straits.id("test1_eur");
+  
+  // Keep history:
+  cfg.mtraits.historyLength(0);
+  // Do not write history data to disk.
+  cfg.mtraits.autoWriteHistory(false); 
+  cfg.mtraits.id("test1_eur");
+
+  // Settings:
+  double tcost = 0.000001;
+  cfg.straits.warmUpLength(0);
+  cfg.straits.signalThreshold(0.0);
+  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  cfg.straits.signalMeanLength(100);
+  cfg.straits.transactionCost(tcost);
+  
+  cfg.mtraits.transactionCost(tcost);  
+  cfg.mtraits.batchTrainLength(1000);
+  cfg.mtraits.batchTrainFrequency(100);
+  cfg.mtraits.onlineTrainLength(-1);
+  cfg.mtraits.lambda(0.0);
+  cfg.mtraits.numInputReturns(10);
+  cfg.mtraits.maxIterations(30);
+
+  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  cfg.mtraits.trainAlgorithm(TRAIN_DDR);
+  cfg.mtraits.warmInit(true);
+  cfg.mtraits.numEpochs(15);
+  cfg.mtraits.learningRate(0.01);
+
+  cfg.prices_mode = REAL_PRICES;
+  cfg.prices_start_time =  D'21.02.2015 12:00:00';
+  cfg.prices_step_size = 500;
+  // cfg.use_log_prices = true;
+
+  if(true)
+  {
+    // Long test:
+    cfg.num_prices = 20000;
+    cfg.num_iterations = 161;
+  }
+  else 
+  {
+    cfg.num_prices = 10000;
+    cfg.num_iterations = 4;
+  }
+
+  cfg.sendReportMail = true;
+  // cfg.sendReportMail = false;
+
+  nvStrategyEvaluator::evaluate(cfg);
+END_TEST_CASE()
+
+XBEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
+  nvStrategyEvalConfig cfg;
+
+  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
+  cfg.straits.historyLength(0);
+  cfg.straits.autoWriteHistory(false); 
+  cfg.straits.id("test1_eur");
+  
+  // Keep history:
+  cfg.mtraits.historyLength(0);
+  // Do not write history data to disk.
+  cfg.mtraits.autoWriteHistory(false); 
+  cfg.mtraits.id("test1_eur");
+
+  // Settings:
+  double tcost = 0.000001;
+  cfg.straits.warmUpLength(0);
+  cfg.straits.signalThreshold(0.0);
+  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
+  cfg.straits.signalMeanLength(100);
+  cfg.straits.transactionCost(tcost);
+  
+  cfg.mtraits.transactionCost(tcost);  
+  cfg.mtraits.batchTrainLength(2000);
+  cfg.mtraits.batchTrainFrequency(250);
+  cfg.mtraits.onlineTrainLength(-1);
+  cfg.mtraits.lambda(0.0);
+  cfg.mtraits.numInputReturns(10);
+  cfg.mtraits.maxIterations(30);
+
+  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
+  cfg.mtraits.warmInit(true);
+  cfg.mtraits.numEpochs(15);
+  cfg.mtraits.learningRate(0.01);
+
+  cfg.prices_mode = REAL_PRICES;
+  cfg.prices_start_time =  D'21.02.2015 12:00:00';
+  cfg.prices_step_size = 500;
+  if(true)
+  {
+    // Long test:
+    cfg.num_prices = 20000;
+    cfg.num_iterations = 161;
+  }
+  else 
+  {
+    cfg.num_prices = 10000;
+    cfg.num_iterations = 4;
+  }
+
+  cfg.sendReportMail = true;
+  // cfg.sendReportMail = false;
+
+  nvStrategyEvaluator::evaluate(cfg);
+END_TEST_CASE()
+
 XBEGIN_TEST_CASE("should support evaluation of strategy with exact SR")
   // Results of this test:
   // St. Wealth mean: -0.01191535637000173
@@ -57,6 +172,8 @@ XBEGIN_TEST_CASE("should support evaluation of strategy with exact SR")
   cfg.prices_mode = REAL_PRICES;
   cfg.prices_start_time =  D'21.02.2015 12:00:00';
   cfg.prices_step_size = 500;
+  cfg.use_log_prices = true;
+
   if(true)
   {
     // Long test:
@@ -71,62 +188,6 @@ XBEGIN_TEST_CASE("should support evaluation of strategy with exact SR")
 
   // cfg.sendReportMail = true;
   cfg.sendReportMail = false;
-
-  nvStrategyEvaluator::evaluate(cfg);
-END_TEST_CASE()
-
-XBEGIN_TEST_CASE("should support evaluation of strategy with stochastic SR")
-  nvStrategyEvalConfig cfg;
-
-  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
-  cfg.straits.historyLength(0);
-  cfg.straits.autoWriteHistory(false); 
-  cfg.straits.id("test1_eur");
-  
-  // Keep history:
-  cfg.mtraits.historyLength(0);
-  // Do not write history data to disk.
-  cfg.mtraits.autoWriteHistory(false); 
-  cfg.mtraits.id("test1_eur");
-
-  // Settings:
-  double tcost = 0.000001;
-  cfg.straits.warmUpLength(0);
-  cfg.straits.signalThreshold(0.0);
-  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
-  cfg.straits.signalMeanLength(100);
-  cfg.straits.transactionCost(tcost);
-  
-  cfg.mtraits.transactionCost(tcost);  
-  cfg.mtraits.batchTrainLength(2000);
-  cfg.mtraits.batchTrainFrequency(225);
-  cfg.mtraits.onlineTrainLength(-1);
-  cfg.mtraits.lambda(0.0);
-  cfg.mtraits.numInputReturns(10);
-  cfg.mtraits.maxIterations(30);
-
-  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
-  cfg.mtraits.warmInit(true);
-  cfg.mtraits.numEpochs(15);
-  cfg.mtraits.learningRate(0.01);
-
-  cfg.prices_mode = REAL_PRICES;
-  cfg.prices_start_time =  D'21.02.2015 12:00:00';
-  cfg.prices_step_size = 500;
-  if(true)
-  {
-    // Long test:
-    cfg.num_prices = 20000;
-    cfg.num_iterations = 161;
-  }
-  else 
-  {
-    cfg.num_prices = 10000;
-    cfg.num_iterations = 4;
-  }
-
-  cfg.sendReportMail = true;
-  // cfg.sendReportMail = false;
 
   nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()
@@ -219,63 +280,6 @@ XBEGIN_TEST_CASE("should support computing long term profit")
 
   all_prices.writeTo("test_long_strategy_prices.txt");
 
-END_TEST_CASE()
-
-BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
-  nvStrategyEvalConfig cfg;
-
-  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
-  cfg.straits.historyLength(0);
-  cfg.straits.autoWriteHistory(false); 
-  cfg.straits.id("test1_eur");
-  
-  // Keep history:
-  cfg.mtraits.historyLength(0);
-  // Do not write history data to disk.
-  cfg.mtraits.autoWriteHistory(false); 
-  cfg.mtraits.id("test1_eur");
-
-  // Settings:
-  double tcost = 0.000001;
-  cfg.straits.warmUpLength(0);
-  cfg.straits.signalThreshold(0.0);
-  cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
-  cfg.straits.signalMeanLength(100);
-  cfg.straits.transactionCost(tcost);
-  
-  cfg.mtraits.transactionCost(tcost);  
-  cfg.mtraits.batchTrainLength(2000);
-  cfg.mtraits.batchTrainFrequency(225);
-  cfg.mtraits.onlineTrainLength(-1);
-  cfg.mtraits.lambda(0.0);
-  cfg.mtraits.numInputReturns(10);
-  cfg.mtraits.maxIterations(30);
-
-  cfg.mtraits.trainMode(TRAIN_STOCHASTIC_GRADIENT_DESCENT);
-  cfg.mtraits.trainAlgorithm(TRAIN_DDR);
-  cfg.mtraits.warmInit(true);
-  cfg.mtraits.numEpochs(15);
-  cfg.mtraits.learningRate(0.01);
-
-  cfg.prices_mode = REAL_PRICES;
-  cfg.prices_start_time =  D'21.02.2015 12:00:00';
-  cfg.prices_step_size = 500;
-  if(false)
-  {
-    // Long test:
-    cfg.num_prices = 20000;
-    cfg.num_iterations = 161;
-  }
-  else 
-  {
-    cfg.num_prices = 10000;
-    cfg.num_iterations = 4;
-  }
-
-  cfg.sendReportMail = true;
-  // cfg.sendReportMail = false;
-
-  nvStrategyEvaluator::evaluate(cfg);
 END_TEST_CASE()
 
 END_TEST_SUITE()
