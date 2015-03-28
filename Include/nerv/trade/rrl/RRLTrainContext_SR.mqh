@@ -14,10 +14,6 @@ public:
   nvVecd dDt;
   nvVecd params;
 
-  double Ft_1;
-  double A;
-  double B;
-
 protected:
   nvRRLModelTraits _traits;
 
@@ -37,9 +33,15 @@ protected:
 
 public:
   nvRRLTrainContext_SR()
-    : A(0.0), B(0.0), _pos(0), _len(0)
+    : _pos(0), _len(0)
   {
 
+  }
+
+  nvRRLTrainContext_SR(const nvRRLModelTraits &traits)
+    : _pos(0), _len(0)
+  {
+    init(traits);
   }
 
   virtual void init(const nvRRLModelTraits &traits)

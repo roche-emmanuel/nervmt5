@@ -4,6 +4,16 @@
 class nvTrainContext : public nvObject
 {
 public:
+  double Ft_1;
+  double A;
+  double B;
+
+public:
+  nvTrainContext() : A(0.0), B(0.0), Ft_1(0.0)
+  {
+
+  }
+
   virtual void pushState()
   {
     NO_IMPL();
@@ -24,5 +34,10 @@ public:
   {
     NO_IMPL();
     return 0.0;
+  }
+
+  virtual void addReturn(double Rt)
+  {
+    NO_IMPL();
   }
 };  
