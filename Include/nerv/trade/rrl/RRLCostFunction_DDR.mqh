@@ -106,6 +106,9 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
 #ifndef USE_OPTIMIZATIONS
   nvVecd theta = x;
   nvVecd rvec(ni);
+
+  nvVecd params(nm);
+  params.set(0, 1.0);  
 #else
   double adFt[];
   double adFt_1[];
@@ -121,8 +124,6 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
   double param, m1, m2, d1, t1, norm;
 #endif
 
-  _ctx.params.set(0, 1.0);
-
   for (int i = 0; i < size; ++i)
   {
 
@@ -132,10 +133,10 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
     if (i < ni - 1)
       continue;
 
-    _ctx.params.set(1, _ctx.Ft_1);
-    _ctx.params.set(2, rvec);
+    params.set(1, _ctx.Ft_1);
+    params.set(2, rvec);
 
-    double Ft = predict(_ctx.params, theta);
+    double Ft = predict(params, theta);
 #else
     if (i < ni - 1)
       continue;
@@ -165,7 +166,7 @@ double nvRRLCostFunction_DDR::performStochasticTraining(const nvVecd& x, nvVecd&
       // We can perform the training.
 #ifndef USE_OPTIMIZATIONS
       // 1. Compute the new value of dFt/dw
-      _ctx.dFt = (_ctx.params + _ctx.dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
+      _ctx.dFt = (params + _ctx.dFt_1 * theta[1]) * ((1 - Ft) * (1 + Ft));
 
       // 2. compute dRt/dw
       _ctx.dRt = _ctx.dFt_1 * (rt + dsign) - _ctx.dFt * dsign;

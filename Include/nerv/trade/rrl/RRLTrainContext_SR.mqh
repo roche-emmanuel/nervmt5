@@ -12,7 +12,6 @@ public:
   nvVecd dFt;
   nvVecd dRt;
   nvVecd dDt;
-  nvVecd params;
 
 protected:
   nvRRLModelTraits _traits;
@@ -54,7 +53,6 @@ public:
     Ft_1 = 0.0;
     dFt_1.resize(nm);
     dDt.resize(nm);
-    params.resize(nm);
 
     // +2 below is because we also want to store the initial value of the training context data.
     _len = _traits.batchTrainLength() - _traits.numInputReturns() + 2;

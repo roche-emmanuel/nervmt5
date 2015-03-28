@@ -109,3 +109,4 @@
 03/27/15-18:47:18: Added optimizations for train contexts.
 03/28/15-08:24:23: Added support for log prices. Fixed left duration computation.
 03/28/15-10:48:24: Added RRLCostFunction as base for SR cost function.
+03/28/15-10:51:27: not using _ctx.params anymore in DDR cost function.
