@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                     DateTime.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -138,6 +138,8 @@ string CDateTime::ShortDayName(const int num) const
 //+------------------------------------------------------------------+
 int CDateTime::DaysInMonth(void) const
   {
+   int leap_year;
+//---
    switch(mon)
      {
       case  1:
@@ -149,7 +151,10 @@ int CDateTime::DaysInMonth(void) const
       case 12:
          return(31);
       case  2:
-         return((year%4==0)? 29 : 28);
+         leap_year=year;
+         if(year%100==0)
+            leap_year/=100;
+         return((leap_year%4==0)? 29 : 28);
       case  4:
       case  6:
       case  9:

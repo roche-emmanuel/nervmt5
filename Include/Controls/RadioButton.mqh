@@ -35,7 +35,7 @@ public:
    color             Color(void)         const { return(m_label.Color());        }
    bool              Color(const color value)  { return(m_label.Color(value));   }
    //--- state
-   bool              State(void)               { return(m_button.Pressed());     }
+   bool              State(void)         const { return(m_button.Pressed());     }
    bool              State(const bool flag)    { return(m_button.Pressed(flag)); }
 
 protected:
