@@ -40,7 +40,9 @@
 #include <nerv/core/Log.mqh>
 #include <nerv/core/ObjectMap.mqh>
 
-
+#import "shell32.dll"
+int ShellExecuteW(int hwnd,string Operation,string File,string Parameters,string Directory,int ShowCmd);
+#import
 
 string nvReadFile(string filename, int flags = FILE_ANSI)
 {
@@ -60,6 +62,23 @@ string nvReadFile(string filename, int flags = FILE_ANSI)
   FileClose(handle);
 
   return content;
+}
+
+void nvWriteFile(string filename, string content, int flags = FILE_ANSI)
+{
+  int handle = FileOpen(filename, FILE_WRITE|flags);
+  FileWriteString(handle, content);
+  FileClose(handle);
+}
+
+void nvOpenFile(string filename)
+{
+    string terminal_data_path = TerminalInfoString(TERMINAL_DATA_PATH);
+
+    string file = terminal_data_path +"/MQL5/Files/"+filename;
+    Print("Should open file: ", file);
+
+    shell32::ShellExecuteW(0,"open",file,"","",3);
 }
 
 string formatTime(ulong secs)

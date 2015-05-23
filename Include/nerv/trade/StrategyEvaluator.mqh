@@ -46,6 +46,7 @@ struct nvStrategyEvalConfig
 class nvStrategyEvaluator
 {
 public:
+  static void generateResults(const nvStrategyEvalConfig& cfg, string filename);
   static void reportEvaluationResults(const nvStrategyEvalConfig& cfg);
   static void evaluateStrategy(nvStrategyEvalConfig& cfg);
   static void evaluate(nvStrategyEvalConfig& cfg);
@@ -78,8 +79,28 @@ void nvStrategyEvaluator::evaluateStrategy(nvStrategyEvalConfig& cfg)
   cfg.st_num_deals.push_back(nd);
 }
 
+void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, string filename)
+{
+  // Retrieve the content of the template:
+  string content = nvReadFile("templates/strategy_eval.html");
+
+  // update the content of the file here.
+
+  // write the final file:
+  nvWriteFile(filename,content);
+}
+
 void nvStrategyEvaluator::reportEvaluationResults(const nvStrategyEvalConfig& cfg)
 {
+  string fname = "tmp/strategy_eval_results.html";
+
+  // Generate the result page:
+  generateResults(cfg,fname);
+
+  // Display the result page:
+  nvOpenFile(fname);
+
+
   nvStringStream os;
   os << "St. Wealth mean: " << cfg.st_final_wealth.mean() << "\n";
   os << "St. Wealth deviation: " << cfg.st_final_wealth.deviation() << "\n";
