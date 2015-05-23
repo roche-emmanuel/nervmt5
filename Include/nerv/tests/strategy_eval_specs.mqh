@@ -43,6 +43,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
   cfg.mtraits.numEpochs(15);
   cfg.mtraits.learningRate(0.01);
 
+
   cfg.prices_mode = REAL_PRICES;
   cfg.prices_start_time =  D'21.02.2015 12:00:00';
   cfg.prices_step_size = 500;
