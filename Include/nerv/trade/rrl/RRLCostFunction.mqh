@@ -19,6 +19,7 @@ protected:
 
 public:
   nvRRLCostFunction(const nvRRLModelTraits &traits);
+  ~nvRRLCostFunction();
 
   virtual void setReturns(const nvVecd &returns);
   virtual nvTrainContext* getTrainContext() const;
@@ -41,6 +42,12 @@ nvRRLCostFunction::nvRRLCostFunction(const nvRRLModelTraits &traits)
   : nvCostFunctionBase(traits.numInputReturns() + 2)
 {
   _traits = traits;
+}
+
+nvRRLCostFunction::~nvRRLCostFunction()
+{
+  // Release the train context if any:
+  RELEASE_PTR(_ctx);
 }
 
 nvTrainContext* nvRRLCostFunction::getTrainContext() const

@@ -108,6 +108,7 @@ nvRRLModel::nvRRLModel(const nvRRLModelTraits &traits)
 nvRRLModel::~nvRRLModel()
 {
   RELEASE_PTR(_costfunc);
+  RELEASE_PTR(_traits);
 }
 
 void nvRRLModel::setTraits(nvRRLModelTraits *traits)
