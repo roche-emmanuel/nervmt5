@@ -21,6 +21,8 @@ struct nvStrategyEvalConfig
   nvVecd st_max_dd;
   nvVecd st_num_deals;
 
+  nvVecd wealths[];
+
   ulong duration;
 
   bool sendReportMail;
@@ -48,11 +50,11 @@ class nvStrategyEvaluator
 public:
   static void generateResults(const nvStrategyEvalConfig& cfg, string filename);
   static void reportEvaluationResults(const nvStrategyEvalConfig& cfg);
-  static void evaluateStrategy(nvStrategyEvalConfig& cfg);
+  static void evaluateStrategy(nvStrategyEvalConfig& cfg, int index);
   static void evaluate(nvStrategyEvalConfig& cfg);
 };
 
-void nvStrategyEvaluator::evaluateStrategy(nvStrategyEvalConfig& cfg)
+void nvStrategyEvaluator::evaluateStrategy(nvStrategyEvalConfig& cfg, int index)
 {
   nvStrategy st(cfg.straits);
 
@@ -63,6 +65,10 @@ void nvStrategyEvaluator::evaluateStrategy(nvStrategyEvalConfig& cfg)
   // Now retrieve the wealth data from the strategy itself:
   nvVecd* wealth = (nvVecd*)st.getHistoryMap().get("strategy_wealth");
   CHECK_PTR(wealth, "Invalid pointer");
+
+  // Copy the complete wealth vector in the cfg array:
+  cfg.wealths[index] = wealth;
+
   double fw = wealth.back();
   logDEBUG("Acheived St. final wealth: " << fw);
   cfg.st_final_wealth.push_back(fw);
@@ -82,33 +88,83 @@ void nvStrategyEvaluator::evaluateStrategy(nvStrategyEvalConfig& cfg)
 void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, string filename)
 {
   // Retrieve the content of the template:
-  string content = nvReadFile("templates/strategy_eval.html");
+  // string content = nvReadFile("templates/strategy_eval.html");
 
-  // update the content of the file here.
+  // Generate the mean wealth vector:
+  nvVecd wmean(cfg.num_prices);
 
-  // Update the date field:
-  StringReplace(content, "${CURRENT_DATE}", nvCurrentDateString());
+  int count = cfg.num_iterations;
+  for(int i = 0;i<count; ++i)
+  {
+    wmean += cfg.wealths[i];
+  }
+  wmean /= count;
 
-  // Write the final_wealth array:
-  StringReplace(content, "var final_wealth = [];", "var final_wealth = "+cfg.st_final_wealth.toJSON()+";");
-  // Write the max_drawdown array:
-  StringReplace(content, "var max_drawdown = [];", "var max_drawdown = "+cfg.st_max_dd.toJSON()+";");
-  // Write the num_deals array:
-  StringReplace(content, "var num_deals = [];", "var num_deals = "+cfg.st_num_deals.toJSON()+";");
+  // Generate the min/max vectors:
+  nvVecd wmin(cfg.num_prices);
+  nvVecd wmax(cfg.num_prices);
 
-  // write the final file:
-  nvWriteFile(filename,content);
+  nvVecd tmp(count);
+
+  for(int s = 0;s<cfg.num_prices; ++s) {
+    
+    // For each sample compute the min/max range:
+    for(int i = 0;i<count; ++i)
+    {
+      tmp.set(i,cfg.wealths[i][s]);
+    }
+
+    wmin.set(s,tmp.min());
+    wmax.set(s,tmp.max());
+  }
+
+  // Open a file for writing:
+  int handle = FileOpen(filename, FILE_WRITE|FILE_ANSI);
+
+  FileWriteString(handle, "loadData({\n");
+  FileWriteString(handle, "  date: \""+nvCurrentDateString()+"\",\n");
+  FileWriteString(handle, "  final_wealth: "+cfg.st_final_wealth.toJSON()+",\n");
+  FileWriteString(handle, "  max_drawdown: "+cfg.st_max_dd.toJSON()+",\n");
+  FileWriteString(handle, "  num_deals: "+cfg.st_num_deals.toJSON()+",\n");
+  FileWriteString(handle, "  mean_wealth: "+wmean.toJSON()+",\n");
+  FileWriteString(handle, "  min_wealth: "+wmin.toJSON()+",\n");
+  FileWriteString(handle, "  max_wealth: "+wmax.toJSON()+"\n");
+  FileWriteString(handle, "});\n");
+
+  FileClose(handle);
+
+
+  // // Generate the deviation 
+  // // Update the date field:
+  // StringReplace(content, "${CURRENT_DATE}", nvCurrentDateString());
+  // // Write the final_wealth array:
+  // StringReplace(content, "var final_wealth = [];", "var final_wealth = "+cfg.st_final_wealth.toJSON()+";");
+  // // Write the max_drawdown array:
+  // StringReplace(content, "var max_drawdown = [];", "var max_drawdown = "+cfg.st_max_dd.toJSON()+";");
+  // // Write the num_deals array:
+  // StringReplace(content, "var num_deals = [];", "var num_deals = "+cfg.st_num_deals.toJSON()+";");
+
+  // // Write the mean_wealth array:
+  // // StringReplace(content, "var mean_wealth = [];", "var mean_wealth = "+wmean.toJSON()+";");
+  
+  // // Write the min/max_wealth array:
+
+  // StringReplace(content, "var min_wealth = [];", "var min_wealth = "+wmin.toJSON()+";");
+  // StringReplace(content, "var max_wealth = [];", "var max_wealth = "+wmax.toJSON()+";");
+
+  // // write the final file:
+  // nvWriteFile(filename,content);
 }
 
 void nvStrategyEvaluator::reportEvaluationResults(const nvStrategyEvalConfig& cfg)
 {
-  string fname = "tmp/strategy_eval_results.html";
+  string fname = "strategy_evaluation/strategy_eval_data.json";
 
   // Generate the result page:
   generateResults(cfg,fname);
 
   // Display the result page:
-  nvOpenFile(fname);
+  nvOpenFile("strategy_evaluation/strategy_eval.html");
 
 
   nvStringStream os;
@@ -179,6 +235,9 @@ void nvStrategyEvaluator::evaluate(nvStrategyEvalConfig& cfg)
   datetime startTime = TimeLocal();
   logDEBUG("Evaluation started at "<<startTime);
 
+  // Prepare the array of wealths vectors:
+  CHECK(ArrayResize(cfg.wealths,numit)==numit,"Failed to resize wealths vector.")
+
   int poffset = 0;
   for(int i=0;i<numit;++i)
   {
@@ -190,7 +249,7 @@ void nvStrategyEvaluator::evaluate(nvStrategyEvalConfig& cfg)
 
     cfg.prices = all_prices.subvec(poffset,tsize);
 
-    evaluateStrategy(cfg);
+    evaluateStrategy(cfg,i);
 
     datetime tick = TimeLocal();
     ulong elapsed = tick - startTime;

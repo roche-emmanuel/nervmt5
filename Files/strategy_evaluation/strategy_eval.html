@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Strategy Evaluation Results</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css" />
+
+    <!-- <script src="http://code.jquery.com/jquery-2.1.4.min.js" charset="utf-8"></script> -->
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <style type="text/css">
+    body {
+        font: 10px sans-serif;
+    }
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    /*.x.axis path {
+        display: none;
+    }*/
+    .line {
+        fill: none;
+        /*stroke: steelblue;*/
+        stroke-width: 1.5px;
+    }
+    .zline {
+        fill: none;
+        stroke: red;
+        stroke-width: 1.5px;
+    }    
+    </style>
+</head>
+
+<body ng-app="myModule">
+<div ng-controller="ctrlRead" class="container-fluid">
+
+<!-- <input type="file" id="source_file" name="files[]" style="visibility:hidden" multiple/> -->
+
+<!-- Title row -->
+<div class="row text-center">
+<h1 class="col-md-10 col-md-offset-1">Evaluation on ${CURRENT_DATE}</h1>
+</div>
+
+<!-- Navigation tabs -->
+<div class="col-md-10 col-md-offset-1">
+<ul class="nav nav-pills">
+  <li ng-click="setTab(0)" ng-class="{active: isCurrentTab(0)}"><a href="#">Final Wealth</a></li>
+  <li ng-click="setTab(1)" ng-class="{active: isCurrentTab(1)}"><a href="#">Max Drawdown</a></li>
+  <li ng-click="setTab(2)" ng-class="{active: isCurrentTab(2)}"><a href="#">Num Deals</a></li>
+  <li ng-click="setTab(3)" ng-class="{active: isCurrentTab(3)}"><a href="#">Wealth Evolution</a></li>
+</ul>
+</div>
+
+<div class="col-md-10 col-md-offset-1">
+    <div ng-show="isCurrentTab(0)" id="final_wealth"></div>
+    <div ng-show="isCurrentTab(1)" id="max_drawdown"></div>
+    <div ng-show="isCurrentTab(2)" id="num_deals"></div>
+    <div ng-show="isCurrentTab(3)" id="wealth_evolution"></div>
+</div>
+
+</div>
+<script src="http://code.angularjs.org/1.1.0/angular.min.js"></script>
+</body>
+
+<script>
+var mod = angular.module('myModule', []);
+
+mod.controller('ctrlRead', function ($scope) {
+
+$scope._tab = 0;
+$scope.setTab = function(id)
+{
+    $scope._tab = id;
+}
+
+$scope.isCurrentTab = function(id)
+{
+    return $scope._tab == id;
+}
+
+});
+
+</script>
+
+<script type="text/javascript">
+
+var displayGraph = function(parent,data,cfg)
+{
+    // line chart based on http://bl.ocks.org/mbostock/3883245
+    var margin = {
+            top: 20,
+            right: 20,
+            bottom: 30,
+            left: 50
+        },
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    var line = d3.svg.line()
+        .x(function(d) {
+            return x(d.x);
+        })
+        .y(function(d) {
+            return y(d.y);
+        });
+
+    var zline = d3.svg.line()
+        .x(function(d) {
+            return x(d.x);
+        })
+        .y(function(d) {
+            return y(0.0);
+        });
+
+    var svg = d3.select(parent).append("svg")
+        // .attr("width", "100%")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    x.domain(d3.extent(data, function(d) {
+        return d.x;
+    }));
+    y.domain(d3.extent(data, function(d) {
+        return d.y;
+    }));
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+    if(cfg.with_zero_line)
+    {
+        svg.append("path")
+            .datum(data)
+            .attr("class", "zline")
+            .attr("d", zline);
+    }
+
+    svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("stroke","steelblue")
+        .attr("d", line);
+}
+
+var displayMultiGraph = function(parent,lines,cfg)
+{
+    // line chart based on http://bl.ocks.org/mbostock/3883245
+    var margin = {
+            top: 20,
+            right: 20,
+            bottom: 30,
+            left: 50
+        },
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    var svg = d3.select(parent).append("svg")
+        // .attr("width", "100%")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    if(cfg.with_zero_line)
+    {
+        // var zline = d3.svg.line()
+        // .x(function(d) {
+        //     return d;
+        // })
+        // .y(function(d) {
+        //     return y(0.0);
+        // });
+
+        // svg.append("path")
+        //     .datum([0,width])
+        //     .attr("class", "zline")
+        //     .attr("d", zline);
+    }
+
+    var dmin = 0.0;
+    var dmax = 0.0;
+
+    for(var i=0;i<lines.length; ++i) {
+        var dat = lines[i].data;
+
+        x.domain(d3.extent(dat, function(d) {
+            return d.x;
+        }));
+
+        var range = d3.extent(dat, function(d) {
+            return d.y;
+        });
+
+        dmin = Math.min(dmin,range[0]);
+        dmax = Math.max(dmax,range[1]);
+    }
+
+    // console.log("dmin="+dmin+", dmax=",dmax);
+
+    y.domain([dmin,dmax]);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+    for(var i=0;i<lines.length; ++i) {
+        var dat = lines[i].data;
+
+        var line = d3.svg.line()
+            .x(function(d) {
+                return x(d.x);
+            })
+            .y(function(d) {
+                return y(d.y);
+            });
+
+        // console.log("Data="+JSON.stringify(dat))
+
+        svg.append("path")
+            .datum(dat)
+            .attr("class", "line")
+            .attr("stroke", lines[i].color)
+            .attr("d", line);
+    }
+
+}
+
+var loadDummyData = function(arr)
+{
+    // Add some dummy data:
+    var count = 100;
+
+    for(var i=0;i<count;++i)
+    {
+        arr.push(Math.sin(4.0*Math.PI*i/count));
+    }
+
+}
+
+var arrayToData = function(arr)
+{
+    if (arr.length==0)
+    {
+        loadDummyData(arr);
+    }
+
+    var data = [];
+    for(var i=0;i<arr.length;++i)
+    {
+        data.push({x:i,y:arr[i]});
+    }
+
+    return data;
+}
+
+var loadData = function(obj)
+{
+    displayGraph("#final_wealth",arrayToData(obj.final_wealth || []),{with_zero_line:true});
+    displayGraph("#max_drawdown",arrayToData(obj.max_drawdown || []),{});
+    displayGraph("#num_deals",arrayToData(obj.num_deals || []),{});
+
+    // displayGraph("#wealth_evolution",arrayToData(mean_wealth),{});
+    displayMultiGraph("#wealth_evolution",[
+        {data: arrayToData(obj.mean_wealth || []), color: "steelblue"},
+        {data: arrayToData(obj.max_wealth || []), color: "blue"},
+        {data: arrayToData(obj.min_wealth || []), color: "red"}
+    ],{with_zero_line:true});
+}
+
+// loadData({date: "Not set"})
+
+// // var final_wealth = [1.2,2.3,3.4,4.5,5.6,6.7,7.8,8.9];
+// var final_wealth = [];
+// var max_drawdown = [];
+// var num_deals = [];
+
+// // var mean_wealth = [1,2,3,4,5];
+// var mean_wealth = [];
+// // var min_wealth = [0,1,2,3,0];
+// var min_wealth = [];
+// // var max_wealth = [2,3,4,5,6];
+// var max_wealth = [];
+
+
+
+// Check for the various File API support.
+// if (window.File && window.FileReader && window.FileList && window.Blob) {
+//   // Great success! All the File APIs are supported.
+// } else {
+//   alert('The File APIs are not fully supported in this browser.');
+// }
+
+//
+
+// var loadFile = function(filename)
+// {
+//     var file = new File([""],filename);
+//     var reader = new FileReader();
+//     reader.onerror = function() {
+//      console.log("Failure loading "+file.name);
+//     }
+
+//     reader.onload = function() {
+//      console.log("Success loading "+file.name+" of size: "+file.size);
+//      console.log("Content is: "+reader.result);            
+//     }
+//     reader.readAsText(file)
+// }
+
+// loadFile("file:///W:/Cloud/Projects/MetaTrader5/MQL5/Files/tmp/strategy_eval_results.json")
+
+
+// function handleFileSelect(evt) {
+//     var files = evt.target.files; // FileList object
+
+//     // files is a FileList of File objects. List some properties.
+//     for (var i = 0, f; f = files[i]; i++) {
+//         console.log("File size is: "+f.size);
+//         console.log("Filename is: "+f.name);
+//     }    
+// }
+
+// document.getElementById('source_file').addEventListener('change', handleFileSelect, false);
+
+// document.getElementById("source_file").value = "W:/Cloud/Projects/MetaTrader5/MQL5/Files/tmp/strategy_eval_results.json";
+
+// $.getScript("strategy_eval_results.js", function(){
+//    alert("Script loaded and executed.");
+// });
+
+</script>
+<script src="strategy_eval_data.json"></script>
+
+</html>
