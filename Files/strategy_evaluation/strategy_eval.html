@@ -35,7 +35,11 @@
         fill: none;
         stroke: red;
         stroke-width: 1.5px;
-    }    
+    } 
+    .legend rect {
+      fill:white;
+      stroke:black;
+      opacity:0.8;}       
     </style>
 </head>
 
@@ -44,7 +48,7 @@
 
 <!-- Title row -->
 <div class="row text-center">
-<h1 class="col-md-10 col-md-offset-1">Evaluation on ${CURRENT_DATE}</h1>
+<h1 class="col-md-10 col-md-offset-1" id="current_date">Evaluation on ${CURRENT_DATE}</h1>
 </div>
 
 <!-- Navigation tabs -->
@@ -89,6 +93,58 @@ $scope.isCurrentTab = function(id)
 </script>
 
 <script type="text/javascript">
+
+(function() {
+d3.legend = function(g) {
+  g.each(function() {
+    var g= d3.select(this),
+        items = {},
+        svg = d3.select(g.property("nearestViewportElement")),
+        legendPadding = g.attr("data-style-padding") || 5,
+        lb = g.selectAll(".legend-box").data([true]),
+        li = g.selectAll(".legend-items").data([true])
+
+    lb.enter().append("rect").classed("legend-box",true)
+    li.enter().append("g").classed("legend-items",true)
+
+    svg.selectAll("[data-legend]").each(function() {
+        var self = d3.select(this)
+        items[self.attr("data-legend")] = {
+          pos : self.attr("data-legend-pos") || this.getBBox().y,
+          color : self.attr("data-legend-color") != undefined ? self.attr("data-legend-color") : self.style("fill") != 'none' ? self.style("fill") : self.style("stroke") 
+        }
+      })
+
+    items = d3.entries(items).sort(function(a,b) { return a.value.pos-b.value.pos})
+
+    
+    li.selectAll("text")
+        .data(items,function(d) { return d.key})
+        .call(function(d) { d.enter().append("text")})
+        .call(function(d) { d.exit().remove()})
+        .attr("y",function(d,i) { return i+"em"})
+        .attr("x","1em")
+        .text(function(d) { ;return d.key})
+    
+    li.selectAll("circle")
+        .data(items,function(d) { return d.key})
+        .call(function(d) { d.enter().append("circle")})
+        .call(function(d) { d.exit().remove()})
+        .attr("cy",function(d,i) { return i-0.25+"em"})
+        .attr("cx",0)
+        .attr("r","0.4em")
+        .style("fill",function(d) { console.log(d.value.color);return d.value.color})  
+    
+    // Reposition and resize the box
+    var lbbox = li[0][0].getBBox()  
+    lb.attr("x",(lbbox.x-legendPadding))
+        .attr("y",(lbbox.y-legendPadding))
+        .attr("height",(lbbox.height+2*legendPadding))
+        .attr("width",(lbbox.width+2*legendPadding))
+  })
+  return g
+}
+})()
 
 var displayGraph = function(parent,data,cfg)
 {
@@ -203,22 +259,6 @@ var displayMultiGraph = function(parent,lines,cfg)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    if(cfg.with_zero_line)
-    {
-        var zline = d3.svg.line()
-        .x(function(d) {
-            return d;
-        })
-        .y(function(d) {
-            return y(0.0);
-        });
-
-        svg.append("path")
-            .datum([0,width])
-            .attr("class", "zline")
-            .attr("d", zline);
-    }
-
     var dmin = 0.0;
     var dmax = 0.0;
 
@@ -250,6 +290,22 @@ var displayMultiGraph = function(parent,lines,cfg)
         .attr("class", "y axis")
         .call(yAxis);
 
+    if(cfg.with_zero_line)
+    {
+        var zline = d3.svg.line()
+        .x(function(d) {
+            return d;
+        })
+        .y(function(d) {
+            return y(0.0);
+        });
+
+        svg.append("path")
+            .datum([0,width])
+            .attr("class", "zline")
+            .attr("d", zline);
+    }
+
     for(var i=0;i<lines.length; ++i) {
         var dat = lines[i].data;
 
@@ -266,8 +322,18 @@ var displayMultiGraph = function(parent,lines,cfg)
         svg.append("path")
             .datum(dat)
             .attr("class", "line")
+            .attr("data-legend",lines[i].name)
             .attr("stroke", lines[i].color)
             .attr("d", line);
+    }
+
+    if(lines.length>1)
+    {
+        svg.append("g")
+          .attr("class","legend")
+          .attr("transform","translate(30,30)")
+          .style("font-size","12px")
+          .call(d3.legend)
     }
 
 }
@@ -302,15 +368,21 @@ var arrayToData = function(arr)
 
 var loadData = function(obj)
 {
+    var div = document.querySelector("#current_date");
+    angular.element(div).html("Evaluation on "+obj.date)
     displayGraph("#final_wealth",arrayToData(obj.final_wealth || []),{with_zero_line:true});
     displayGraph("#max_drawdown",arrayToData(obj.max_drawdown || []),{});
     displayGraph("#num_deals",arrayToData(obj.num_deals || []),{});
 
     // displayGraph("#wealth_evolution",arrayToData(mean_wealth),{});
     displayMultiGraph("#wealth_evolution",[
-        {data: arrayToData(obj.mean_wealth || []), color: "steelblue"},
-        {data: arrayToData(obj.max_wealth || []), color: "blue"},
-        {data: arrayToData(obj.min_wealth || []), color: "red"}
+        {name: "Mean wealth", data: arrayToData(obj.mean_wealth || []), color: "steelblue"},
+        {name: "Max wealth", data: arrayToData(obj.max_wealth || []), color: "blue"},
+        {name: "Min wealth", data: arrayToData(obj.min_wealth || []), color: "red"},
+        {name: "Positive dev", data: arrayToData(obj.dev_pos || []), color: "#065B06"},
+        {name: "Upside dev", data: arrayToData(obj.up_dev || []), color: "#012CD6"},
+        {name: "Downside dev", data: arrayToData(obj.down_dev || []), color: "#FF5500"},
+        {name: "Negative dev", data: arrayToData(obj.dev_neg || []), color: "#FF007F"}
     ],{with_zero_line:true});
 }
 

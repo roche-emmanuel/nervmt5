@@ -101,22 +101,70 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   wmean /= count;
 
   // Generate the min/max vectors:
+  // Generate the deviation vector:
+
   nvVecd wmin(cfg.num_prices);
   nvVecd wmax(cfg.num_prices);
+  nvVecd deviation(cfg.num_prices);
+  nvVecd down_dev(cfg.num_prices);
+  nvVecd up_dev(cfg.num_prices);
 
   nvVecd tmp(count);
+  double val;
+  double val2;
+  double dev;
+  double mean;
+  double ddev; // downside deviation;
+  double udev; // upside deviation;
+  int dcount, ucount;
 
   for(int s = 0;s<cfg.num_prices; ++s) {
     
+    dev = 0.0; // reset the deviation computation.
+    udev = 0.0;
+    ddev = 0.0;
+    mean = wmean[s];
+    dcount = 0;
+    ucount = 0;
+
     // For each sample compute the min/max range:
     for(int i = 0;i<count; ++i)
     {
-      tmp.set(i,cfg.wealths[i][s]);
+      val = cfg.wealths[i][s];
+      tmp.set(i,val);
+      val2 = (val-mean)*(val-mean);
+      dev += val2;
+      if(val2>0.0) {
+        // upside deviation:
+        ucount++;
+        udev += val2;
+      }
+      else {
+        // downside deviation:
+        dcount++;
+        ddev += val2;
+      }
     }
 
+    dev /= count;
+    if(dcount>0)
+      ddev/=dcount;
+    if(ucount>0)
+      udev/=ucount;
+
+    deviation.set(s,sqrt(dev));
+    down_dev.set(s,sqrt(ddev));
+    up_dev.set(s,sqrt(udev));
     wmin.set(s,tmp.min());
     wmax.set(s,tmp.max());
   }
+
+  // build the actual deviation curves:
+  up_dev = wmean + up_dev;
+  down_dev = wmean - down_dev;
+
+  nvVecd dev_pos = wmean + deviation;
+  nvVecd dev_neg = wmean - deviation;
 
   // Open a file for writing:
   int handle = FileOpen(filename, FILE_WRITE|FILE_ANSI);
@@ -128,7 +176,11 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   FileWriteString(handle, "  num_deals: "+cfg.st_num_deals.toJSON()+",\n");
   FileWriteString(handle, "  mean_wealth: "+wmean.toJSON()+",\n");
   FileWriteString(handle, "  min_wealth: "+wmin.toJSON()+",\n");
-  FileWriteString(handle, "  max_wealth: "+wmax.toJSON()+"\n");
+  FileWriteString(handle, "  max_wealth: "+wmax.toJSON()+",\n");
+  FileWriteString(handle, "  dev_pos: "+dev_pos.toJSON()+",\n");
+  FileWriteString(handle, "  dev_neg: "+dev_neg.toJSON()+",\n");
+  FileWriteString(handle, "  up_dev: "+up_dev.toJSON()+",\n");
+  FileWriteString(handle, "  down_dev: "+down_dev.toJSON()+"\n");
   FileWriteString(handle, "});\n");
 
   FileClose(handle);
