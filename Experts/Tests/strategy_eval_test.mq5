@@ -13,3 +13,4 @@ lm.addSink(logger);
 LOAD_TEST_PACKAGE(strategy_eval_specs)
 
 END_TEST_SESSION()
+ 

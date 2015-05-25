@@ -134,12 +134,12 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
       tmp.set(i,val);
       val2 = (val-mean)*(val-mean);
       dev += val2;
-      if(val2>0.0) {
+      if(val>mean) {
         // upside deviation:
         ucount++;
         udev += val2;
       }
-      else {
+      else if(val<mean) {
         // downside deviation:
         dcount++;
         ddev += val2;
