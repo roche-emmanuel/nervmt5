@@ -244,6 +244,9 @@ var displayMultiGraph = function(parent,lines,cfg)
     var y = d3.scale.linear()
         .range([height, 0]);
 
+    var zoom = d3.behavior.zoom()
+        .scaleExtent([1, 10]);
+
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("bottom");
@@ -258,6 +261,20 @@ var displayMultiGraph = function(parent,lines,cfg)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var rect = svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all");
+        
+    var container = svg.append("g");
+    zoom.on("zoom", function() {
+      console.log("Zoom method called with: "+JSON.stringify(d3.event.scale));
+      container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    });
+
+    svg.call(zoom);
 
     var dmin = 0.0;
     var dmax = 0.0;
@@ -281,12 +298,12 @@ var displayMultiGraph = function(parent,lines,cfg)
 
     y.domain([dmin,dmax]);
 
-    svg.append("g")
+    container.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
-    svg.append("g")
+    container.append("g")
         .attr("class", "y axis")
         .call(yAxis);
 
@@ -300,7 +317,7 @@ var displayMultiGraph = function(parent,lines,cfg)
             return y(0.0);
         });
 
-        svg.append("path")
+        container.append("path")
             .datum([0,width])
             .attr("class", "zline")
             .attr("d", zline);
@@ -319,7 +336,7 @@ var displayMultiGraph = function(parent,lines,cfg)
 
         // console.log("Data="+JSON.stringify(dat))
 
-        svg.append("path")
+        container.append("path")
             .datum(dat)
             .attr("class", "line")
             .attr("data-legend",lines[i].name)
@@ -329,7 +346,7 @@ var displayMultiGraph = function(parent,lines,cfg)
 
     if(lines.length>1)
     {
-        svg.append("g")
+        container.append("g")
           .attr("class","legend")
           .attr("transform","translate(30,30)")
           .style("font-size","12px")
