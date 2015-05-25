@@ -270,7 +270,7 @@ var displayMultiGraph = function(parent,lines,cfg)
         
     var container = svg.append("g");
     zoom.on("zoom", function() {
-      console.log("Zoom method called with: "+JSON.stringify(d3.event.scale));
+      // console.log("Zoom method called with: "+JSON.stringify(d3.event.scale));
       container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     });
 

@@ -33,6 +33,7 @@ struct nvStrategyEvalConfig
 
   int num_prices;
   int num_iterations;
+  int report_sample_rate;
 
   // Artificial prices parameters:
   double prices_alpha;
@@ -67,7 +68,7 @@ void nvStrategyEvaluator::evaluateStrategy(nvStrategyEvalConfig& cfg, int index)
   CHECK_PTR(wealth, "Invalid pointer");
 
   // Copy the complete wealth vector in the cfg array:
-  cfg.wealths[index] = wealth;
+  cfg.wealths[index] = wealth.sample(cfg.report_sample_rate);
 
   double fw = wealth.back();
   logDEBUG("Acheived St. final wealth: " << fw);
@@ -91,7 +92,9 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   // string content = nvReadFile("templates/strategy_eval.html");
 
   // Generate the mean wealth vector:
-  nvVecd wmean(cfg.num_prices);
+  int vsize = ((int)floor((double)cfg.num_prices/(double)cfg.report_sample_rate));
+
+  nvVecd wmean(vsize);
 
   int count = cfg.num_iterations;
   for(int i = 0;i<count; ++i)
@@ -103,11 +106,11 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   // Generate the min/max vectors:
   // Generate the deviation vector:
 
-  nvVecd wmin(cfg.num_prices);
-  nvVecd wmax(cfg.num_prices);
-  nvVecd deviation(cfg.num_prices);
-  nvVecd down_dev(cfg.num_prices);
-  nvVecd up_dev(cfg.num_prices);
+  nvVecd wmin(vsize);
+  nvVecd wmax(vsize);
+  nvVecd deviation(vsize);
+  nvVecd down_dev(vsize);
+  nvVecd up_dev(vsize);
 
   nvVecd tmp(count);
   double val;
@@ -118,7 +121,7 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   double udev; // upside deviation;
   int dcount, ucount;
 
-  for(int s = 0;s<cfg.num_prices; ++s) {
+  for(int s = 0;s<vsize; ++s) {
     
     dev = 0.0; // reset the deviation computation.
     udev = 0.0;
