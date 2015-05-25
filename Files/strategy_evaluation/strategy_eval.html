@@ -42,8 +42,6 @@
 <body ng-app="myModule">
 <div ng-controller="ctrlRead" class="container-fluid">
 
-<!-- <input type="file" id="source_file" name="files[]" style="visibility:hidden" multiple/> -->
-
 <!-- Title row -->
 <div class="row text-center">
 <h1 class="col-md-10 col-md-offset-1">Evaluation on ${CURRENT_DATE}</h1>
@@ -207,18 +205,18 @@ var displayMultiGraph = function(parent,lines,cfg)
 
     if(cfg.with_zero_line)
     {
-        // var zline = d3.svg.line()
-        // .x(function(d) {
-        //     return d;
-        // })
-        // .y(function(d) {
-        //     return y(0.0);
-        // });
+        var zline = d3.svg.line()
+        .x(function(d) {
+            return d;
+        })
+        .y(function(d) {
+            return y(0.0);
+        });
 
-        // svg.append("path")
-        //     .datum([0,width])
-        //     .attr("class", "zline")
-        //     .attr("d", zline);
+        svg.append("path")
+            .datum([0,width])
+            .attr("class", "zline")
+            .attr("d", zline);
     }
 
     var dmin = 0.0;
@@ -315,67 +313,6 @@ var loadData = function(obj)
         {data: arrayToData(obj.min_wealth || []), color: "red"}
     ],{with_zero_line:true});
 }
-
-// loadData({date: "Not set"})
-
-// // var final_wealth = [1.2,2.3,3.4,4.5,5.6,6.7,7.8,8.9];
-// var final_wealth = [];
-// var max_drawdown = [];
-// var num_deals = [];
-
-// // var mean_wealth = [1,2,3,4,5];
-// var mean_wealth = [];
-// // var min_wealth = [0,1,2,3,0];
-// var min_wealth = [];
-// // var max_wealth = [2,3,4,5,6];
-// var max_wealth = [];
-
-
-
-// Check for the various File API support.
-// if (window.File && window.FileReader && window.FileList && window.Blob) {
-//   // Great success! All the File APIs are supported.
-// } else {
-//   alert('The File APIs are not fully supported in this browser.');
-// }
-
-//
-
-// var loadFile = function(filename)
-// {
-//     var file = new File([""],filename);
-//     var reader = new FileReader();
-//     reader.onerror = function() {
-//      console.log("Failure loading "+file.name);
-//     }
-
-//     reader.onload = function() {
-//      console.log("Success loading "+file.name+" of size: "+file.size);
-//      console.log("Content is: "+reader.result);            
-//     }
-//     reader.readAsText(file)
-// }
-
-// loadFile("file:///W:/Cloud/Projects/MetaTrader5/MQL5/Files/tmp/strategy_eval_results.json")
-
-
-// function handleFileSelect(evt) {
-//     var files = evt.target.files; // FileList object
-
-//     // files is a FileList of File objects. List some properties.
-//     for (var i = 0, f; f = files[i]; i++) {
-//         console.log("File size is: "+f.size);
-//         console.log("Filename is: "+f.name);
-//     }    
-// }
-
-// document.getElementById('source_file').addEventListener('change', handleFileSelect, false);
-
-// document.getElementById("source_file").value = "W:/Cloud/Projects/MetaTrader5/MQL5/Files/tmp/strategy_eval_results.json";
-
-// $.getScript("strategy_eval_results.js", function(){
-//    alert("Script loaded and executed.");
-// });
 
 </script>
 <script src="strategy_eval_data.json"></script>
