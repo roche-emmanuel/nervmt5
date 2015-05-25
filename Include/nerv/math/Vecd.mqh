@@ -394,6 +394,19 @@ public:
     return res;
   }
 
+  string toJSON() const
+  {
+    string res = "[";
+    for (uint i = 0; i < _len; ++i)
+    {
+      res += (string)_data[i];
+      if (i < _len - 1)
+        res += ",";
+    }
+    res += "]";
+    return res;
+  }
+
   double norm2() const
   {
     return this * this;

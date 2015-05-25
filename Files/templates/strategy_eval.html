@@ -4,8 +4,13 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Normal Plot</title>
+    <title>Strategy Evaluation Results</title>
     <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css" />
+
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <style type="text/css">
     body {
@@ -25,124 +30,179 @@
         stroke: steelblue;
         stroke-width: 1.5px;
     }
+    .zline {
+        fill: none;
+        stroke: red;
+        stroke-width: 1.5px;
+    }    
     </style>
 </head>
 
-<body>
+<body ng-app="myModule">
+<div ng-controller="ctrlRead" class="container-fluid">
 
+<!-- Title row -->
+<div class="row text-center">
+<h1 class="col-md-10 col-md-offset-1">Evaluation on ${CURRENT_DATE}</h1>
+</div>
+
+<!-- Navigation tabs -->
+<div class="col-md-10 col-md-offset-1">
+<ul class="nav nav-pills">
+  <li ng-click="setTab(0)" ng-class="{active: isCurrentTab(0)}"><a href="#">Final Wealth</a></li>
+  <li ng-click="setTab(1)" ng-class="{active: isCurrentTab(1)}"><a href="#">Max Drawdown</a></li>
+  <li ng-click="setTab(2)" ng-class="{active: isCurrentTab(2)}"><a href="#">Num Deals</a></li>
+</ul>
+</div>
+
+<div class="col-md-10 col-md-offset-1">
+    <div ng-show="isCurrentTab(0)" id="final_wealth"></div>
+    <div ng-show="isCurrentTab(1)" id="max_drawdown"></div>
+    <div ng-show="isCurrentTab(2)" id="num_deals"></div>
+</div>
+
+</div>
+<script src="http://code.angularjs.org/1.1.0/angular.min.js"></script>
 </body>
 
+<script>
+var mod = angular.module('myModule', []);
+
+mod.controller('ctrlRead', function ($scope) {
+
+$scope._tab = 0;
+$scope.setTab = function(id)
+{
+    $scope._tab = id;
+}
+
+$scope.isCurrentTab = function(id)
+{
+    return $scope._tab == id;
+}
+
+});
+
+</script>
+
 <script type="text/javascript">
-//setting up empty data array
-var data = [];
 
-getData(); // popuate data 
-
-// line chart based on http://bl.ocks.org/mbostock/3883245
-var margin = {
-        top: 20,
-        right: 20,
-        bottom: 30,
-        left: 50
-    },
+var displayGraph = function(parent,data,cfg)
+{
+    // line chart based on http://bl.ocks.org/mbostock/3883245
+    var margin = {
+            top: 20,
+            right: 20,
+            bottom: 30,
+            left: 50
+        },
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
-var x = d3.scale.linear()
-    .range([0, width]);
+    var x = d3.scale.linear()
+        .range([0, width]);
 
-var y = d3.scale.linear()
-    .range([height, 0]);
+    var y = d3.scale.linear()
+        .range([height, 0]);
 
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
 
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
 
-var line = d3.svg.line()
-    .x(function(d) {
-        return x(d.q);
-    })
-    .y(function(d) {
-        return y(d.p);
-    });
+    var line = d3.svg.line()
+        .x(function(d) {
+            return x(d.x);
+        })
+        .y(function(d) {
+            return y(d.y);
+        });
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var zline = d3.svg.line()
+        .x(function(d) {
+            return x(d.x);
+        })
+        .y(function(d) {
+            return y(0.0);
+        });
 
-x.domain(d3.extent(data, function(d) {
-    return d.q;
-}));
-y.domain(d3.extent(data, function(d) {
-    return d.p;
-}));
+    var svg = d3.select(parent).append("svg")
+        // .attr("width", "100%")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
+    x.domain(d3.extent(data, function(d) {
+        return d.x;
+    }));
+    y.domain(d3.extent(data, function(d) {
+        return d.y;
+    }));
 
-svg.append("g")
-    .attr("class", "y axis")
-    .call(yAxis);
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
 
-svg.append("path")
-    .datum(data)
-    .attr("class", "line")
-    .attr("d", line);
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
 
-function getData() {
-
-// loop to populate data array with 
-// probabily - quantile pairs
-for (var i = 0; i < 100000; i++) {
-    q = normal() // calc random draw from normal dist
-    p = gaussian(q) // calc prob of rand draw
-    el = {
-        "q": q,
-        "p": p
+    if(cfg.with_zero_line)
+    {
+        svg.append("path")
+            .datum(data)
+            .attr("class", "zline")
+            .attr("d", zline);
     }
-    data.push(el)
-};
 
-// need to sort for plotting
-//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
-data.sort(function(x, y) {
-    return x.q - y.q;
-});	
+    svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("d", line);
 }
 
-// from http://bl.ocks.org/mbostock/4349187
-// Sample from a normal distribution with mean 0, stddev 1.
-function normal() {
-    var x = 0,
-        y = 0,
-        rds, c;
-    do {
-        x = Math.random() * 2 - 1;
-        y = Math.random() * 2 - 1;
-        rds = x * x + y * y;
-    } while (rds == 0 || rds > 1);
-    c = Math.sqrt(-2 * Math.log(rds) / rds); // Box-Muller transform
-    return x * c; // throw away extra sample y * c
+var loadDummyData = function(arr)
+{
+    // Add some dummy data:
+    var count = 100;
+
+    for(var i=0;i<count;++i)
+    {
+        arr.push(Math.sin(4.0*Math.PI*i/count));
+    }
+
 }
 
-//taken from Jason Davies science library
-// https://github.com/jasondavies/science.js/
-function gaussian(x) {
-	var gaussianConstant = 1 / Math.sqrt(2 * Math.PI),
-		mean = 0,
-    	sigma = 1;
+var arrayToData = function(arr)
+{
+    if (arr.length==0)
+    {
+        loadDummyData(arr);
+    }
 
-    x = (x - mean) / sigma;
-    return gaussianConstant * Math.exp(-.5 * x * x) / sigma;
-};
+    var data = [];
+    for(var i=0;i<arr.length;++i)
+    {
+        data.push({x:i,y:arr[i]});
+    }
+
+    return data;
+}
+
+// var final_wealth = [1.2,2.3,3.4,4.5,5.6,6.7,7.8,8.9];
+var final_wealth = [];
+var max_drawdown = [];
+var num_deals = [];
+
+displayGraph("#final_wealth",arrayToData(final_wealth),{with_zero_line:true});
+displayGraph("#max_drawdown",arrayToData(max_drawdown),{});
+displayGraph("#num_deals",arrayToData(num_deals),{});
+
 </script>
 
 </html>

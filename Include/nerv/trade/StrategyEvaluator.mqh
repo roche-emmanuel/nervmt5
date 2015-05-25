@@ -86,6 +86,16 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
 
   // update the content of the file here.
 
+  // Update the date field:
+  StringReplace(content, "${CURRENT_DATE}", nvCurrentDateString());
+
+  // Write the final_wealth array:
+  StringReplace(content, "var final_wealth = [];", "var final_wealth = "+cfg.st_final_wealth.toJSON()+";");
+  // Write the max_drawdown array:
+  StringReplace(content, "var max_drawdown = [];", "var max_drawdown = "+cfg.st_max_dd.toJSON()+";");
+  // Write the num_deals array:
+  StringReplace(content, "var num_deals = [];", "var num_deals = "+cfg.st_num_deals.toJSON()+";");
+
   // write the final file:
   nvWriteFile(filename,content);
 }

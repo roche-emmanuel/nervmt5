@@ -103,6 +103,16 @@ BEGIN_TEST_CASE("should support toString method")
   //REQUIRE_EQUAL(str,"Vec is: Vecd(1,2,3,4,5)");
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("should support toJSON method")
+  double arr[] = {1,2,3,4,5};
+  nvVecd vec1(arr);
+  
+  REQUIRE_EQUAL(vec1.toJSON(),"[1,2,3,4,5]");
+  DISPLAY(vec1);
+  //string str = vec1<<"Vec is: ";
+  //REQUIRE_EQUAL(str,"Vec is: Vecd(1,2,3,4,5)");
+END_TEST_CASE()
+
 BEGIN_TEST_CASE("should have assignment operator")
   double arr[] = {1,2,3,4,5};
   nvVecd vec1(arr);

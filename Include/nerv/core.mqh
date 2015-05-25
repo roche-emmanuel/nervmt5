@@ -81,6 +81,13 @@ void nvOpenFile(string filename)
     shell32::ShellExecuteW(0,"open",file,"","",3);
 }
 
+string nvCurrentDateString()
+{
+  MqlDateTime date;
+  TimeLocal(date);
+  return StringFormat("%02d/%02d/%4d at %d:%02d:%02d", date.day, date.mon, date.year, date.hour, date.min, date.sec);
+}
+
 string formatTime(ulong secs)
 {
   ulong hours = (ulong)MathFloor(secs/3600.0);
