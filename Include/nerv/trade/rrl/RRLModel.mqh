@@ -189,7 +189,6 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 
   // Default value for confidence:
   double confidence = 0.0;
-  double signal = 0.0;
 
   // Retrieve the previous signal before we override it:
   double Ft_1 = getCurrentSignal();
@@ -236,7 +235,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
     }
 
     // perform the evaluation:
-    signal = evaluate(confidence);
+    evaluate(confidence);
     _evalCount++;
 
     _costfunc.getTrainContext().pushState();
@@ -248,7 +247,7 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 
     // write the data into the prediction and mark it as valid:
     pred.valid(true);
-    pred.signal(signal);
+    pred.signal(getCurrentSignal());
     pred.confidence(confidence);
   }
 
@@ -289,7 +288,18 @@ bool nvRRLModel::digest(const nvDigestTraits &dt, nvTradePrediction &pred)
 
 double nvRRLModel::predict(const nvVecd &params, const nvVecd &theta)
 {
-  return _costfunc.predict(params, theta);
+  double sig = _costfunc.predict(params, theta);
+
+  // Instead of returning the raw signal, we check if we should apply a signal threshold
+  // at this point:
+  if(_traits.useSignalThreshold())
+  {
+    double th = _traits.signalThreshold();
+    return sig > th ? 1.0 : sig < -th ? -1.0 : 0.0;
+  }
+
+  // otherwise return the raw signal directly:
+  return sig;
 }
 
 double nvRRLModel::predict(const nvVecd &rvec, double &confidence)

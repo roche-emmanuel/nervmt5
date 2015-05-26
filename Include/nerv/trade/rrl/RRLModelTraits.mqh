@@ -13,6 +13,8 @@ protected:
   int _returnsMeanLength;
   double _transactionCost;
   int _batchTrainFrequency;
+  bool _useSignalThreshold;
+  double _signalThreshold;
 
 public:
   /* Default constructor,
@@ -67,6 +69,18 @@ public:
   /* Retrieve the batch train frequency. default is 0.
   Any value <=0 means no batch cycle training. */
   int batchTrainFrequency() const;  
+
+  /* Specify if we should use signal threshold or not. */
+  nvRRLModelTraits* useSignalThreshold(bool enable);
+
+  /* Check if signal threshold should be used. */
+  bool useSignalThreshold() const;
+
+  /* Specify the value of the signal threshold */
+  nvRRLModelTraits* signalThreshold(double val);
+
+  /* Retrieve the value of the signal threshold. */
+  double signalThreshold() const;
 };
 
 
@@ -78,7 +92,9 @@ nvRRLModelTraits::nvRRLModelTraits()
   _onlineTrainLength(100),
   _returnsMeanLength(1000),
   _transactionCost(0.00001),
-  _batchTrainFrequency(0)
+  _batchTrainFrequency(0),
+  _useSignalThreshold(false),
+  _signalThreshold(0.0)
 {
 }
 
@@ -97,6 +113,8 @@ nvRRLModelTraits *nvRRLModelTraits::operator=(const nvRRLModelTraits &rhs)
   _returnsMeanLength = rhs._returnsMeanLength;
   _transactionCost = rhs._transactionCost;
   _batchTrainFrequency = rhs._batchTrainFrequency;
+  _useSignalThreshold = rhs._useSignalThreshold;
+  _signalThreshold = rhs._signalThreshold;
   return THIS;
 }
 
@@ -165,3 +183,26 @@ int nvRRLModelTraits::batchTrainFrequency() const
 {
   return _batchTrainFrequency;
 }
+
+nvRRLModelTraits* nvRRLModelTraits::useSignalThreshold(bool enable)
+{
+  _useSignalThreshold = enable;
+  return THIS;
+}
+
+bool nvRRLModelTraits::useSignalThreshold() const
+{
+  return _useSignalThreshold;
+}
+
+nvRRLModelTraits* nvRRLModelTraits::signalThreshold(double val)
+{
+  _signalThreshold = val;
+  return THIS;
+}
+
+double nvRRLModelTraits::signalThreshold() const
+{
+  return _signalThreshold;
+}
+
