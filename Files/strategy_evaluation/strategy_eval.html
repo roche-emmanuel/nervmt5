@@ -13,15 +13,22 @@
 
     <!-- <script src="http://code.jquery.com/jquery-2.1.4.min.js" charset="utf-8"></script> -->
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="rgbcolor.js"></script>
+    <script type="text/javascript" src="canvg.js"></script>
+    <script type="text/javascript" src="d3.legend.js"></script>
+
     <style type="text/css">
     body {
         font: 10px sans-serif;
     }
     .axis path,
     .axis line {
-        fill: none;
+/*        fill: none;
         stroke: #000;
-        shape-rendering: crispEdges;
+        shape-rendering: crispEdges;*/
+    }
+    .hidden {
+        display: none;
     }
     /*.x.axis path {
         display: none;
@@ -36,6 +43,7 @@
         stroke: red;
         stroke-width: 1.5px;
     } 
+
     .legend rect {
       fill:white;
       stroke:black;
@@ -44,6 +52,11 @@
 </head>
 
 <body ng-app="myModule">
+
+<canvas id="canvas" width="960" height="500" class="hidden"></canvas>
+
+<button type="button" class="btn btn-primary" id="save">Save</button>
+
 <div ng-controller="ctrlRead" class="container-fluid">
 
 <!-- Title row -->
@@ -94,57 +107,60 @@ $scope.isCurrentTab = function(id)
 
 <script type="text/javascript">
 
-(function() {
-d3.legend = function(g) {
-  g.each(function() {
-    var g= d3.select(this),
-        items = {},
-        svg = d3.select(g.property("nearestViewportElement")),
-        legendPadding = g.attr("data-style-padding") || 5,
-        lb = g.selectAll(".legend-box").data([true]),
-        li = g.selectAll(".legend-items").data([true])
+d3.select("#save").on("click", function(){
+  var html = d3.select("#svg_wealth_evolution")
+        .attr("version", 1.1)
+        .attr("xmlns", "http://www.w3.org/2000/svg")
+        .node().parentNode.innerHTML;
+ 
+  var canvas = document.querySelector("canvas"),
+      context = canvas.getContext("2d");
 
-    lb.enter().append("rect").classed("legend-box",true)
-    li.enter().append("g").classed("legend-items",true)
+  // console.log(html);
+  
+  var redraw = false;
 
-    svg.selectAll("[data-legend]").each(function() {
-        var self = d3.select(this)
-        items[self.attr("data-legend")] = {
-          pos : self.attr("data-legend-pos") || this.getBBox().y,
-          color : self.attr("data-legend-color") != undefined ? self.attr("data-legend-color") : self.style("fill") != 'none' ? self.style("fill") : self.style("stroke") 
-        }
-      })
+  canvg('canvas', html, {
+                ignoreMouse: true,
+                ignoreAnimation: true,
+                renderCallback: function() { 
+                    // alert('done rendering!'); 
+                    var canvasdata = canvas.toDataURL("image/png");
+                    var a = document.createElement("a");
+                    a.download = "sample.png";
+                    a.href = canvasdata;
+                    // document.body.appendChild(a);
+                    a.click()
+                    // document.body.removeChild(a);
+                },
 
-    items = d3.entries(items).sort(function(a,b) { return a.value.pos-b.value.pos})
+                forceRedraw: function() { var update = redraw; redraw = false; return update; }
+            });
 
-    
-    li.selectAll("text")
-        .data(items,function(d) { return d.key})
-        .call(function(d) { d.enter().append("text")})
-        .call(function(d) { d.exit().remove()})
-        .attr("y",function(d,i) { return i+"em"})
-        .attr("x","1em")
-        .text(function(d) { ;return d.key})
-    
-    li.selectAll("circle")
-        .data(items,function(d) { return d.key})
-        .call(function(d) { d.enter().append("circle")})
-        .call(function(d) { d.exit().remove()})
-        .attr("cy",function(d,i) { return i-0.25+"em"})
-        .attr("cx",0)
-        .attr("r","0.4em")
-        .style("fill",function(d) { console.log(d.value.color);return d.value.color})  
-    
-    // Reposition and resize the box
-    var lbbox = li[0][0].getBBox()  
-    lb.attr("x",(lbbox.x-legendPadding))
-        .attr("y",(lbbox.y-legendPadding))
-        .attr("height",(lbbox.height+2*legendPadding))
-        .attr("width",(lbbox.width+2*legendPadding))
-  })
-  return g
-}
-})()
+
+  // Implementation below doesn't render the texts properly.
+  // var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+  // // var img = '<img src="'+imgsrc+'">'; 
+  // // d3.select("#svgdataurl").html(img);
+ 
+  // var image = new Image;
+  // image.src = imgsrc;
+  // image.onload = function() {
+  //     context.drawImage(image, 0, 0);
+ 
+  //     var canvasdata = canvas.toDataURL("image/png");
+ 
+  //     // var pngimg = '<img src="'+canvasdata+'">'; 
+  //     // d3.select("#pngdataurl").html(pngimg);
+ 
+  //     var a = document.createElement("a");
+  //     a.download = "sample.png";
+  //     a.href = canvasdata;
+  //     document.body.appendChild(a);
+  //     a.click();
+  // };
+ 
+});
 
 var displayGraph = function(parent,data,cfg)
 {
@@ -255,8 +271,9 @@ var displayMultiGraph = function(parent,lines,cfg)
         .scale(y)
         .orient("left");
 
-    var svg = d3.select(parent).append("svg")
+    var svg = d3.select("#"+parent).append("svg")
         // .attr("width", "100%")
+        .attr("id","svg_"+parent)
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -300,12 +317,20 @@ var displayMultiGraph = function(parent,lines,cfg)
 
     container.append("g")
         .attr("class", "x axis")
+        // .attr("fill","none")
+        // .attr("stroke","#000")
+        // .attr("shape-rendering","crispEdges")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
     container.append("g")
         .attr("class", "y axis")
         .call(yAxis);
+
+    d3.selectAll(".axis path, .axis line")
+        .attr("fill","none")
+        .attr("stroke","#000")
+        .attr("shape-rendering","crispEdges");
 
     if(cfg.with_zero_line)
     {
@@ -319,7 +344,9 @@ var displayMultiGraph = function(parent,lines,cfg)
 
         container.append("path")
             .datum([0,width])
-            .attr("class", "zline")
+            // .attr("class", "zline")
+            .attr("fill","none")
+            .attr("stroke","red")
             .attr("d", zline);
     }
 
@@ -338,7 +365,8 @@ var displayMultiGraph = function(parent,lines,cfg)
 
         container.append("path")
             .datum(dat)
-            .attr("class", "line")
+            // .attr("class", "line")
+            .attr("fill","none")
             .attr("data-legend",lines[i].name)
             .attr("stroke", lines[i].color)
             .attr("d", line);
@@ -347,11 +375,25 @@ var displayMultiGraph = function(parent,lines,cfg)
     if(lines.length>1)
     {
         container.append("g")
-          .attr("class","legend")
+          // .attr("class","legend")
           .attr("transform","translate(30,30)")
           .style("font-size","12px")
           .call(d3.legend)
+
+        d3.select(".legend-box")
+            .attr("stroke","black")
+            .attr("opacity","0.8")
+            .attr("fill","white");
     }
+
+    // d3.select("#"+parent).append("div")
+    //     .append("button")
+    //     .attr("type","button")
+    //     .attr("class","btn btn-primary")
+    //     .attr("id","save")
+    //     .html("Save");
+
+        // <button type="button" class="btn btn-primary" id="save">Save</button>
 
 }
 
@@ -392,7 +434,7 @@ var loadData = function(obj)
     displayGraph("#num_deals",arrayToData(obj.num_deals || []),{});
 
     // displayGraph("#wealth_evolution",arrayToData(mean_wealth),{});
-    displayMultiGraph("#wealth_evolution",[
+    displayMultiGraph("wealth_evolution",[
         {name: "Mean wealth", data: arrayToData(obj.mean_wealth || []), color: "steelblue"},
         {name: "Max wealth", data: arrayToData(obj.max_wealth || []), color: "blue"},
         {name: "Min wealth", data: arrayToData(obj.min_wealth || []), color: "red"},
@@ -402,6 +444,16 @@ var loadData = function(obj)
         {name: "Negative dev", data: arrayToData(obj.dev_neg || []), color: "#FF007F"}
     ],{with_zero_line:true});
 }
+
+// var canvas = document.getElementById("canvas");
+// if(canvas.toBlob)
+// {
+//     alert("toBlob is available.");
+// }
+// else
+// {
+//     alert("toBlob is NOT available.");
+// }
 
 </script>
 <script src="strategy_eval_data.json"></script>
