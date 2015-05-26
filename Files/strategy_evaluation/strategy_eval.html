@@ -55,8 +55,6 @@
 
 <canvas id="canvas" width="960" height="500" class="hidden"></canvas>
 
-<button type="button" class="btn btn-primary" id="save">Save</button>
-
 <div ng-controller="ctrlRead" class="container-fluid">
 
 <!-- Title row -->
@@ -79,6 +77,10 @@
     <div ng-show="isCurrentTab(1)" id="max_drawdown"></div>
     <div ng-show="isCurrentTab(2)" id="num_deals"></div>
     <div ng-show="isCurrentTab(3)" id="wealth_evolution"></div>
+</div>
+
+<div class="col-md-10 col-md-offset-1">
+<button type="button" class="btn btn-primary" id="save">Save</button>
 </div>
 
 </div>
