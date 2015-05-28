@@ -16,6 +16,7 @@ struct nvStrategyEvalConfig
   nvStrategyTraits straits;
   nvRRLModelTraits mtraits;
 
+  nvVecd all_prices;
   nvVecd prices;
   nvVecd st_final_wealth;
   nvVecd st_max_dd;
@@ -92,7 +93,7 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   // string content = nvReadFile("templates/strategy_eval.html");
 
   // Generate the mean wealth vector:
-  int vsize = ((int)floor((double)cfg.num_prices/(double)cfg.report_sample_rate));
+  int vsize = ((int)floor((double)(cfg.num_prices+cfg.report_sample_rate-1)/(double)cfg.report_sample_rate));
 
   nvVecd wmean(vsize);
 
@@ -174,6 +175,7 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
 
   FileWriteString(handle, "loadData({\n");
   FileWriteString(handle, "  date: \""+nvCurrentDateString()+"\",\n");
+  FileWriteString(handle, "  all_prices: "+cfg.all_prices.sample(cfg.report_sample_rate).toJSON()+",\n");
   FileWriteString(handle, "  final_wealth: "+cfg.st_final_wealth.toJSON()+",\n");
   FileWriteString(handle, "  max_drawdown: "+cfg.st_max_dd.toJSON()+",\n");
   FileWriteString(handle, "  num_deals: "+cfg.st_num_deals.toJSON()+",\n");
@@ -221,19 +223,18 @@ void nvStrategyEvaluator::reportEvaluationResults(const nvStrategyEvalConfig& cf
   // Display the result page:
   nvOpenFile("strategy_evaluation/strategy_eval.html");
 
-
   nvStringStream os;
   os << "St. Wealth mean: " << cfg.st_final_wealth.mean() << "\n";
   os << "St. Wealth deviation: " << cfg.st_final_wealth.deviation() << "\n";
-  cfg.st_final_wealth.writeTo("test_final_wealth.txt");
 
   os << "St. Max DrawDown mean: " << cfg.st_max_dd.mean() << "\n";
   os << "St. Max DrawDown deviation: " << cfg.st_max_dd.deviation() << "\n";
-  cfg.st_max_dd.writeTo("test_max_drawdown.txt");
 
   os << "St. Num deals mean: " << cfg.st_num_deals.mean() << "\n";
   os << "St. Num deals deviation: " << cfg.st_num_deals.deviation() << "\n";
-  cfg.st_num_deals.writeTo("test_num_deals.txt");
+  
+  os << "St. Inputs mean: " << cfg.all_prices.mean() << "\n";
+  os << "St. Inputs deviation: " << cfg.all_prices.deviation() << "\n";
 
   os << "\n";
 
@@ -280,6 +281,9 @@ void nvStrategyEvaluator::evaluate(nvStrategyEvalConfig& cfg)
   nvVecd rets = nv_generate_returns(all_prices);
   logDEBUG("Global returns mean: "<<rets.mean()<<", dev:"<<rets.deviation());
   
+  // keep reference on all prices in config object:
+  cfg.all_prices = rets;
+
   cfg.mtraits.fixReturnsMeanDev(rets.mean(),rets.deviation());
 
   int tsize = cfg.num_prices;

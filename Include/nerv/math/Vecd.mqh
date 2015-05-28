@@ -646,14 +646,15 @@ public:
     if (srate<2)
       return THIS;
 
-    int size = ((int)floor((double)_len/(double)srate));
+    int size = ((int)floor((double)(_len+srate-1)/(double)srate));
 
     nvVecd res(size);
     int j=0;
     for (uint i = 0; i < _len; ++i)
     {
-      if(i%srate==0)
+      if(i%srate==0) {
         res._data[j++] = _data[i];
+      }
     }
     CHECK(j==size,"Invalid sampling index result: size="<<size<<", j="<<j);
     return res;
