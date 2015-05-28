@@ -10,7 +10,7 @@ BEGIN_TEST_SUITE("Strategy evaluation")
 BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
   nvStrategyEvalConfig cfg;
 
-  cfg.straits.symbol("EURUSD").period(PERIOD_M1);
+  cfg.straits.symbol("EURUSD").period(PERIOD_M10);
   cfg.straits.historyLength(0);
   cfg.straits.autoWriteHistory(false); 
   cfg.straits.id("test1_eur");
