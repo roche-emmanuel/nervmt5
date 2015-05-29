@@ -16,7 +16,6 @@ struct nvStrategyEvalConfig
   nvStrategyTraits straits;
   nvRRLModelTraits mtraits;
 
-  nvVecd all_prices;
   nvVecd prices;
   nvVecd st_final_wealth;
   nvVecd st_max_dd;
@@ -45,6 +44,9 @@ struct nvStrategyEvalConfig
 
   // Usage of compounded return log:
   bool use_log_prices;
+
+  // List of all inputs:
+  nvVecd all_prices;
 };
 
 class nvStrategyEvaluator

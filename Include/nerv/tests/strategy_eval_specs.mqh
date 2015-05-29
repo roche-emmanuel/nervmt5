@@ -52,7 +52,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
 
   // cfg.use_log_prices = true;
 
-  if(true)
+  if(false)
   {
     // Long test:
     cfg.num_prices = 20000;
