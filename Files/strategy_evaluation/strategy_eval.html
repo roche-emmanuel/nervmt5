@@ -66,19 +66,21 @@
 <div class="col-md-10 col-md-offset-1">
 <ul class="nav nav-pills">
   <li ng-click="setTab(0)" ng-class="{active: isCurrentTab(0)}"><a href="#">All prices</a></li>
-  <li ng-click="setTab(1)" ng-class="{active: isCurrentTab(1)}"><a href="#">Final Wealth</a></li>
-  <li ng-click="setTab(2)" ng-class="{active: isCurrentTab(2)}"><a href="#">Max Drawdown</a></li>
-  <li ng-click="setTab(3)" ng-class="{active: isCurrentTab(3)}"><a href="#">Num Deals</a></li>
-  <li ng-click="setTab(4)" ng-class="{active: isCurrentTab(4)}"><a href="#">Wealth Evolution</a></li>
+  <li ng-click="setTab(1)" ng-class="{active: isCurrentTab(1)}"><a href="#">All returns</a></li>
+  <li ng-click="setTab(2)" ng-class="{active: isCurrentTab(2)}"><a href="#">Final Wealth</a></li>
+  <li ng-click="setTab(3)" ng-class="{active: isCurrentTab(3)}"><a href="#">Max Drawdown</a></li>
+  <li ng-click="setTab(4)" ng-class="{active: isCurrentTab(4)}"><a href="#">Num Deals</a></li>
+  <li ng-click="setTab(5)" ng-class="{active: isCurrentTab(5)}"><a href="#">Wealth Evolution</a></li>
 </ul>
 </div>
 
 <div class="col-md-10 col-md-offset-1">
     <div ng-show="isCurrentTab(0)" id="all_prices"></div>
-    <div ng-show="isCurrentTab(1)" id="final_wealth"></div>
-    <div ng-show="isCurrentTab(2)" id="max_drawdown"></div>
-    <div ng-show="isCurrentTab(3)" id="num_deals"></div>
-    <div ng-show="isCurrentTab(4)" id="wealth_evolution"></div>
+    <div ng-show="isCurrentTab(1)" id="all_returns"></div>
+    <div ng-show="isCurrentTab(2)" id="final_wealth"></div>
+    <div ng-show="isCurrentTab(3)" id="max_drawdown"></div>
+    <div ng-show="isCurrentTab(4)" id="num_deals"></div>
+    <div ng-show="isCurrentTab(5)" id="wealth_evolution"></div>
 </div>
 
 <div class="col-md-10 col-md-offset-1">
@@ -434,6 +436,7 @@ var loadData = function(obj)
     var div = document.querySelector("#current_date");
     angular.element(div).html("Evaluation on "+obj.date)
     displayGraph("#all_prices",arrayToData(obj.all_prices || []),{});
+    displayGraph("#all_returns",arrayToData(obj.all_returns || []),{});
     displayGraph("#final_wealth",arrayToData(obj.final_wealth || []),{with_zero_line:true});
     displayGraph("#max_drawdown",arrayToData(obj.max_drawdown || []),{});
     displayGraph("#num_deals",arrayToData(obj.num_deals || []),{});

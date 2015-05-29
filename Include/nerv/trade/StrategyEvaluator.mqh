@@ -47,6 +47,7 @@ struct nvStrategyEvalConfig
 
   // List of all inputs:
   nvVecd all_inputs;
+  nvVecd all_returns;
 };
 
 class nvStrategyEvaluator
@@ -178,6 +179,7 @@ void nvStrategyEvaluator::generateResults(const nvStrategyEvalConfig& cfg, strin
   FileWriteString(handle, "loadData({\n");
   FileWriteString(handle, "  date: \""+nvCurrentDateString()+"\",\n");
   FileWriteString(handle, "  all_prices: "+cfg.all_inputs.sample(cfg.report_sample_rate).toJSON()+",\n");
+  FileWriteString(handle, "  all_returns: "+cfg.all_returns.sample(cfg.report_sample_rate).toJSON()+",\n");
   FileWriteString(handle, "  final_wealth: "+cfg.st_final_wealth.toJSON()+",\n");
   FileWriteString(handle, "  max_drawdown: "+cfg.st_max_dd.toJSON()+",\n");
   FileWriteString(handle, "  num_deals: "+cfg.st_num_deals.toJSON()+",\n");
@@ -235,8 +237,8 @@ void nvStrategyEvaluator::reportEvaluationResults(const nvStrategyEvalConfig& cf
   os << "St. Num deals mean: " << cfg.st_num_deals.mean() << "\n";
   os << "St. Num deals deviation: " << cfg.st_num_deals.deviation() << "\n";
   
-  os << "St. Inputs mean: " << cfg.all_inputs.mean() << "\n";
-  os << "St. Inputs deviation: " << cfg.all_inputs.deviation() << "\n";
+  os << "St. Returns mean: " << cfg.all_returns.mean() << "\n";
+  os << "St. Returns deviation: " << cfg.all_returns.deviation() << "\n";
 
   os << "\n";
 
@@ -285,6 +287,7 @@ void nvStrategyEvaluator::evaluate(nvStrategyEvalConfig& cfg)
   
   // keep reference on all prices in config object:
   cfg.all_inputs = all_prices;
+  cfg.all_returns = rets;
 
   cfg.mtraits.fixReturnsMeanDev(rets.mean(),rets.deviation());
 
