@@ -22,7 +22,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
   cfg.mtraits.id("test1_eur");
 
   // Settings:
-  double tcost = 0.00001;
+  double tcost = 0.000001;
   cfg.straits.warmUpLength(0);
   cfg.straits.signalThreshold(0.0);
   cfg.straits.signalAdaptation(0.01); // This as no effect for now => Signal EMA not used.
@@ -52,7 +52,7 @@ BEGIN_TEST_CASE("should support evaluation of strategy with stochastic DDR")
 
   // cfg.use_log_prices = true;
 
-  if(false)
+  if(true)
   {
     // Long test:
     cfg.num_prices = 20000;
