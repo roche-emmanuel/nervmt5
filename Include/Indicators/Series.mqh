@@ -8,7 +8,7 @@
 //+------------------------------------------------------------------+
 //| defines                                                          |
 //+------------------------------------------------------------------+
-#define DEFAULT_BUFFER_SIZE 100
+#define DEFAULT_BUFFER_SIZE 1024
 //+------------------------------------------------------------------+
 //| Class CSeries.                                                   |
 //| Purpose: Base class for access to timeseries.                    |
@@ -76,33 +76,14 @@ CSeries::~CSeries(void)
 //+------------------------------------------------------------------+
 bool CSeries::BufferResize(const int size)
   {
-//--- correcting size for "big" timeframes (1 year limitation)
-   int tmp_size=size;
-   switch(m_period)
-     {
-      case PERIOD_D1:
-         if(size>365)
-            tmp_size=365;
-         break;
-      case PERIOD_W1:
-         if(size>52)
-            tmp_size=52;
-         break;
-      case PERIOD_MN1:
-         if(size>12)
-            tmp_size=12;
-         break;
-      default:
-         break;
-     }
 //--- check history
-   if(!CheckLoadHistory(tmp_size))
+   if(!CheckLoadHistory(size))
      {
-      printf("Failed to get %d bars for '%s','%s'.",tmp_size,m_symbol,EnumToString(m_period));
+      printf("failed to get %d bars for %s,%s",size,m_symbol,EnumToString(m_period));
       return(false);
      }
 //--- history is available
-   m_buffer_size=tmp_size;
+   m_buffer_size=size;
 //--- ok
    return(true);
   }
@@ -115,7 +96,7 @@ bool CSeries::SetSymbolPeriod(const string symbol,const ENUM_TIMEFRAMES period)
    m_period=(period==0)    ? ChartPeriod() : period;
    PeriodToTimeframeFlag(m_period);
 //---
-   return(CSeries::BufferResize(DEFAULT_BUFFER_SIZE));
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Convert period to timeframe flag (similar to visibility flags)   |

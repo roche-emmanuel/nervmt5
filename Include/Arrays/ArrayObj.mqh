@@ -624,12 +624,9 @@ int CArrayObj::SearchGreatOrEqual(const CObject *element) const
    if(m_data_total==0 || !CheckPointer(element) || m_sort_mode==-1)
       return(-1);
 //--- search
-   if((pos=SearchGreat(element))!=-1)
-     {
-      if(pos!=0 && m_data[pos-1].Compare(element,m_sort_mode)==0)
-         return(pos-1);
-      return(pos);
-     }
+   for(pos=QuickSearch(element);pos<m_data_total;pos++)
+      if(m_data[pos].Compare(element,m_sort_mode)>=0)
+         return(pos);
 //--- not found
    return(-1);
   }
@@ -644,12 +641,9 @@ int CArrayObj::SearchLessOrEqual(const CObject *element) const
    if(m_data_total==0 || !CheckPointer(element) || m_sort_mode==-1)
       return(-1);
 //--- search
-   if((pos=SearchLess(element))!=-1)
-     {
-      if(pos!=m_data_total-1 && m_data[pos+1].Compare(element,m_sort_mode)==0)
-         return(pos+1);
-      return(pos);
-     }
+   for(pos=QuickSearch(element);pos>=0;pos--)
+      if(m_data[pos].Compare(element,m_sort_mode)<=0)
+         return(pos);
 //--- not found
    return(-1);
   }

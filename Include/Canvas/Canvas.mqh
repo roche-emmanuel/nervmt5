@@ -299,10 +299,15 @@ void CCanvas::Destroy(void)
      }
 //--- deallocate array
    ArrayFree(m_pixels);
+//--- free resource
+   if(m_rcname!=NULL)
+     {
+      ResourceFree(m_rcname);
+      m_rcname=NULL;
+     }
 //--- zeroize data
    m_width =0;
    m_height=0;
-   m_rcname=NULL;
   }
 //+------------------------------------------------------------------+
 //| Update object on screen (redraw)                                 |

@@ -36,6 +36,8 @@ public:
    template<typename T>
    uint              WriteStruct(T &data);
    bool              WriteObject(CObject *object);
+   template<typename T>
+   uint              WriteEnum(const T value) { return(WriteInteger((int)value)); }
    //--- methods for reading data
    bool              ReadChar(char &value);
    bool              ReadShort(short &value);
@@ -56,6 +58,8 @@ public:
    template<typename T>
    uint              ReadStruct(T &data);
    bool              ReadObject(CObject *object);
+   template<typename T>
+   bool              ReadEnum(T &value);
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -496,5 +500,18 @@ bool CFileBin::ReadObject(CObject *object)
          return(object.Load(m_handle));
 //--- failure
    return(false);
+  }
+//+------------------------------------------------------------------+
+//| Read a variable of an enumeration type                           |
+//+------------------------------------------------------------------+
+template<typename T>
+bool CFileBin::ReadEnum(T &value)
+  {
+   int val;
+   if(!ReadInteger(val))
+      return(false);
+//---
+   value=(T)val;
+   return(true);
   }
 //+------------------------------------------------------------------+
