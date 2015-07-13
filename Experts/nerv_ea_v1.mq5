@@ -28,10 +28,10 @@ double dealprice;
 int OnInit()
 {
   // Enable logging to file:
-  // nvLogManager* lm = nvLogManager::instance();
-  // string fname = "nerv_ea_v1.log";
-  // nvFileLogger* logger = new nvFileLogger(fname);
-  // lm.addSink(logger);
+  nvLogManager* lm = nvLogManager::instance();
+  string fname = "nerv_ea_v1.log";
+  nvFileLogger* logger = new nvFileLogger(fname);
+  lm.addSink(logger);
 
   logDEBUG("Initializing Nerv EA.")
 
@@ -115,9 +115,11 @@ void OnTick()
     if(latest_price.bid > (price + STP*point*0.5)) {
 
       double nsl = NormalizeDouble((latest_price.bid + price)*0.5,digits);
-      logDEBUG("Might update stop loss with new value: "<< nsl)
+      // logDEBUG("Might update stop loss with new value: "<< nsl)
 
-      if(nsl>stoploss) {
+      if(nsl>(stoploss+10*point)) {
+        logDEBUG("Updating stoploss to: "<<nsl<<" with price: "<<dealprice)
+
         // We need to update the stop loss here:
         stoploss = nsl;
 
