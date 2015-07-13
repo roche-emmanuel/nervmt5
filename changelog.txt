@@ -114,3 +114,4 @@
 03/28/15-12:38:44: Merged SR and DDR cost function.
 04/18/15-23:03:17: Updated terminal version.
 07/13/15-18:59:19: Updated version of MT5.
+07/13/15-19:35:40: Added very first version of Nerv EA.
