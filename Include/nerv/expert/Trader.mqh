@@ -174,14 +174,14 @@ public:
     mrequest.symbol = _security.getSymbol();                         // currency pair
     mrequest.magic = _ea_magic;
     
-    logDEBUG("Previous SL: "<<PositionGetDouble(POSITION_SL)<<", requested new SL: "<<mrequest.sl)
+    // logDEBUG("Previous SL: "<<PositionGetDouble(POSITION_SL)<<", requested new SL: "<<mrequest.sl)
 
     //--- send Order
     MqlTradeResult mresult;
     CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
     
-    selectPosition();
-    logDEBUG("New SL: "<<PositionGetDouble(POSITION_SL))
+    // selectPosition();
+    // logDEBUG("New SL: "<<PositionGetDouble(POSITION_SL))
 
     CHECK(mresult.retcode==TRADE_RETCODE_DONE,"Invalid send order result retcode: "<<mresult.retcode);    
   }

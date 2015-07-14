@@ -130,7 +130,8 @@ void OnTick()
         mrequest.action = TRADE_ACTION_SLTP;                                  // modify stop loss                
         mrequest.sl = stoploss; 
         mrequest.tp = takeprofit; 
-        mrequest.symbol = symbol;                                            // currency pair
+        mrequest.symbol = symbol;
+        mrequest.magic = EA_Magic;                                          // currency pair
 
         //--- send Order
         CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend for SLTP()");
