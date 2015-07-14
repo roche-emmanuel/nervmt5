@@ -84,7 +84,7 @@ void OnTick()
     mrequest.action = TRADE_ACTION_DEAL;                               // immediate order execution
     dealprice = NormalizeDouble(latest_price.ask,digits);           // latest ask price
     mrequest.price = dealprice;
-    stoploss = NormalizeDouble(latest_price.ask - STP*point,digits);    // Stop Loss
+    stoploss = NormalizeDouble(latest_price.ask - 2.0*STP*point,digits);    // Stop Loss
     mrequest.sl = stoploss; 
     takeprofit = NormalizeDouble(latest_price.ask + TKP*point,digits);  // Take Profit
     mrequest.tp = takeprofit; 
