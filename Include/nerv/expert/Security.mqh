@@ -14,11 +14,29 @@ public:
   
   Class cosntructor
   */
-  Security(string symbol, int digits, double point)
+  nvSecurity(string symbol, int digits, double point)
   {
     _symbol = symbol;
     _digits = digits;
     _point = point;
+  }
+
+  /*
+    Copy constructor
+  */
+  nvSecurity(const nvSecurity& rhs)
+  {
+    this = rhs;
+  }
+
+  /*
+    assignment operator
+  */
+  void operator=(const nvSecurity& rhs)
+  {
+    _symbol = rhs._symbol;
+    _digits = rhs._digits;
+    _point = rhs._point;
   }
 
   /*
