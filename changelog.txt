@@ -120,3 +120,4 @@
 07/13/15-22:24:08: Updating stop loss by increment of 10 points.
 07/14/15-10:07:42: Adding initial implementation for nvTrader and nvSecurity.
 07/14/15-10:35:15: Added copy construction and tests for nvSecurity.
+07/14/15-12:37:27: Added support for stoploss update in Trader class.
