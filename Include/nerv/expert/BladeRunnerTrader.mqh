@@ -1,5 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/PeriodTrader.mqh>
+#include <nerv/math.mqh>
 
 /*
 Trading strategy based on the descriptino found on the page:
@@ -17,7 +18,9 @@ class BladeRunnerTrader : public nvPeriodTrader
 {
 protected:
   int _maHandle;  // handle for our Moving Average indicator
+  int _ma4Handle;  // handle for our Moving Average indicator
   double _maVal[]; // Dynamic array to hold the values of Moving Average for each bars
+  double _ma4Val[]; // Dynamic array to hold the values of Moving Average of period 4 for each bars
   MqlRates _mrate[];
 
   ENUM_BR_BIAS _bias;
@@ -28,21 +31,24 @@ protected:
   double _currentBase;
   double _currentHigh;
   double _currentLow;
+  double _openBarCount;
 
 public:
   BladeRunnerTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
   {
     // Prepare the moving average indicator:
-    int ma_period = 20;
-    _maHandle=iMA(_security.getSymbol(),_period,ma_period,0,MODE_EMA,PRICE_CLOSE);
+    _maHandle=iMA(_security.getSymbol(),_period,20,0,MODE_EMA,PRICE_CLOSE);
+    _ma4Handle=iMA(_security.getSymbol(),_period,4,0,MODE_EMA,PRICE_CLOSE);
     
     //--- What if handle returns Invalid Handle    
-    CHECK(_maHandle>=0,"Invalid indicators handle");
+    CHECK(_maHandle>=0 && _ma4Handle>=0,"Invalid indicators handle");
 
     // the rates arrays
     ArraySetAsSeries(_mrate,true);
     // the MA-20 values arrays
     ArraySetAsSeries(_maVal,true);
+    // the MA-4 values arrays
+    ArraySetAsSeries(_ma4Val,true);
 
     // Initialize the bias:
     _bias = BIAS_NONE;
@@ -63,6 +69,7 @@ public:
     
     //--- Release our indicator handles
     IndicatorRelease(_maHandle);
+    IndicatorRelease(_ma4Handle);
   }
 
   void handleBar()
@@ -76,17 +83,26 @@ public:
     // Get the details of the latest 3 bars
     CHECK(CopyRates(symbol,_period,0,3,_mrate)==3,"Cannot copy the latest rates");
     CHECK(CopyBuffer(_maHandle,0,0,3,_maVal)==3,"Cannot copy MA buffer 0");
+    CHECK(CopyBuffer(_ma4Handle,0,0,3,_ma4Val)==3,"Cannot copy MA buffer 0");
 
     double prev_ema = _maVal[0];
+    double prev_ema4 = _ma4Val[0];
     double point = _security.getPoint();
     int digits = _security.getDigits();
 
     // If we currently have a position opened, we use the EMA20 value to update the stop loss if possible:
     if(selectPosition())
     {
+      _openBarCount += 1.0;
+      double maxBar = 15.0; // TODO: compute this value as a statistic parameter.
+
+      double coeff = MathMin(_openBarCount/maxBar,1.0)*2.0-1.0;
+      coeff = 1.0/(1.0 + exp(-coeff));
+      double nsl = prev_ema + coeff*(prev_ema4 - prev_ema);
+
       double stoploss = PositionGetDouble(POSITION_SL);
       bool isBuy = PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
-      double nsl = isBuy ? MathMax(prev_ema,stoploss) : MathMin(prev_ema,stoploss);
+      nsl = isBuy ? MathMax(nsl,stoploss) : MathMin(nsl,stoploss);
       if(nsl!=stoploss) {
 
         updateSLTP(nsl);
@@ -153,6 +169,7 @@ public:
 
           logDEBUG("Placing buy order")
           sendDealOrder(ORDER_TYPE_BUY,_lot,price,sl,tp);
+          _openBarCount = 0.0;
         }
         else {
           // cancel this signal:
@@ -210,6 +227,7 @@ public:
 
           logDEBUG("Placing sell order")
           sendDealOrder(ORDER_TYPE_SELL,_lot,price,sl,tp);
+          _openBarCount = 0.0;
         }
         else {
           // cancel this signal:

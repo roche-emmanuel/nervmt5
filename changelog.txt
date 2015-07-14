@@ -126,3 +126,4 @@
 07/14/15-15:34:00: Added version 2 of EA for re implementation of MACD trader.
 07/14/15-19:11:07: First implementation of blade runner trader: can last one year without just dying... but still not making profit.
 07/14/15-19:33:10: First version of the blade runner trader giving positive results on 1 year!
+07/14/15-23:15:30: Added sigmoid update of stoploss level between ma20 and ma4 for bladerunner.
