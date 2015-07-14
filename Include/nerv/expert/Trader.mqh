@@ -125,7 +125,12 @@ public:
 
     //--- send Order
     MqlTradeResult mresult;
-    CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
+    // CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
+    if(!OrderSend(mrequest,mresult))
+    {
+      logERROR("Invalid result of OrderSend()");
+      return;
+    }
 
     CHECK(mresult.retcode==TRADE_RETCODE_DONE,"Invalid send order result retcode: "<<mresult.retcode);
   }
@@ -189,7 +194,12 @@ public:
 
     //--- send Order
     MqlTradeResult mresult;
-    CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
+    // CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
+    if(!OrderSend(mrequest,mresult))
+    {
+      logERROR("Invalid result of OrderSend()");
+      return;
+    }
     
     // selectPosition();
     // logDEBUG("New SL: "<<PositionGetDouble(POSITION_SL))

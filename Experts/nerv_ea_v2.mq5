@@ -86,14 +86,65 @@ public:
     bool Buy_opened=false;  // variable to hold the result of Buy opened position
     bool Sell_opened=false; // variables to hold the result of Sell opened position
 
+    // if(selectPosition())
+    // {
+    //   if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
+    //   {
+    //     Buy_opened=true;  //It is a Buy
+    //   }
+    //   else if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL)
+    //   {
+    //     Sell_opened=true; // It is a Sell
+    //   }
+    // }
+
+    double point = _security.getPoint();
+
+
     if(selectPosition())
     {
+      double price = PositionGetDouble(POSITION_PRICE_OPEN);
+
+      // Check if we are currently making profit:
       if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
       {
+        // This is a buy position,
+        if(latest_price.bid > (price + _STP*point*1.0)) {
+          double nsl = (latest_price.bid + price)*0.5;
+          
+          // logDEBUG("Might update stop loss with new value: "<< nsl)
+          double stoploss = PositionGetDouble(POSITION_SL);
+
+          if(nsl>(stoploss+20*point)) {
+
+            logDEBUG("Updating stoploss to: "<<nsl<<" with open price: "<<price)
+
+            updateSLTP(nsl);
+          }
+
+          return; // Should no do anything else in that case.
+        }
+
         Buy_opened=true;  //It is a Buy
       }
       else if(PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL)
       {
+        if(latest_price.ask < (price - _STP*point*1.0)) {
+          double nsl = (latest_price.ask + price)*0.5;
+          
+          // logDEBUG("Might update stop loss with new value: "<< nsl)
+          double stoploss = PositionGetDouble(POSITION_SL);
+
+          if(nsl<(stoploss-20*point)) {
+
+            logDEBUG("Updating stoploss to: "<<nsl<<" with open price: "<<price)
+
+            updateSLTP(nsl);
+          }
+
+          return; // Should no do anything else in that case.
+        }
+
         Sell_opened=true; // It is a Sell
       }
     }
@@ -101,7 +152,6 @@ public:
     // Copy the bar close price for the previous bar prior to the current bar, that is Bar 1
     _p_close=_mrate[1].close;  // bar 1 close price
 
-    double point = _security.getPoint();
 
     /*
       1. Check for a long/Buy Setup : MA-8 increasing upwards, 

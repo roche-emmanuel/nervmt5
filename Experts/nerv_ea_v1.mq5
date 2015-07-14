@@ -80,7 +80,7 @@ void OnTick()
     // Currently this can only be BUY position.
     // We need to check if we should update the stop loss because we are currently getting money:
     // double price = HistoryDealGetDouble(deal,DEAL_PRICE);
-    // double price = PositionGetDouble(POSITION_PRICE_OPEN);
+    double price = PositionGetDouble(POSITION_PRICE_OPEN);
     logDEBUG("Checking existing deal setup at price: "<<price)
 
     // If the current bid price is higher than the deal buy price, then we are making money:

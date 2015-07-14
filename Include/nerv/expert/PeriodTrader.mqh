@@ -70,7 +70,7 @@ public:
     if(Old_Time!=New_Time[0]) // if old time isn't equal to new bar time
     {
       IsNewBar=true;   // if it isn't a first call, the new bar has appeared
-      logDEBUG("Handling new bar at time "<<New_Time[0]<<" old time was: "<<Old_Time);
+      // logDEBUG("Handling new bar at time "<<New_Time[0]<<" old time was: "<<Old_Time);
       Old_Time=New_Time[0];            // saving bar time  
       handleBar();    
     }     
