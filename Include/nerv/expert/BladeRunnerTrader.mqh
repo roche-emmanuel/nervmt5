@@ -25,6 +25,9 @@ protected:
   double _margin;
   int _TKP;
   double _lot;
+  double _currentBase;
+  double _currentHigh;
+  double _currentLow;
 
 public:
   BladeRunnerTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
@@ -93,7 +96,7 @@ public:
 
     double pclose = _mrate[0].close;
     // logDEBUG("pclose="<<pclose<<", prev_ema="<<prev_ema)
-    logDEBUG("delta="<<NormalizeDouble(pclose-prev_ema,digits))
+    // logDEBUG("delta="<<NormalizeDouble(pclose-prev_ema,digits))
 
     // There is currently no position opened, so we check if we should open one:
     if (_bias == BIAS_NONE) {
@@ -102,6 +105,8 @@ public:
       {
         // It seems prices are going up:
         _bias = BIAS_LONG;
+        _currentBase = prev_ema;
+        _currentHigh = pclose;
         logDEBUG("Detected LONG bias.")
       }
 
@@ -109,12 +114,23 @@ public:
       {
         // It seems prices are going down:
         _bias = BIAS_SHORT;
+        _currentBase = prev_ema;
+        _currentLow = pclose;
         logDEBUG("Detected SHORT bias.")
       }
     }
 
+    double fallbackRatio = 0.5;
+
     if (_bias == BIAS_LONG)
     {
+      if (pclose > _currentHigh)
+      {
+        // update the references:
+        _currentHigh = pclose;
+        _currentBase = prev_ema;
+      }
+
       // If the price goes down too much we cancel the bias:
       if (pclose < prev_ema)
       {
@@ -124,11 +140,11 @@ public:
         return; // do nothing more.
       }
 
-      if (_signaled || true) { // ignore the signal for now.
+      if (_signaled) {
         // We already got a signal candlestick, so we check if the previous candlestick confirmed that signal:
         // To get a confirmation we would expect the close price of the previous stick to be higher than the close of the 
         // stick before it:
-        if(pclose>_mrate[1].close || true) {
+        if(pclose>_mrate[1].close) {
           // This is a confirmation of the signal, so we should place a buy order:
           // TODO: place a pending order instead ?
           double price = latest_price.ask;
@@ -146,8 +162,15 @@ public:
       }
       else {
         // We didn't get any signal yet, check the previous bar:
-        double thres = (prev_ema+_margin*point*0.25);
-        if(_mrate[0].low < thres && pclose > thres && pclose > _mrate[0].open)
+        // double thres = (prev_ema+_margin*point*0.25);
+        // if(_mrate[0].low < thres && pclose > thres && pclose > _mrate[0].open)
+        // {
+        //   logDEBUG("Detected LONG signal.")
+        //   _signaled = true;
+        // }
+
+        // We consider we get a signal when we fall by 75% from the current High:
+        if((pclose - _currentBase)/(_currentHigh - _currentBase) < fallbackRatio)
         {
           logDEBUG("Detected LONG signal.")
           _signaled = true;
@@ -157,6 +180,14 @@ public:
 
     if (_bias == BIAS_SHORT)
     {
+      if (pclose < _currentLow)
+      {
+        // update the references:
+        _currentLow = pclose;
+        _currentBase = prev_ema;
+      }
+
+
       // If the price goes down too much we cancel the bias:
       if (pclose > prev_ema)
       {
@@ -166,11 +197,11 @@ public:
         return; // do nothing more.
       }
 
-      if (_signaled || true) {
+      if (_signaled) {
         // We already got a signal candlestick, so we check if the previous candlestick confirmed that signal:
         // To get a confirmation we would expect the close price of the previous stick to be higher than the close of the 
         // stick before it:
-        if(pclose<_mrate[1].close || true) {
+        if(pclose<_mrate[1].close) {
           // This is a confirmation of the signal, so we should place a buy order:
           // TODO: place a pending order instead ?
           double price = latest_price.bid;
@@ -188,12 +219,19 @@ public:
       }
       else {
         // We didn't get any signal yet, check the previous bar:
-        double thres = (prev_ema-_margin*point*0.25);
-        if(_mrate[0].high > thres && pclose < thres && pclose < _mrate[0].open)
+        // double thres = (prev_ema-_margin*point*0.25);
+        // if(_mrate[0].high > thres && pclose < thres && pclose < _mrate[0].open)
+        // {
+        //   logDEBUG("Detected SHORT signal.")
+        //   _signaled = true;
+        // }
+
+        // We consider we get a signal when we fall by 75% from the current High:
+        if((_currentBase - pclose)/(_currentBase - _currentLow) < fallbackRatio)
         {
           logDEBUG("Detected SHORT signal.")
           _signaled = true;
-        }
+        }        
       }
     }
   }
