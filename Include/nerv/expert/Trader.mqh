@@ -1,4 +1,5 @@
 #include <nerv/core.mqh>
+#include <nerv/expert/Security.mqh>
 
 /*
 Class: nvTrader
@@ -65,6 +66,16 @@ public:
   bool hasPosition()
   {
     return selectPosition();
+  }
+  
+  /*
+  Function: getSecurity
+  
+  Retrieve the nvSecurity object assigned to this trader
+  */
+  const nvSecurity* getSecurity()
+  {
+    return GetPointer(_security);
   }
   
   /*

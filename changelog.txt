@@ -122,3 +122,4 @@
 07/14/15-10:35:15: Added copy construction and tests for nvSecurity.
 07/14/15-12:37:27: Added support for stoploss update in Trader class.
 07/14/15-12:43:46: Trying to fix error on stoploss update with ea_magic: but this doesn't seem to help at all.
+07/14/15-14:29:52: Added initial implementation for PeriodTrader class.

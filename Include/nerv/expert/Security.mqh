@@ -44,7 +44,7 @@ public:
   
   Retrieve the symbol corresponding to this security.
   */
-  string getSymbol()
+  string getSymbol() const
   {
     return _symbol;
   }
@@ -54,7 +54,7 @@ public:
   
   Retrieve the number of digits corresponding to this security.
   */
-  int getDigits()
+  int getDigits() const
   {
     return _digits;
   }
@@ -64,7 +64,7 @@ public:
   
   Retrieve the size of the smallest point increment for this security.
   */
-  double getPoint()
+  double getPoint() const
   {
     return _point;
   }

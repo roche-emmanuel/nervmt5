@@ -2,6 +2,7 @@
 #include <nerv/unit/Testing.mqh>
 #include <nerv/expert/Security.mqh>
 #include <nerv/expert/Trader.mqh>
+#include <nerv/expert/PeriodTrader.mqh>
 
 BEGIN_TEST_PACKAGE(expert_specs)
 
@@ -90,5 +91,42 @@ END_TEST_CASE()
 
 END_TEST_SUITE()
 
+BEGIN_TEST_SUITE("PeriodTrader class")
+
+BEGIN_TEST_CASE("Default implementation should throw on handleBar()")
+	nvSecurity sec("EURUSD",5,1e-5);
+
+	class MyData {
+	public:
+		bool state;
+	};
+
+	MyData data;
+	data.state = false;
+
+	class MyTrader : public nvPeriodTrader
+	{
+	protected:
+		MyData* _data;
+
+	public:
+		MyTrader(const nvSecurity& sec, MyData* data) : nvPeriodTrader(sec,PERIOD_H1) {
+			_data = data;
+		};
+
+		void handleBar()
+		{
+			_data.state = true;
+		}
+	};
+
+	MyTrader trader(sec,GetPointer(data));
+
+	// Ensure that handleBar is called when we call onTick:
+	trader.onTick();
+	REQUIRE(data.state);
+END_TEST_CASE()
+
+END_TEST_SUITE()
 
 END_TEST_PACKAGE()
