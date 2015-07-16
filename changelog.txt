@@ -128,3 +128,4 @@
 07/14/15-19:33:10: First version of the blade runner trader giving positive results on 1 year!
 07/14/15-23:15:30: Added sigmoid update of stoploss level between ma20 and ma4 for bladerunner.
 07/16/15-22:52:05: Initial implementation for delta variance computation.
+07/16/15-22:57:33: Fixed non reinitialized bias issue.

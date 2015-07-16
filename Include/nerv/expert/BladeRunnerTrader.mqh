@@ -171,6 +171,7 @@ public:
         updateSLTP(nsl);
       }
 
+      _bias = BIAS_NONE;
       return;
     }
 
@@ -230,12 +231,12 @@ public:
           logDEBUG("Placing buy order")
           sendDealOrder(ORDER_TYPE_BUY,_lot,price,sl,tp);
           _openBarCount = 0.0;
+          _bias = BIAS_NONE;
         }
-        else {
-          // cancel this signal:
-          logDEBUG("Cancelling LONG signal.")
-          _signaled = false;
-        }
+
+        // cancel this signal:
+        // logDEBUG("Cancelling LONG signal.")
+        _signaled = false;
       }
       else {
         // We didn't get any signal yet, check the previous bar:
@@ -288,12 +289,12 @@ public:
           logDEBUG("Placing sell order")
           sendDealOrder(ORDER_TYPE_SELL,_lot,price,sl,tp);
           _openBarCount = 0.0;
+          _bias = BIAS_NONE;
         }
-        else {
-          // cancel this signal:
-          logDEBUG("Cancelling SHORT signal.")
-          _signaled = false;
-        }
+        
+        // cancel this signal:
+        // logDEBUG("Cancelling SHORT signal.")
+        _signaled = false;
       }
       else {
         // We didn't get any signal yet, check the previous bar:
