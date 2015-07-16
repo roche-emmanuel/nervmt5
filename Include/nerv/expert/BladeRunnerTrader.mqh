@@ -33,6 +33,12 @@ protected:
   double _currentLow;
   double _openBarCount;
 
+  // Arrays of previous positive and negative delta values,
+  // Used for the computation of the variance/mean values:
+  nvVecd _posDeltas;
+  nvVecd _negDeltas;
+  bool _initialized;
+
 public:
   BladeRunnerTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
   {
@@ -61,6 +67,11 @@ public:
 
     // Lot size:
     _lot = 0.1;
+
+    int len = 250;
+    _posDeltas.resize(len);
+    _negDeltas.resize(len);
+    _initialized = false;
   }
 
   ~BladeRunnerTrader()
@@ -72,9 +83,56 @@ public:
     IndicatorRelease(_ma4Handle);
   }
 
+  void pushDelta(double delta)
+  {
+    if(delta>0)
+    {
+      _posDeltas.push_back(delta);
+    }
+    else {
+      _negDeltas.push_back(-delta);
+    }
+  }
+
   void handleBar()
   {
     string symbol = _security.getSymbol();
+
+    // Add here the computation of the variance of the positive/negative delta values.
+     // TODO: clarify what value to use here ?
+
+    if(!_initialized) 
+    {
+      logDEBUG("Initializing delta statistics...")
+      int ilen = (int)_posDeltas.size()*4; // length of the input array: we need to use a bigger value than len to ensure we get enough positive and negative samples.
+
+      // Retrieve the previous rates, and MA20 values:
+      // Note that we start with an offset of one because the previous bar details will be 
+      // retrieved just after the initialization anyway.
+      CHECK(CopyRates(symbol,_period,1,ilen,_mrate)==ilen,"Cannot copy the latest rates");
+      CHECK(CopyBuffer(_maHandle,0,1,ilen,_maVal)==ilen,"Cannot copy MA buffer 0");
+
+      // We iterate on each element:
+      int pcount = 0;
+      int ncount = 0;
+      for(int i=0;i<ilen;++i)
+      {
+        double delta = _mrate[i].close - _maVal[0];
+        if(delta>0)
+        {
+          _posDeltas.push_back(delta);
+          pcount++;
+        }
+        else {
+          _negDeltas.push_back(-delta);
+          ncount++;
+        }
+      }
+
+      logDEBUG("Received "<<pcount<<" positive samples and "<<ncount<<" negative samples.");
+      _initialized = true;
+    }
+
 
     // MqlTick latest_price;
     MqlTick latest_price;
@@ -89,6 +147,11 @@ public:
     double prev_ema4 = _ma4Val[0];
     double point = _security.getPoint();
     int digits = _security.getDigits();
+    double pclose = _mrate[0].close;
+    // logDEBUG("pclose="<<pclose<<", prev_ema="<<prev_ema)
+    // logDEBUG("delta="<<NormalizeDouble(pclose-prev_ema,digits))
+
+    pushDelta(pclose - prev_ema);
 
     // If we currently have a position opened, we use the EMA20 value to update the stop loss if possible:
     if(selectPosition())
@@ -107,12 +170,9 @@ public:
 
         updateSLTP(nsl);
       }
+
       return;
     }
-
-    double pclose = _mrate[0].close;
-    // logDEBUG("pclose="<<pclose<<", prev_ema="<<prev_ema)
-    // logDEBUG("delta="<<NormalizeDouble(pclose-prev_ema,digits))
 
     // There is currently no position opened, so we check if we should open one:
     if (_bias == BIAS_NONE) {
