@@ -25,7 +25,7 @@ protected:
 
   ENUM_BR_BIAS _bias;
   bool _signaled;
-  double _margin;
+  double _marginSig;
   int _TKP;
   double _lot;
   double _currentBase;
@@ -35,8 +35,7 @@ protected:
 
   // Arrays of previous positive and negative delta values,
   // Used for the computation of the variance/mean values:
-  nvVecd _posDeltas;
-  nvVecd _negDeltas;
+  nvVecd _deltas;
   bool _initialized;
 
 public:
@@ -59,8 +58,8 @@ public:
     // Initialize the bias:
     _bias = BIAS_NONE;
 
-    // Security margin to consider in terms of points around the EMA value:
-    _margin = 400;
+    // Number of sigmas to consider when evaluating the bias margin:
+    _marginSig = 1.0;
 
     // Take profit level:
     _TKP = 1000;
@@ -69,8 +68,7 @@ public:
     _lot = 0.1;
 
     int len = 250;
-    _posDeltas.resize(len);
-    _negDeltas.resize(len);
+    _deltas.resize(len);
     _initialized = false;
   }
 
@@ -83,17 +81,6 @@ public:
     IndicatorRelease(_ma4Handle);
   }
 
-  void pushDelta(double delta)
-  {
-    if(delta>0)
-    {
-      _posDeltas.push_back(delta);
-    }
-    else {
-      _negDeltas.push_back(-delta);
-    }
-  }
-
   void handleBar()
   {
     string symbol = _security.getSymbol();
@@ -104,7 +91,7 @@ public:
     if(!_initialized) 
     {
       logDEBUG("Initializing delta statistics...")
-      int ilen = (int)_posDeltas.size()*4; // length of the input array: we need to use a bigger value than len to ensure we get enough positive and negative samples.
+      int ilen = (int)_deltas.size();
 
       // Retrieve the previous rates, and MA20 values:
       // Note that we start with an offset of one because the previous bar details will be 
@@ -113,23 +100,12 @@ public:
       CHECK(CopyBuffer(_maHandle,0,1,ilen,_maVal)==ilen,"Cannot copy MA buffer 0");
 
       // We iterate on each element:
-      int pcount = 0;
-      int ncount = 0;
       for(int i=0;i<ilen;++i)
       {
         double delta = _mrate[i].close - _maVal[0];
-        if(delta>0)
-        {
-          _posDeltas.push_back(delta);
-          pcount++;
-        }
-        else {
-          _negDeltas.push_back(-delta);
-          ncount++;
-        }
+        _deltas.push_back(delta);
       }
 
-      logDEBUG("Received "<<pcount<<" positive samples and "<<ncount<<" negative samples.");
       _initialized = true;
     }
 
@@ -151,7 +127,8 @@ public:
     // logDEBUG("pclose="<<pclose<<", prev_ema="<<prev_ema)
     // logDEBUG("delta="<<NormalizeDouble(pclose-prev_ema,digits))
 
-    pushDelta(pclose - prev_ema);
+    double delta = pclose - prev_ema;
+    _deltas.push_back(delta);
 
     // If we currently have a position opened, we use the EMA20 value to update the stop loss if possible:
     if(selectPosition())
@@ -177,8 +154,15 @@ public:
 
     // There is currently no position opened, so we check if we should open one:
     if (_bias == BIAS_NONE) {
+      // Compute the current margin from the previous deltas:
+      double mean = _deltas.mean();
+      double sig = _deltas.deviation();
+
+      double pmargin = mean+sig*_marginSig;
+      double nmargin = mean-sig*_marginSig;
+
       // Select our current bias depending on the current price location:
-      if (pclose > (prev_ema + _margin*point))
+      if (delta > pmargin)
       {
         // It seems prices are going up:
         _bias = BIAS_LONG;
@@ -187,7 +171,7 @@ public:
         logDEBUG("Detected LONG bias.")
       }
 
-      if (pclose < (prev_ema - _margin*point))
+      if (delta < nmargin)
       {
         // It seems prices are going down:
         _bias = BIAS_SHORT;
@@ -291,7 +275,7 @@ public:
           _openBarCount = 0.0;
           _bias = BIAS_NONE;
         }
-        
+
         // cancel this signal:
         // logDEBUG("Cancelling SHORT signal.")
         _signaled = false;
