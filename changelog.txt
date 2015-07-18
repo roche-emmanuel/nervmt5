@@ -136,3 +136,4 @@
 07/18/15-15:49:47: Added slope multiplier and stoploss multiplier for PeakTrader.
 07/18/15-16:24:52: Added test in PeakTrader for MA20 invert signal.
 07/18/15-16:51:06: Using equity level to close positions higher that 4 sigmas.
+07/18/15-22:43:17: Tested implementation of risk aversion in PeakTrader.

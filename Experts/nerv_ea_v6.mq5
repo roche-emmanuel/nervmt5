@@ -15,6 +15,7 @@ input double   Price_Threshold=3.0;     // Price sigma multiplier to evaluate th
 input double   MA_Threshold=1.3;     // MA sigma multiplier to evaluate the trend bubble entry
 input double   SL_Mult=2.0;     // Stoploss sigma multiplier used when placing a deal.
 input double   Slope_Threshold=1.0;     // Threshold multiplier in number of sigma for MA4 slope.
+input double   Risk_Decay=0.9;  // Decay factor for the risk aversion.
 
 nvPeriodTrader* trader;
 
@@ -29,7 +30,7 @@ int OnInit()
 
   logDEBUG("Initializing Nerv EA.")
   nvSecurity sec("EURUSD",5,0.00001);
-  trader = new PeakTrader(sec,Period(),Price_Threshold,MA_Threshold,SL_Mult,Slope_Threshold);
+  trader = new PeakTrader(sec,Period(),Price_Threshold,MA_Threshold,SL_Mult,Slope_Threshold,Risk_Decay);
 
   return 0;
 }

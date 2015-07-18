@@ -115,7 +115,7 @@ public:
     mrequest.sl = NormalizeDouble(sl,_security.getDigits());         // Stop Loss
     mrequest.tp = NormalizeDouble(tp,_security.getDigits());         // take profit
     mrequest.symbol = _security.getSymbol();                         // currency pair
-    mrequest.volume = lot;                                           // number of lots to trade
+    mrequest.volume = NormalizeDouble(lot,2);                                           // number of lots to trade
     mrequest.magic = _ea_magic;                                      // Order Magic Number
     mrequest.type = (ENUM_ORDER_TYPE)otype;                          // Buy Order
     mrequest.type_filling = ORDER_FILLING_FOK;                       // Order execution type

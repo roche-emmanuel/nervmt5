@@ -47,6 +47,7 @@ protected:
   double _prev_ema4;
   double _prev_ema20;
   double _slMult;
+  double _riskDecayMult;
 
   double _ema4Slope;
   double _slopeAlpha;
@@ -57,13 +58,19 @@ protected:
   double _ema4SlopeMean;
   double _ema4SlopeSig;
 
+  double _envelopeThreshold;
+  double _prevBalance;
+  double _accumLost;
+  double _riskAversion;
+  double _numStreakLost;
+
   nvVecd _equityDeltas;
   int _equityStatCount;
   ENUM_PT_TREND _trend;
   string _symbol;
 
 public:
-  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period, double priceThres, double maThres, double slMult, double slopeThreshold) : nvPeriodTrader(sec,period)
+  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period, double priceThres, double maThres, double slMult, double slopeThreshold, double riskDecay) : nvPeriodTrader(sec,period)
   {
     // Prepare the moving average indicator:
     _maHandle=iMA(_security.getSymbol(),_period,20,0,MODE_EMA,PRICE_CLOSE);
@@ -87,9 +94,16 @@ public:
     
     // Stoploss multiplier:
     _slMult = slMult;
+    _riskDecayMult = riskDecay;
 
     // initialize the new bar flag:
     _hasNewBar = false;
+
+    _envelopeThreshold = 0.0;
+    _prevBalance = 0.0;
+    _accumLost = 0.0;
+    _riskAversion = 0.0;
+    _numStreakLost = 0.0;
 
     // ma threshold given in number of ma sigmas:
     _maThreshold = maThres;
@@ -111,7 +125,7 @@ public:
     _signaled = false;
 
     // resize the statistic vectors:
-    int malen = 100;
+    int malen = 200;
     int pricelen = 100;
     int ticklen = 4;
     int smoothlen = 7;
@@ -201,6 +215,7 @@ public:
       _priceStatCount++;
       _priceMean = _priceDeltas.mean();
       _priceSig = _priceDeltas.deviation();
+      logDEBUG(TimeCurrent() << ": Current price deviation: "<<_priceSig)
     }
     if(delta < _maMean-_maThreshold*_maSig)
     {
@@ -209,6 +224,7 @@ public:
       _priceStatCount++;
       _priceMean = _priceDeltas.mean();
       _priceSig = _priceDeltas.deviation();
+      logDEBUG(TimeCurrent() << ": Current price deviation: "<<_priceSig)
     }
   }
 
@@ -279,11 +295,24 @@ public:
 
     // Mark that a new bar as arrived, thus a new order could be placed if possible:
     _hasNewBar = true;
+
+    // We need to decay the risk aversion progressively:
+    _riskAversion = _riskAversion*_riskDecayMult;
+    // logDEBUG("Current risk aversion: "<<_riskAversion)
   }
 
   void handleTick()
   {
     CHECK(ready(),"Not enough statistic data ?")
+
+    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+    // MqlTick latest_price;
+    MqlTick latest_price;
+    CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
+
+    double tick = latest_price.bid;
+
 
     if(selectPosition())
     {
@@ -296,7 +325,20 @@ public:
       //   _hasNewBar = false;
       // }
       
-      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      // Check if we need to secure the current profits:
+      // double sl = PositionGetDouble(POSITION_SL);
+      // double point = _security.getPoint();
+      // bool isBuy = PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
+
+      // // Update the stoploss to get closer to the bid price progressively:
+      // double nsl = sl + 0.01 * (tick + (isBuy ? -_priceSig: _priceSig) - sl);
+      // nsl = isBuy ? MathMax(nsl,sl) : MathMin(nsl,sl);
+      // if(nsl!=sl)
+      // {
+      //   logDEBUG("Updated new stoploss: "<<nsl)
+      //   updateSLTP(nsl);
+      // }
+
       double equity = AccountInfoDouble(ACCOUNT_EQUITY);
       double delta = equity-balance;
       _equityDeltas.push_back(delta);
@@ -318,6 +360,40 @@ public:
       return;
     }
 
+    // init the prev balance value:
+    if(_prevBalance == 0.0)
+    {
+      _prevBalance = balance;
+    }
+
+    // each time we receive a new balance value, it means a deal is terminated.
+    // And we should react depending on the current tendency to avoid large drawdowns:
+    if(_prevBalance != balance)
+    {
+      logDEBUG(TimeCurrent() << ": Detected new balance value: "<<balance)
+      double delta = 100.0 * (balance - _prevBalance)/balance; // in percentage.
+
+      // We then keep the notion of accumulated lost:
+      if(delta<0.0) {
+        _numStreakLost+=1.0;
+
+        _accumLost += -delta;
+        // And we build an exponential risk aversion on top of that:
+        // _riskAversion = (MathExp((_numStreakLost>4.0?_numStreakLost/4.0:0.0)+_accumLost/1.0)-1.0); 
+        _riskAversion = 0.0; //(MathExp(_accumLost/1.0)-1.0); 
+        logDEBUG("Accumulated lost in percent: "<< _accumLost)
+      }
+      else
+      {
+        // reset the accumulated lost:
+        _accumLost = 0.0;
+        _numStreakLost = 0.0;
+        _riskAversion = 0.0;
+      }
+
+      _prevBalance = balance;
+    }
+
     // We don't have anything to do if we are not in a trend bubble:
     if(_trend == TREND_NONE)
     {
@@ -325,12 +401,6 @@ public:
     }
 
     // logDEBUG("Entering handleTick()")
-
-    // MqlTick latest_price;
-    MqlTick latest_price;
-    CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
-
-    double tick = latest_price.bid;
 
     if(_prevTick==0.0)
     {
@@ -373,16 +443,26 @@ public:
 
   }
 
+  double getLotSize()
+  {
+    double num =  _lot / (1.0 + _riskAversion);
+    num = MathFloor(num*100)/100;
+    logDEBUG("Using lot size: "<<num);
+    return num;
+  }
+
   void sendDeviationOrder(double ask)
   {
+    double lotsize = getLotSize();
+
     // place the order depending on the current trend:
     if(_trend==TREND_LONG) {
       // We place a sell order in that case:
-      sendDealOrder(ORDER_TYPE_SELL,_lot,_prevTick,_prevTick+_slMult*_priceSig,_prev_ema4);
+      sendDealOrder(ORDER_TYPE_SELL,lotsize,_prevTick,_prevTick+_slMult*_priceSig,_prev_ema4);
     }
     else {
       // We place a buy order in that case:
-      sendDealOrder(ORDER_TYPE_BUY,_lot,ask,_prevTick-_slMult*_priceSig,_prev_ema4);
+      sendDealOrder(ORDER_TYPE_BUY,lotsize,ask,_prevTick-_slMult*_priceSig,_prev_ema4);
     }
   }
 
@@ -390,13 +470,15 @@ public:
   {
     // place the order depending on the current trend:
     double delta = MathAbs(_prev_ema4-_prev_ema20);
+    double lotsize = getLotSize();
+
     if(_trend==TREND_LONG) {
       // We place a sell order in that case:
-      sendDealOrder(ORDER_TYPE_SELL,_lot,_prevTick,_prevTick+_slMult*delta,_prev_ema4);
+      sendDealOrder(ORDER_TYPE_SELL,lotsize,_prevTick,_prevTick+_slMult*delta,_prev_ema4);
     }
     else {
       // We place a buy order in that case:
-      sendDealOrder(ORDER_TYPE_BUY,_lot,ask,_prevTick-_slMult*delta,_prev_ema4);
+      sendDealOrder(ORDER_TYPE_BUY,lotsize,ask,_prevTick-_slMult*delta,_prev_ema4);
     }
   }
 
@@ -418,6 +500,14 @@ public:
     //   // We just don't want to take the risk here.
     //   return false;
     // }
+
+    double delta = MathAbs(_prev_ema4-_prev_ema20);
+    // If we are not at least one delta higher that the current prev_ema4, then we should not signal anything:
+    if((_trend==TREND_LONG && _prevTick < (_prev_ema4 + _envelopeThreshold*delta))
+      || (_trend==TREND_SHORT && _prevTick > (_prev_ema4 - _envelopeThreshold*delta)))
+    {
+      return false;
+    }
 
     // There is currently no signal for an interesting tick behavior.
     // So just check if the current tick is goind too far.
