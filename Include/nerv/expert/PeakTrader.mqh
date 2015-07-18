@@ -57,6 +57,8 @@ protected:
   double _ema4SlopeMean;
   double _ema4SlopeSig;
 
+  nvVecd _equityDeltas;
+  int _equityStatCount;
   ENUM_PT_TREND _trend;
   string _symbol;
 
@@ -101,6 +103,9 @@ public:
     // Count used to decide if we are ready to trade.
     _priceStatCount = 0;
 
+    // Count to decide if the equity handling is ready:
+    _equityStatCount = 0;
+
     // Initialize the trend:
     _trend = TREND_NONE;
     _signaled = false;
@@ -111,12 +116,14 @@ public:
     int ticklen = 4;
     int smoothlen = 7;
     int slopelen = 100;
+    int equitylen = 1000.0;
 
     _maDeltas.resize(malen);
     _priceDeltas.resize(pricelen);
     _tickDeltas.resize(ticklen);
     _smoothedSlope.resize(smoothlen);
     _prevSlopes.resize(slopelen);
+    _equityDeltas.resize(equitylen);
 
     _ema4Slope = 0.0;
     _maMean = 0.0;
@@ -261,12 +268,12 @@ public:
 
     if(delta > _maMean+_maThreshold*_maSig)
     {
-      logDEBUG("Detected Long bubble.")
+      // logDEBUG("Detected Long bubble.")
       _trend = TREND_LONG;
     }
     if(delta < _maMean-_maThreshold*_maSig)
     {
-      logDEBUG("Detected Short bubble.")
+      // logDEBUG("Detected Short bubble.")
       _trend = TREND_SHORT;
     }
 
@@ -281,12 +288,31 @@ public:
     if(selectPosition())
     {
       // We update the takeprofit with the newest value of the prev_ema.
-      if(_hasNewBar)
+      // if(_hasNewBar)
+      // {
+      //   double sl = PositionGetDouble(POSITION_SL);
+      //   double tp = _prev_ema4;
+      //   updateSLTP(sl,tp);
+      //   _hasNewBar = false;
+      // }
+      
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      double delta = equity-balance;
+      _equityDeltas.push_back(delta);
+      _equityStatCount++;
+
+      if(_equityStatCount>=(int)_equityDeltas.size())
       {
-        double sl = PositionGetDouble(POSITION_SL);
-        double tp = _prev_ema4;
-        updateSLTP(sl,tp);
-        _hasNewBar = false;
+        // We can use the current equity level to decide if a position should be closed:
+        double mean = _equityDeltas.mean();
+        double sigma = _equityDeltas.deviation();
+        if(delta > mean + 4*sigma)
+        {
+          // then we close the current position!
+          logDEBUG("Closing position since "<<delta<<" > "<<(mean + 3*sigma))
+          closePosition();
+        }
       }
 
       return;
@@ -386,12 +412,12 @@ public:
   {
     // logDEBUG("Checking for signal...")
     // Check if the market is not current trending too much:
-    if(MathAbs(_ema4Slope - _ema4SlopeMean) > _slopeThreshold*_ema4SlopeSig)
-    {
-      // Current trend is too strong.
-      // We just don't want to take the risk here.
-      return false;
-    }
+    // if(MathAbs(_ema4Slope - _ema4SlopeMean) > _slopeThreshold*_ema4SlopeSig)
+    // {
+    //   // Current trend is too strong.
+    //   // We just don't want to take the risk here.
+    //   return false;
+    // }
 
     // There is currently no signal for an interesting tick behavior.
     // So just check if the current tick is goind too far.
