@@ -45,6 +45,7 @@ protected:
   bool _signaled;
   bool _hasNewBar;
   double _prev_ema4;
+  double _prev_ema20;
   double _slMult;
 
   double _ema4Slope;
@@ -125,6 +126,8 @@ public:
     _ema4SlopeMean = 0.0;
     _ema4SlopeSig = 0.0;
     _initialized = false;
+    _prev_ema4 = 0.0;
+    _prev_ema20 = 0.0;
 
     // tick exponential moving average alpha:
     _tickAlpha = 1.0/(double)ticklen;
@@ -151,6 +154,12 @@ public:
       _prev_ema4 = ema4;
     }
 
+    if(_prev_ema20 == 0.0)
+    {
+      // init prev ema:
+      _prev_ema20 = ema20;
+    }
+
     // Now compute the smoothed MA4 slope:
     _smoothedSlope.push_back(ema4-_prev_ema4);
 
@@ -163,6 +172,7 @@ public:
 
     // save prev ema4 value:
     _prev_ema4 = ema4;
+    _prev_ema20 = ema20;
 
     double delta = ema4 - ema20;
     _maDeltas.push_back(delta);
@@ -270,7 +280,15 @@ public:
 
     if(selectPosition())
     {
-      // We do nothing here by default.
+      // We update the takeprofit with the newest value of the prev_ema.
+      if(_hasNewBar)
+      {
+        double sl = PositionGetDouble(POSITION_SL);
+        double tp = _prev_ema4;
+        updateSLTP(sl,tp);
+        _hasNewBar = false;
+      }
+
       return;
     }
 
@@ -302,7 +320,6 @@ public:
     // Add this delta to the vector:
     _tickDeltas.push_back(tdelta);
 
-
     // So we received a new tick, statistics are ready and we are not in a position yet.
     // So first we check if we are currently in a signaled state:
     if(_signaled) {
@@ -314,20 +331,8 @@ public:
       // Now check the current EMA: it should be positive, otherwise, we place an order!
       if(_tickDeltas.EMA(_tickAlpha)<0.0)
       {
-        // place the order depending on the current trend:
-        if(true) { //_hasNewBar) {
-          if(_trend==TREND_LONG) {
-            // We place a sell order in that case:
-            sendDealOrder(ORDER_TYPE_SELL,_lot,tick,tick+_slMult*_priceSig,_prev_ema4);
-          }
-          else {
-            // We place a buy order in that case:
-            sendDealOrder(ORDER_TYPE_BUY,_lot,latest_price.ask,tick-_slMult*_priceSig,_prev_ema4);
-          }
-
-          // Now we need to wait for a new bar in case we would like to place another order!
-          _hasNewBar = false;          
-        }
+        sendDeviationOrder(latest_price.ask);
+        // sendMA20InvertOrder(latest_price.ask);
 
         // terminate this signal:
         _signaled = false;
@@ -336,25 +341,62 @@ public:
       // The tick trend is still not finished, so we wait...
     }
     else {
-      // logDEBUG("Checking for signal...")
-      // Check if the market is not current trending too much:
-      if(MathAbs(_ema4Slope - _ema4SlopeMean) > _slopeThreshold*_ema4SlopeSig)
-      {
-        // Current trend is too strong.
-        // We just don't want to take the risk here.
-        return;
-      }
-
-      // There is currently no signal for an interesting tick behavior.
-      // So just check if the current tick is goind too far.
-      // This again will depend on the current trend.
-      if((_trend==TREND_LONG && tick > _prev_ema4+_priceMean+_priceThreshold*_priceSig && _tickDeltas.EMA(_tickAlpha)>0.0)
-        || (_trend==TREND_SHORT && tick < _prev_ema4-_priceMean-_priceThreshold*_priceSig && _tickDeltas.EMA(_tickAlpha)>0.0))
-      {
-        // Signal this tick as interesting and keep the current tick statistics:
-        logDEBUG("Detected interesting tick!")
-        _signaled = true;
-      }
+      _signaled = checkDeviationSignal();
+      // _signaled = checkMA20InvertSignal();
     }
+
+  }
+
+  void sendDeviationOrder(double ask)
+  {
+    // place the order depending on the current trend:
+    if(_trend==TREND_LONG) {
+      // We place a sell order in that case:
+      sendDealOrder(ORDER_TYPE_SELL,_lot,_prevTick,_prevTick+_slMult*_priceSig,_prev_ema4);
+    }
+    else {
+      // We place a buy order in that case:
+      sendDealOrder(ORDER_TYPE_BUY,_lot,ask,_prevTick-_slMult*_priceSig,_prev_ema4);
+    }
+  }
+
+  void sendMA20InvertOrder(double ask)
+  {
+    // place the order depending on the current trend:
+    double delta = MathAbs(_prev_ema4-_prev_ema20);
+    if(_trend==TREND_LONG) {
+      // We place a sell order in that case:
+      sendDealOrder(ORDER_TYPE_SELL,_lot,_prevTick,_prevTick+_slMult*delta,_prev_ema4);
+    }
+    else {
+      // We place a buy order in that case:
+      sendDealOrder(ORDER_TYPE_BUY,_lot,ask,_prevTick-_slMult*delta,_prev_ema4);
+    }
+  }
+
+  bool checkMA20InvertSignal()
+  {
+    // For the invert entry we consider the threshold to be proportional to the delta of MA4 and MA20.
+    double delta = MathAbs(_prev_ema4-_prev_ema20);
+    return ((_trend==TREND_LONG && _prevTick > (_prev_ema4 + _priceThreshold*delta))
+      || (_trend==TREND_SHORT && _prevTick < (_prev_ema4 - _priceThreshold*delta)));
+  }
+
+  bool checkDeviationSignal()
+  {
+    // logDEBUG("Checking for signal...")
+    // Check if the market is not current trending too much:
+    if(MathAbs(_ema4Slope - _ema4SlopeMean) > _slopeThreshold*_ema4SlopeSig)
+    {
+      // Current trend is too strong.
+      // We just don't want to take the risk here.
+      return false;
+    }
+
+    // There is currently no signal for an interesting tick behavior.
+    // So just check if the current tick is goind too far.
+    // This again will depend on the current trend.
+    return ((_trend==TREND_LONG && _prevTick > _prev_ema4+_priceMean+_priceThreshold*_priceSig && _tickDeltas.EMA(_tickAlpha)>0.0)
+      || (_trend==TREND_SHORT && _prevTick < _prev_ema4-_priceMean-_priceThreshold*_priceSig && _tickDeltas.EMA(_tickAlpha)>0.0));
   }
 };
