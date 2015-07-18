@@ -13,8 +13,8 @@ This implementation will use the Peak trader
 
 input double   Price_Threshold=3.0;     // Price sigma multiplier to evaluate the entry threshold
 input double   MA_Threshold=1.3;     // MA sigma multiplier to evaluate the trend bubble entry
-input double   SL_Mult=2.0;     // Stoploss sigma multiplier used when placing a deal.
-input double   Slope_Threshold=1.0;     // Threshold multiplier in number of sigma for MA4 slope.
+input double   SL_Mult=1.0;     // Stoploss sigma multiplier used when placing a deal.
+input double   Slope_Threshold=2.0;     // Threshold multiplier in number of sigma for MA4 slope.
 input double   Risk_Decay=0.9;  // Decay factor for the risk aversion.
 
 nvPeriodTrader* trader;

@@ -63,6 +63,7 @@ protected:
   double _accumLost;
   double _riskAversion;
   double _numStreakLost;
+  int _frozenBars;
 
   nvVecd _equityDeltas;
   int _equityStatCount;
@@ -104,6 +105,7 @@ public:
     _accumLost = 0.0;
     _riskAversion = 0.0;
     _numStreakLost = 0.0;
+    _frozenBars = 0;
 
     // ma threshold given in number of ma sigmas:
     _maThreshold = maThres;
@@ -215,7 +217,7 @@ public:
       _priceStatCount++;
       _priceMean = _priceDeltas.mean();
       _priceSig = _priceDeltas.deviation();
-      logDEBUG(TimeCurrent() << ": Current price deviation: "<<_priceSig)
+      // logDEBUG(TimeCurrent() << ": Current price deviation: "<<_priceSig)
     }
     if(delta < _maMean-_maThreshold*_maSig)
     {
@@ -224,7 +226,7 @@ public:
       _priceStatCount++;
       _priceMean = _priceDeltas.mean();
       _priceSig = _priceDeltas.deviation();
-      logDEBUG(TimeCurrent() << ": Current price deviation: "<<_priceSig)
+      // logDEBUG(TimeCurrent() << ": Current price deviation: "<<_priceSig)
     }
   }
 
@@ -299,6 +301,12 @@ public:
     // We need to decay the risk aversion progressively:
     _riskAversion = _riskAversion*_riskDecayMult;
     // logDEBUG("Current risk aversion: "<<_riskAversion)
+
+    // Reduce the number of frozen bars if needed:
+    if(_frozenBars>0)
+    {
+      --_frozenBars;
+    }
   }
 
   void handleTick()
@@ -382,6 +390,14 @@ public:
         // _riskAversion = (MathExp((_numStreakLost>4.0?_numStreakLost/4.0:0.0)+_accumLost/1.0)-1.0); 
         _riskAversion = 0.0; //(MathExp(_accumLost/1.0)-1.0); 
         logDEBUG("Accumulated lost in percent: "<< _accumLost)
+
+        // Implement the notion of freeze:
+        if(_numStreakLost>=6)
+        {
+          logDEBUG("Drawdown detected applying freeze.")
+          _numStreakLost = 0.0;
+          _frozenBars = 10;
+        }
       }
       else
       {
@@ -392,6 +408,12 @@ public:
       }
 
       _prevBalance = balance;
+    }
+
+    if(_frozenBars>0)
+    {
+      // Don't look for any trade, we are currently frozen due to drawdown:
+      return;
     }
 
     // We don't have anything to do if we are not in a trend bubble:
@@ -427,8 +449,12 @@ public:
       // Now check the current EMA: it should be positive, otherwise, we place an order!
       if(_tickDeltas.EMA(_tickAlpha)<0.0)
       {
-        sendDeviationOrder(latest_price.ask);
-        // sendMA20InvertOrder(latest_price.ask);
+        if(_hasNewBar || true) // allow only one order per bar.
+        {
+          sendDeviationOrder(latest_price.ask);
+          // sendMA20InvertOrder(latest_price.ask);          
+        }
+        _hasNewBar = false;
 
         // terminate this signal:
         _signaled = false;
@@ -443,9 +469,9 @@ public:
 
   }
 
-  double getLotSize()
+  double getLotSize(double mult)
   {
-    double num =  _lot / (1.0 + _riskAversion);
+    double num =  mult*_lot / (1.0 + _riskAversion);
     num = MathFloor(num*100)/100;
     logDEBUG("Using lot size: "<<num);
     return num;
@@ -453,7 +479,7 @@ public:
 
   void sendDeviationOrder(double ask)
   {
-    double lotsize = getLotSize();
+    double lotsize = getLotSize(1.0);
 
     // place the order depending on the current trend:
     if(_trend==TREND_LONG) {
@@ -470,7 +496,7 @@ public:
   {
     // place the order depending on the current trend:
     double delta = MathAbs(_prev_ema4-_prev_ema20);
-    double lotsize = getLotSize();
+    double lotsize = getLotSize(1.0);
 
     if(_trend==TREND_LONG) {
       // We place a sell order in that case:

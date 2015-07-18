@@ -137,3 +137,4 @@
 07/18/15-16:24:52: Added test in PeakTrader for MA20 invert signal.
 07/18/15-16:51:06: Using equity level to close positions higher that 4 sigmas.
 07/18/15-22:43:17: Tested implementation of risk aversion in PeakTrader.
+07/19/15-00:15:46: Saved current reference for best results on 01/2011.
