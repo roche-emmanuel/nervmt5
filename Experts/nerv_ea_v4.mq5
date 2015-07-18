@@ -1,7 +1,6 @@
 /*
-This is the version 2 of the Nerv EA.
-This implementation will use the Bladerunner strategy as described from:
-http://www.authenticfx.com/free-forex-trading-strategy.html
+This is the version 4 of the Nerv EA.
+This implementation will use a simple MA tendency
 */
 
 #property copyright "Copyright 2015, Nervtech"
@@ -10,7 +9,7 @@ http://www.authenticfx.com/free-forex-trading-strategy.html
 #property version   "1.00"
 
 #include <nerv/core.mqh>
-#include <nerv/expert/BladeRunnerTrader.mqh>
+#include <nerv/expert/SimpleMATrader.mqh>
 
 nvPeriodTrader* trader;
 
@@ -25,7 +24,7 @@ int OnInit()
 
   logDEBUG("Initializing Nerv EA.")
   nvSecurity sec("EURUSD",5,0.00001);
-  trader = new BladeRunnerTrader(sec,Period());
+  trader = new SimpleMATrader(sec,Period());
 
   return 0;
 }

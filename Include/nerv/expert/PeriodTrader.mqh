@@ -73,7 +73,10 @@ public:
       // logDEBUG("Handling new bar at time "<<New_Time[0]<<" old time was: "<<Old_Time);
       Old_Time=New_Time[0];            // saving bar time  
       handleBar();    
-    }     
+    }
+
+    // We call the handleTick() method afterward:
+    handleTick();    
   }
   
   /*
@@ -85,6 +88,18 @@ public:
   virtual void handleBar()
   {
     NO_IMPL(); 
+  }
+  
+
+  /*
+  Function: handleTick
+  
+  Method used to handle a tick (after handleBar was called if applicable).
+  The default implementation does nothing.
+  */
+  void handleTick()
+  {
+    // No op.
   }
   
 };

@@ -102,7 +102,7 @@ public:
       // We iterate on each element:
       for(int i=0;i<ilen;++i)
       {
-        double delta = _mrate[i].close - _maVal[0];
+        double delta = _mrate[i].close - _maVal[i];
         _deltas.push_back(delta);
       }
 
@@ -152,11 +152,12 @@ public:
       return;
     }
 
+    // Compute the current margin from the previous deltas:
+    double mean = _deltas.mean();
+    double sig = _deltas.deviation();
+
     // There is currently no position opened, so we check if we should open one:
     if (_bias == BIAS_NONE) {
-      // Compute the current margin from the previous deltas:
-      double mean = _deltas.mean();
-      double sig = _deltas.deviation();
 
       double pmargin = mean+sig*_marginSig;
       double nmargin = mean-sig*_marginSig;
@@ -210,7 +211,7 @@ public:
           // TODO: place a pending order instead ?
           double price = latest_price.ask;
           double sl = prev_ema;
-          double tp = 0.0; //latest_price.ask+ _TKP*point;
+          double tp = 0.0; //prev_ema + mean + 4*sig; 
 
           logDEBUG("Placing buy order")
           sendDealOrder(ORDER_TYPE_BUY,_lot,price,sl,tp);
@@ -268,7 +269,7 @@ public:
           // TODO: place a pending order instead ?
           double price = latest_price.bid;
           double sl = prev_ema;
-          double tp = 0.0; //latest_price.bid - _TKP*point;
+          double tp = 0.0; //prev_ema + mean - 4*sig; //latest_price.bid - _TKP*point;
 
           logDEBUG("Placing sell order")
           sendDealOrder(ORDER_TYPE_SELL,_lot,price,sl,tp);
