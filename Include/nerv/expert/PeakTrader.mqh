@@ -43,12 +43,24 @@ protected:
   double _tickAlpha;
   bool _initialized;
   bool _signaled;
+  bool _hasNewBar;
   double _prev_ema4;
+  double _slMult;
+
+  double _ema4Slope;
+  double _slopeAlpha;
+  nvVecd _prevSlopes;
+  nvVecd _smoothedSlope;
+
+  double _slopeThreshold;
+  double _ema4SlopeMean;
+  double _ema4SlopeSig;
+
   ENUM_PT_TREND _trend;
   string _symbol;
 
 public:
-  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period, double priceThres, double maThres) : nvPeriodTrader(sec,period)
+  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period, double priceThres, double maThres, double slMult, double slopeThreshold) : nvPeriodTrader(sec,period)
   {
     // Prepare the moving average indicator:
     _maHandle=iMA(_security.getSymbol(),_period,20,0,MODE_EMA,PRICE_CLOSE);
@@ -70,11 +82,20 @@ public:
     // cache the symbol:
     _symbol = _security.getSymbol();
     
+    // Stoploss multiplier:
+    _slMult = slMult;
+
+    // initialize the new bar flag:
+    _hasNewBar = false;
+
     // ma threshold given in number of ma sigmas:
     _maThreshold = maThres;
 
     // price threshold given in number of price sigmas:
     _priceThreshold = priceThres;
+
+    // EMA slope threshold:
+    _slopeThreshold = slopeThreshold;
 
     // Count used to decide if we are ready to trade.
     _priceStatCount = 0;
@@ -87,24 +108,35 @@ public:
     int malen = 100;
     int pricelen = 100;
     int ticklen = 4;
+    int smoothlen = 7;
+    int slopelen = 100;
+
     _maDeltas.resize(malen);
     _priceDeltas.resize(pricelen);
     _tickDeltas.resize(ticklen);
+    _smoothedSlope.resize(smoothlen);
+    _prevSlopes.resize(slopelen);
 
+    _ema4Slope = 0.0;
     _maMean = 0.0;
     _maSig = 0.0;
     _priceMean = 0.0;
     _priceSig = 0.0;
+    _ema4SlopeMean = 0.0;
+    _ema4SlopeSig = 0.0;
     _initialized = false;
 
     // tick exponential moving average alpha:
     _tickAlpha = 1.0/(double)ticklen;
+
+    // EMA slope exponential moving average alpha:
+    _slopeAlpha = 1.0/(double)smoothlen;
   }
 
   ~PeakTrader()
   {
     logDEBUG("Deleting indicators...")
-    logDEBUG("Was using: priceThreshold: "<<_priceThreshold<<", maThreshold: "<<_maThreshold)
+    logDEBUG("Was using: priceThreshold: "<<_priceThreshold<<", maThreshold: "<<_maThreshold<<", slMult: "<<_slMult)
 
     //--- Release our indicator handles
     IndicatorRelease(_maHandle);
@@ -113,11 +145,31 @@ public:
 
   void updateStats(double ema4, double ema20, double high, double low)
   {
+    if(_prev_ema4 == 0.0)
+    {
+      // init prev ema:
+      _prev_ema4 = ema4;
+    }
+
+    // Now compute the smoothed MA4 slope:
+    _smoothedSlope.push_back(ema4-_prev_ema4);
+
+    _ema4Slope = _smoothedSlope.EMA(_slopeAlpha);
+
+    // Update the statistics on the smoothed slope:
+    _prevSlopes.push_back(_ema4Slope);
+    _ema4SlopeMean = _prevSlopes.mean();
+    _ema4SlopeSig = _prevSlopes.deviation();
+
+    // save prev ema4 value:
+    _prev_ema4 = ema4;
+
     double delta = ema4 - ema20;
     _maDeltas.push_back(delta);
   
     _maMean = _maDeltas.mean();
     _maSig = _maDeltas.deviation();
+
 
     // Now that we have the maMean and maSig values, we have an "idea"
     // on how far the MA4 can go from the MA20 value
@@ -191,7 +243,6 @@ public:
     CHECK(CopyBuffer(_ma4Handle,0,0,1,_ma4Val)==1,"Cannot copy MA4 buffer 0");
     
     // Store the current MA4 value since this is needed to place orders.
-    _prev_ema4 = _ma4Val[0]; 
     updateStats(_ma4Val[0],_maVal[0],_mrate[0].high,_mrate[0].low);
 
     // Define if we are currently in trend bubble or not:
@@ -208,6 +259,9 @@ public:
       logDEBUG("Detected Short bubble.")
       _trend = TREND_SHORT;
     }
+
+    // Mark that a new bar as arrived, thus a new order could be placed if possible:
+    _hasNewBar = true;
   }
 
   void handleTick()
@@ -261,13 +315,18 @@ public:
       if(_tickDeltas.EMA(_tickAlpha)<0.0)
       {
         // place the order depending on the current trend:
-        if(_trend==TREND_LONG) {
-          // We place a sell order in that case:
-          sendDealOrder(ORDER_TYPE_SELL,_lot,tick,tick+_priceSig,_prev_ema4);
-        }
-        else {
-          // We place a buy order in that case:
-          sendDealOrder(ORDER_TYPE_BUY,_lot,latest_price.ask,tick-_priceSig,_prev_ema4);
+        if(true) { //_hasNewBar) {
+          if(_trend==TREND_LONG) {
+            // We place a sell order in that case:
+            sendDealOrder(ORDER_TYPE_SELL,_lot,tick,tick+_slMult*_priceSig,_prev_ema4);
+          }
+          else {
+            // We place a buy order in that case:
+            sendDealOrder(ORDER_TYPE_BUY,_lot,latest_price.ask,tick-_slMult*_priceSig,_prev_ema4);
+          }
+
+          // Now we need to wait for a new bar in case we would like to place another order!
+          _hasNewBar = false;          
         }
 
         // terminate this signal:
@@ -278,6 +337,13 @@ public:
     }
     else {
       // logDEBUG("Checking for signal...")
+      // Check if the market is not current trending too much:
+      if(MathAbs(_ema4Slope - _ema4SlopeMean) > _slopeThreshold*_ema4SlopeSig)
+      {
+        // Current trend is too strong.
+        // We just don't want to take the risk here.
+        return;
+      }
 
       // There is currently no signal for an interesting tick behavior.
       // So just check if the current tick is goind too far.

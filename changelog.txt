@@ -133,3 +133,4 @@
 07/18/15-11:23:16: Built initial version of PeakTrader.
 07/18/15-12:01:21: Minor changes in PeakTrader: using prev ticks vector.
 07/18/15-14:14:04: Tweaked PeakTrader parameters to 3.0 and 1.3.
+07/18/15-15:49:47: Added slope multiplier and stoploss multiplier for PeakTrader.
