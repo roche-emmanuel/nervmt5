@@ -39,7 +39,7 @@ protected:
   double _priceThreshold;
   int _priceStatCount;
   nvVecd _tickDeltas;
-  nvVecd _prevTicks;
+  double _prevTick;
   double _tickAlpha;
   bool _initialized;
   bool _signaled;
@@ -48,7 +48,7 @@ protected:
   string _symbol;
 
 public:
-  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
+  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period, double priceThres, double maThres) : nvPeriodTrader(sec,period)
   {
     // Prepare the moving average indicator:
     _maHandle=iMA(_security.getSymbol(),_period,20,0,MODE_EMA,PRICE_CLOSE);
@@ -71,10 +71,10 @@ public:
     _symbol = _security.getSymbol();
     
     // ma threshold given in number of ma sigmas:
-    _maThreshold = 1.0;
+    _maThreshold = maThres;
 
     // price threshold given in number of price sigmas:
-    _priceThreshold = 1.0;
+    _priceThreshold = priceThres;
 
     // Count used to decide if we are ready to trade.
     _priceStatCount = 0;
@@ -86,11 +86,10 @@ public:
     // resize the statistic vectors:
     int malen = 100;
     int pricelen = 100;
-    int ticklen = 3;
+    int ticklen = 4;
     _maDeltas.resize(malen);
     _priceDeltas.resize(pricelen);
     _tickDeltas.resize(ticklen);
-    _prevTicks.resize(ticklen);
 
     _maMean = 0.0;
     _maSig = 0.0;
@@ -105,7 +104,8 @@ public:
   ~PeakTrader()
   {
     logDEBUG("Deleting indicators...")
-    
+    logDEBUG("Was using: priceThreshold: "<<_priceThreshold<<", maThreshold: "<<_maThreshold)
+
     //--- Release our indicator handles
     IndicatorRelease(_maHandle);
     IndicatorRelease(_ma4Handle);
@@ -200,10 +200,12 @@ public:
 
     if(delta > _maMean+_maThreshold*_maSig)
     {
+      logDEBUG("Detected Long bubble.")
       _trend = TREND_LONG;
     }
     if(delta < _maMean-_maThreshold*_maSig)
     {
+      logDEBUG("Detected Short bubble.")
       _trend = TREND_SHORT;
     }
   }
@@ -224,27 +226,36 @@ public:
       return;
     }
 
+    // logDEBUG("Entering handleTick()")
+
     // MqlTick latest_price;
     MqlTick latest_price;
     CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
 
     double tick = latest_price.bid;
-    _prevTicks.push_back(tick);
+
+    if(_prevTick==0.0)
+    {
+      // initialize the prev tick value:
+      _prevTick = tick;
+    }
+
+    // So first we update the tick deltas with the latest tick info,
+    // This will depend on the current trend considered.
+    double tdelta = _trend==TREND_LONG ? tick - _prevTick : _prevTick - tick;
+    _prevTick = tick;
+    
+    // Add this delta to the vector:
+    _tickDeltas.push_back(tdelta);
+
 
     // So we received a new tick, statistics are ready and we are not in a position yet.
     // So first we check if we are currently in a signaled state:
     if(_signaled) {
+      // logDEBUG("Handling signal")
       // the previous ticks entered the alert zone, so now we just need to decide if we should buy/sell right now 
       // or wait a bit longer for the tick trend to finish.
       // To do that we should use the mean of the latest tick deltas
-
-      // So first we update the tick deltas with the latest tick info,
-      // This will depend on the current trend considered.
-      double prevTick = _prevTicks.back();
-      double tdelta = _trend==TREND_LONG ? tick - prevTick : prevTick - tick;
-
-      // Add this delta to the vector:
-      _tickDeltas.push_back(tdelta);
 
       // Now check the current EMA: it should be positive, otherwise, we place an order!
       if(_tickDeltas.EMA(_tickAlpha)<0.0)
@@ -266,41 +277,17 @@ public:
       // The tick trend is still not finished, so we wait...
     }
     else {
+      // logDEBUG("Checking for signal...")
+
       // There is currently no signal for an interesting tick behavior.
       // So just check if the current tick is goind too far.
       // This again will depend on the current trend.
-      if(_trend==TREND_LONG && tick > _prev_ema4+_priceMean+_priceThreshold*_priceSig)
+      if((_trend==TREND_LONG && tick > _prev_ema4+_priceMean+_priceThreshold*_priceSig && _tickDeltas.EMA(_tickAlpha)>0.0)
+        || (_trend==TREND_SHORT && tick < _prev_ema4-_priceMean-_priceThreshold*_priceSig && _tickDeltas.EMA(_tickAlpha)>0.0))
       {
-        // Check the latest tick trending:
-        for(uint i=1;i<_prevTicks.size();++i)
-        {
-          if(_prevTicks[i]<_prevTicks[i-1])
-          {
-            // trend is not valid.
-            return;
-          }
-        }
-
-        // The tick trend if valid, so we may consider this as a valid signal:
-        // Signal this tick as interesting and reset the tick statistics:
+        // Signal this tick as interesting and keep the current tick statistics:
+        logDEBUG("Detected interesting tick!")
         _signaled = true;
-        _tickDeltas *= 0.0;
-      }
-      if(_trend==TREND_SHORT && tick < _prev_ema4-_priceMean-_priceThreshold*_priceSig)
-      {
-        // Check the latest tick trending:
-        for(uint i=1;i<_prevTicks.size();++i)
-        {
-          if(_prevTicks[i]>_prevTicks[i-1])
-          {
-            // trend is not valid.
-            return;
-          }
-        }
-
-        // Signal this tick as interesting and reset the tick statistics:
-        _signaled = true;
-        _tickDeltas *= 0.0;
       }
     }
   }

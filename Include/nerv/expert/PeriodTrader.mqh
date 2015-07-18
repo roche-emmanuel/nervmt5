@@ -97,7 +97,7 @@ public:
   Method used to handle a tick (after handleBar was called if applicable).
   The default implementation does nothing.
   */
-  void handleTick()
+  virtual void handleTick()
   {
     // No op.
   }

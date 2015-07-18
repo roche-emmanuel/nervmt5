@@ -11,6 +11,9 @@ This implementation will use the Peak trader
 #include <nerv/core.mqh>
 #include <nerv/expert/PeakTrader.mqh>
 
+input double   Price_Threshold=3.0;     // Price sigma multiplier to evaluate the entry threshold
+input double   MA_Threshold=1.3;     // MA sigma multiplier to evaluate the trend bubble entry
+
 nvPeriodTrader* trader;
 
 // Initialization method:
@@ -24,7 +27,7 @@ int OnInit()
 
   logDEBUG("Initializing Nerv EA.")
   nvSecurity sec("EURUSD",5,0.00001);
-  trader = new PeakTrader(sec,Period());
+  trader = new PeakTrader(sec,Period(),Price_Threshold,MA_Threshold);
 
   return 0;
 }

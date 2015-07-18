@@ -132,3 +132,4 @@
 07/16/15-23:18:07: Using delta variance to evaluate bias margins.
 07/18/15-11:23:16: Built initial version of PeakTrader.
 07/18/15-12:01:21: Minor changes in PeakTrader: using prev ticks vector.
+07/18/15-14:14:04: Tweaked PeakTrader parameters to 3.0 and 1.3.
