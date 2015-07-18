@@ -39,7 +39,7 @@ protected:
   double _priceThreshold;
   int _priceStatCount;
   nvVecd _tickDeltas;
-  double _prevTick;
+  nvVecd _prevTicks;
   double _tickAlpha;
   bool _initialized;
   bool _signaled;
@@ -90,6 +90,7 @@ public:
     _maDeltas.resize(malen);
     _priceDeltas.resize(pricelen);
     _tickDeltas.resize(ticklen);
+    _prevTicks.resize(ticklen);
 
     _maMean = 0.0;
     _maSig = 0.0;
@@ -228,6 +229,7 @@ public:
     CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
 
     double tick = latest_price.bid;
+    _prevTicks.push_back(tick);
 
     // So we received a new tick, statistics are ready and we are not in a position yet.
     // So first we check if we are currently in a signaled state:
@@ -238,7 +240,8 @@ public:
 
       // So first we update the tick deltas with the latest tick info,
       // This will depend on the current trend considered.
-      double tdelta = _trend==TREND_LONG ? tick - _prevTick : _prevTick - tick;
+      double prevTick = _prevTicks.back();
+      double tdelta = _trend==TREND_LONG ? tick - prevTick : prevTick - tick;
 
       // Add this delta to the vector:
       _tickDeltas.push_back(tdelta);
@@ -249,11 +252,11 @@ public:
         // place the order depending on the current trend:
         if(_trend==TREND_LONG) {
           // We place a sell order in that case:
-          sendDealOrder(ORDER_TYPE_SELL,_lot,tick,latest_price.ask+_priceSig,_prev_ema4);
+          sendDealOrder(ORDER_TYPE_SELL,_lot,tick,tick+_priceSig,_prev_ema4);
         }
         else {
           // We place a buy order in that case:
-          sendDealOrder(ORDER_TYPE_SELL,_lot,latest_price.ask,tick-_priceSig,_prev_ema4);
+          sendDealOrder(ORDER_TYPE_BUY,_lot,latest_price.ask,tick-_priceSig,_prev_ema4);
         }
 
         // terminate this signal:
@@ -266,12 +269,37 @@ public:
       // There is currently no signal for an interesting tick behavior.
       // So just check if the current tick is goind too far.
       // This again will depend on the current trend.
-      if((_trend==TREND_LONG && tick > _prev_ema4+_priceMean+_priceThreshold*_priceSig)
-        || (_trend==TREND_SHORT && tick < _prev_ema4-_priceMean-_priceThreshold*_priceSig))
+      if(_trend==TREND_LONG && tick > _prev_ema4+_priceMean+_priceThreshold*_priceSig)
       {
+        // Check the latest tick trending:
+        for(uint i=1;i<_prevTicks.size();++i)
+        {
+          if(_prevTicks[i]<_prevTicks[i-1])
+          {
+            // trend is not valid.
+            return;
+          }
+        }
+
+        // The tick trend if valid, so we may consider this as a valid signal:
         // Signal this tick as interesting and reset the tick statistics:
         _signaled = true;
-        _prevTick = tick;
+        _tickDeltas *= 0.0;
+      }
+      if(_trend==TREND_SHORT && tick < _prev_ema4-_priceMean-_priceThreshold*_priceSig)
+      {
+        // Check the latest tick trending:
+        for(uint i=1;i<_prevTicks.size();++i)
+        {
+          if(_prevTicks[i]>_prevTicks[i-1])
+          {
+            // trend is not valid.
+            return;
+          }
+        }
+
+        // Signal this tick as interesting and reset the tick statistics:
+        _signaled = true;
         _tickDeltas *= 0.0;
       }
     }

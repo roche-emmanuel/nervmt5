@@ -131,3 +131,4 @@
 07/16/15-22:57:33: Fixed non reinitialized bias issue.
 07/16/15-23:18:07: Using delta variance to evaluate bias margins.
 07/18/15-11:23:16: Built initial version of PeakTrader.
+07/18/15-12:01:21: Minor changes in PeakTrader: using prev ticks vector.
