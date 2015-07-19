@@ -82,16 +82,34 @@ public:
 
   void handleTick()
   {
-    if(selectPosition())
-    {
-      // If we already have a position
-      // then we don't do anything for the moment:
-      return;
-    }
-
     // Retrieve latest quote:
     MqlTick latest_price;
     CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
+    double bid = latest_price.bid;
+    double ask = latest_price.bid;
+    double point = _security.getPoint();
+
+    if(selectPosition())
+    {
+      // Update the trailing stop:
+      // double sl = PositionGetDouble(POSITION_SL);
+      // bool isBuy = PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
+
+      // // Update the stoploss to get closer to the bid price progressively:
+      // double closesl = bid + (isBuy ? -1.0:1.0)*10*point;
+      // double coeff = 0.05;
+      // double nsl = sl * (1.0 - coeff) + closesl * coeff;
+
+      // nsl = isBuy ? MathMax(nsl,sl) : MathMin(nsl,sl);
+      // if(nsl!=sl)
+      // {
+      //   // logDEBUG("Updated new stoploss: "<<nsl)
+      //   updateSLTP(nsl);
+      // }
+
+      return;
+    }
+
 
     // Retrieve indicator values:
     CHECK(CopyBuffer(_ma377Handle,0,0,1,_ma377Val)==1,"Cannot copy MA377 buffer 0");
@@ -102,15 +120,13 @@ public:
     CHECK(CopyBuffer(_rsiHandle,0,0,1,_rsiVal)==1,"Cannot copy RSI buffer 0");
     CHECK(CopyBuffer(_stochHandle,0,0,1,_stochVal)==1,"Cannot copy Stochastic buffer 0");
 
-    double bid = latest_price.bid;
-    double ask = latest_price.bid;
-    double point = _security.getPoint();
 
     // Check if we meet the sell conditions:
     if(_ma55Val[0] < _ma377Val[0] && bid > _bolMaxVal[0] && _rsiVal[0] > 65.0 && _stochVal[0] > 80.0)
     {
       // Place a sell order with tp of 3 to 5 and sl of 12 pips:
       sendDealOrder(ORDER_TYPE_SELL,_lot,bid,bid+120*point,bid-30*point);
+      // sendDealOrder(ORDER_TYPE_SELL,_lot,bid,bid+120*point,0.0); //bid-30*point);
     }
 
     // Check if we meet the buy conditions:
@@ -118,6 +134,7 @@ public:
     {
       // Place a buy order with tp of 3 to 5 and sl of 12 pips:
       sendDealOrder(ORDER_TYPE_BUY,_lot,ask,bid-120*point,bid+30*point);
+      // sendDealOrder(ORDER_TYPE_BUY,_lot,ask,bid-120*point,0.0); //bid+30*point);
     }
   }
 };
