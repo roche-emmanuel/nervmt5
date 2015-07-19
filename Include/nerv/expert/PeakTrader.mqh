@@ -335,15 +335,16 @@ public:
       
       // Check if we need to secure the current profits:
       // double sl = PositionGetDouble(POSITION_SL);
-      // double point = _security.getPoint();
       // bool isBuy = PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
-
       // // Update the stoploss to get closer to the bid price progressively:
       // double nsl = sl + 0.01 * (tick + (isBuy ? -_priceSig: _priceSig) - sl);
+
+      // Update the trailing stop:
+      // double nsl = tick + (isBuy ? -1.0: 1.0)*_slMult*_priceSig;
       // nsl = isBuy ? MathMax(nsl,sl) : MathMin(nsl,sl);
       // if(nsl!=sl)
       // {
-      //   logDEBUG("Updated new stoploss: "<<nsl)
+      //   // logDEBUG("Updated new stoploss: "<<nsl)
       //   updateSLTP(nsl);
       // }
 
