@@ -142,3 +142,4 @@
 07/19/15-09:43:03: Moved symbol declaration in PeriodTrader. Starting implementation of ScalpelTrader.
 07/19/15-10:31:38: Added first implementation of ScalpelTrader: results are bad.
 07/19/15-10:56:43: Tested trailing stop in scalpel trader without success.
+07/19/15-11:38:24: Tested new drawdown management system on PeakTrader: results are not so clear.

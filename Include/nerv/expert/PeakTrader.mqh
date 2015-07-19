@@ -60,6 +60,7 @@ protected:
 
   double _envelopeThreshold;
   double _prevBalance;
+  double _maxBalance;
   double _accumLost;
   double _riskAversion;
   double _numStreakLost;
@@ -87,7 +88,7 @@ public:
     ArraySetAsSeries(_ma4Val,true);
 
     // Lot size:
-    _lot = 0.1;
+    _lot = 0.2;
     
     // Stoploss multiplier:
     _slMult = slMult;
@@ -97,11 +98,15 @@ public:
     _hasNewBar = false;
 
     _envelopeThreshold = 0.0;
-    _prevBalance = 0.0;
+
     _accumLost = 0.0;
     _riskAversion = 0.0;
     _numStreakLost = 0.0;
     _frozenBars = 0;
+
+    _prevBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+    _maxBalance = _prevBalance;
+    logDEBUG(TimeCurrent()<<": Initial balance: "<<_maxBalance)
 
     // ma threshold given in number of ma sigmas:
     _maThreshold = maThres;
@@ -365,47 +370,49 @@ public:
       return;
     }
 
-    // init the prev balance value:
-    if(_prevBalance == 0.0)
-    {
-      _prevBalance = balance;
-    }
-
     // each time we receive a new balance value, it means a deal is terminated.
     // And we should react depending on the current tendency to avoid large drawdowns:
-    if(_prevBalance != balance)
-    {
-      logDEBUG(TimeCurrent() << ": Detected new balance value: "<<balance)
-      double delta = 100.0 * (balance - _prevBalance)/balance; // in percentage.
+    // if(_prevBalance != balance)
+    // {
+    //   logDEBUG(TimeCurrent() << ": Detected new balance value: "<<balance)
+      
+    //   double delta = 100.0 * (balance - _prevBalance)/balance; // in percentage.
 
-      // We then keep the notion of accumulated lost:
-      if(delta<0.0) {
-        _numStreakLost+=1.0;
+    //   // We then keep the notion of accumulated lost:
+    //   if(delta<0.0) {
+    //     _numStreakLost+=1.0;
 
-        _accumLost += -delta;
-        // And we build an exponential risk aversion on top of that:
-        // _riskAversion = (MathExp((_numStreakLost>4.0?_numStreakLost/4.0:0.0)+_accumLost/1.0)-1.0); 
-        _riskAversion = 0.0; //(MathExp(_accumLost/1.0)-1.0); 
-        logDEBUG("Accumulated lost in percent: "<< _accumLost)
+    //     _accumLost += -delta;
+    //     // And we build an exponential risk aversion on top of that:
+    //     // _riskAversion = (MathExp((_numStreakLost>4.0?_numStreakLost/4.0:0.0)+_accumLost/1.0)-1.0); 
+    //     _riskAversion = 0.0; //(MathExp(_accumLost/1.0)-1.0); 
+    //     logDEBUG("Accumulated lost in percent: "<< _accumLost)
 
-        // Implement the notion of freeze:
-        if(_numStreakLost>=6)
-        {
-          logDEBUG("Drawdown detected applying freeze.")
-          _numStreakLost = 0.0;
-          _frozenBars = 10;
-        }
-      }
-      else
-      {
-        // reset the accumulated lost:
-        _accumLost = 0.0;
-        _numStreakLost = 0.0;
-        _riskAversion = 0.0;
-      }
+    //     // Implement the notion of freeze:
+    //     if(_numStreakLost>=6)
+    //     {
+    //       logDEBUG("Drawdown detected applying freeze.")
+    //       _numStreakLost = 0.0;
+    //       _frozenBars = 10;
+    //     }
+    //   }
+    //   else
+    //   {
+    //     // reset the accumulated lost:
+    //     _accumLost = 0.0;
+    //     _numStreakLost = 0.0;
+    //     _riskAversion = 0.0;
+    //   }
 
-      _prevBalance = balance;
-    }
+    //   _prevBalance = balance;
+    // }
+
+    // New risk management system: this time we compare the current balance with the maxbalance achieved so far:
+    _maxBalance = MathMax(balance,_maxBalance);
+
+    // Max acceptable drawdown should be something like 1% of balance:
+    _riskAversion = MathExp(MathMax(0.0,_maxBalance-balance)/(_maxBalance*0.02))-1.0;
+    // _riskAversion = MathExp(MathMax(0.0,_maxBalance-balance)/10.0)-1.0;
 
     if(_frozenBars>0)
     {
@@ -469,7 +476,7 @@ public:
   double getLotSize(double mult)
   {
     double num =  mult*_lot / (1.0 + _riskAversion);
-    num = MathFloor(num*100)/100;
+    num = MathMax(MathFloor(num*100)/100,0.01);
     logDEBUG("Using lot size: "<<num);
     return num;
   }
