@@ -12,6 +12,7 @@ class nvPeriodTrader : public nvTrader
 {
 protected:
   ENUM_TIMEFRAMES _period;
+  string _symbol;
 
 public:
   /*
@@ -20,6 +21,7 @@ public:
   nvPeriodTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvTrader(sec)
   {
     _period = period;
+    _symbol = sec.getSymbol();
   }
 
   /*

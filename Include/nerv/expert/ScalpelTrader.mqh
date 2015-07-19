@@ -3,13 +3,8 @@
 #include <nerv/math.mqh>
 
 /*
-This trader will try to detect when we are for instance in a bullish trend and the current
-price is way either than the MA4 value whereas the MA4 value is itself way higher that the MA20 value
-(and same kind of situation for a bearish trend)
-
-In that case, the trader will emit a signal that will be used on a tick by tick basic:
-When in a bullish trend, we then place a sell order when we detect that the up tendency is stopped
-Take profit is placed on the level of the MA4, and stoploss is "twice higher"
+This trader will implement the strategy described on the page:
+http://www.youtrading.com/fr/introduction-au-forex/728-scalping
 */
 
 enum ENUM_PT_TREND
@@ -19,7 +14,7 @@ enum ENUM_PT_TREND
   TREND_SHORT
 };
 
-class PeakTrader : public nvPeriodTrader
+class ScalpelTrader : public nvPeriodTrader
 {
 protected:
   int _maHandle;  // handle for our Moving Average indicator
@@ -29,48 +24,9 @@ protected:
   MqlRates _mrate[];
 
   double _lot;
-  nvVecd _maDeltas;
-  double _maMean;
-  double _maSig;
-  double _maThreshold;
-  nvVecd _priceDeltas;
-  double _priceMean;
-  double _priceSig;
-  double _priceThreshold;
-  int _priceStatCount;
-  nvVecd _tickDeltas;
-  double _prevTick;
-  double _tickAlpha;
-  bool _initialized;
-  bool _signaled;
-  bool _hasNewBar;
-  double _prev_ema4;
-  double _prev_ema20;
-  double _slMult;
-  double _riskDecayMult;
-
-  double _ema4Slope;
-  double _slopeAlpha;
-  nvVecd _prevSlopes;
-  nvVecd _smoothedSlope;
-
-  double _slopeThreshold;
-  double _ema4SlopeMean;
-  double _ema4SlopeSig;
-
-  double _envelopeThreshold;
-  double _prevBalance;
-  double _accumLost;
-  double _riskAversion;
-  double _numStreakLost;
-  int _frozenBars;
-
-  nvVecd _equityDeltas;
-  int _equityStatCount;
-  ENUM_PT_TREND _trend;
 
 public:
-  PeakTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period, double priceThres, double maThres, double slMult, double slopeThreshold, double riskDecay) : nvPeriodTrader(sec,period)
+  ScalpelTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
   {
     // Prepare the moving average indicator:
     _maHandle=iMA(_security.getSymbol(),_period,20,0,MODE_EMA,PRICE_CLOSE);
@@ -88,6 +44,9 @@ public:
 
     // Lot size:
     _lot = 0.1;
+
+    // cache the symbol:
+    _symbol = _security.getSymbol();
     
     // Stoploss multiplier:
     _slMult = slMult;
@@ -155,7 +114,7 @@ public:
     _slopeAlpha = 1.0/(double)smoothlen;
   }
 
-  ~PeakTrader()
+  ~ScalpelTrader()
   {
     logDEBUG("Deleting indicators...")
     logDEBUG("Was using: priceThreshold: "<<_priceThreshold<<", maThreshold: "<<_maThreshold<<", slMult: "<<_slMult)
