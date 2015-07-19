@@ -140,3 +140,4 @@
 07/19/15-00:15:46: Saved current reference for best results on 01/2011.
 07/19/15-09:36:58: Tested implementation of trailing stop on PeakTrader.
 07/19/15-09:43:03: Moved symbol declaration in PeriodTrader. Starting implementation of ScalpelTrader.
+07/19/15-10:31:38: Added first implementation of ScalpelTrader: results are bad.
