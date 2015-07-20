@@ -83,7 +83,7 @@ public:
   
   Method used to send a trade order
   */
-  void sendDealOrder(int otype, double lot, double price = 0.0, double sl = 0.0, double tp = 0.0)
+  bool sendDealOrder(int otype, double lot, double price = 0.0, double sl = 0.0, double tp = 0.0)
   {
     MqlTradeRequest mrequest;
 
@@ -129,10 +129,16 @@ public:
     if(!OrderSend(mrequest,mresult))
     {
       logERROR("Invalid result of OrderSend(): retcode:"<<mresult.retcode);
-      return;
+      return false;
     }
 
-    CHECK(mresult.retcode==TRADE_RETCODE_DONE,"Invalid send order result retcode: "<<mresult.retcode);
+    if(mresult.retcode!=TRADE_RETCODE_DONE)
+    {
+      logERROR("Invalid send order result retcode: "<<mresult.retcode);
+      return false;
+    }
+
+    return true;
   }
   
   /*
