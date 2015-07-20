@@ -128,7 +128,7 @@ public:
     // CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
     if(!OrderSend(mrequest,mresult))
     {
-      logERROR("Invalid result of OrderSend()");
+      logERROR("Invalid result of OrderSend(): retcode:"<<mresult.retcode);
       return;
     }
 

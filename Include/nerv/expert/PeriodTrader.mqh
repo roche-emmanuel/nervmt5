@@ -13,7 +13,10 @@ class nvPeriodTrader : public nvTrader
 protected:
   ENUM_TIMEFRAMES _period;
   string _symbol;
-
+  double _maxBalance;
+  double _riskAversion;
+  double _riskFactor;
+  double _lot;
 public:
   /*
     Class constructor.
@@ -22,6 +25,10 @@ public:
   {
     _period = period;
     _symbol = sec.getSymbol();
+    _maxBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+    _riskAversion = 0.0;
+    _riskFactor = 0.01;
+    _lot = 0.1;
   }
 
   /*
@@ -104,4 +111,66 @@ public:
     // No op.
   }
   
+  /*
+  Function: getRiskAversion
+  
+  Retrieve the risk aversion value.
+  */
+ double getRiskAversion()
+  {
+    return _riskAversion;
+  }
+  
+  /*
+  Function: setRiskFactor
+  
+  Set the risk factor as a percentage of the balance
+  that can be lost in drawdown.
+  */
+  void setRiskFactor(double factor)
+  {
+    _riskFactor = factor * 0.01;
+  }
+  
+  /*
+  Function: updateRiskAversion
+  
+  method used to update the risk aversion value depending on the current balance
+  and the max balance acheived so far:
+  */
+  void updateRiskAversion()
+  {
+    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+    _maxBalance = MathMax(balance,_maxBalance);
+
+    _riskAversion = MathExp(MathMax(0.0,_maxBalance-balance)/(_maxBalance*_riskFactor))-1.0;
+
+    logDEBUG("Risk aversion: "<<_riskAversion)
+  }
+  
+  /*
+  Function: setBaseLotSize
+  
+  Set the base lot size to use during the following trades.
+  */
+  void setBaseLotSize(double num)
+  {
+    _lot = num;
+  }
+  
+  /*
+  Function: getLotSize
+
+  Retrieve the lot size to used for the next trade taking 
+  the risk aversion into account:
+  */
+  double getLotSize(double mult)
+  {
+    double num =  mult*_lot / (1.0 + _riskAversion);
+    num = MathMax(MathFloor(num*100)/100,0.01);
+    logDEBUG("Using lot size: "<<num);
+    return num;
+  }
+
 };

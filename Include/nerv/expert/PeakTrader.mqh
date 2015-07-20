@@ -473,14 +473,6 @@ public:
 
   }
 
-  double getLotSize(double mult)
-  {
-    double num =  mult*_lot / (1.0 + _riskAversion);
-    num = MathMax(MathFloor(num*100)/100,0.01);
-    logDEBUG("Using lot size: "<<num);
-    return num;
-  }
-
   void sendDeviationOrder(double ask)
   {
     double lotsize = getLotSize(1.0);
