@@ -317,8 +317,8 @@ public:
       bool isBuy = PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
 
       double trail = _currentRiskPoints*_trailingRatio;
-      double breakThrsPoints = MathAbs(_currentTarget-_currentEntry)*_breakevenRatio;
 
+      // double breakThrsPoints = MathAbs(_currentTarget-_currentEntry)*_breakevenRatio;
       // // check break even conditions:
       // if(isBuy && bid > (_currentEntry + breakThrsPoints) && breakThrsPoints > _breakOffset)
       // {
@@ -344,21 +344,19 @@ public:
 
       // If there is an open position then we also know how many points
       // we initially put at risk, and how many we targeted:
-      if(isBuy && bid > (_currentTarget+trail))
+      if(isBuy)
       {
-        // We may consider increasing the stop loss here:
-        double nsl = bid-trail;
+        // We check in which "risk zone" we are a try to lock additional profits if applicable:
+        double nsl = _currentEntry + (MathFloor((bid - _currentEntry)/_currentRiskPoints) - 1.0)*_currentRiskPoints;
         if (nsl > sl)
         {
           // logDEBUG("Applying LONG trail: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
           updateSLTP(nsl);
         }
       }
-
-      if(!isBuy && bid < (_currentTarget-trail))
+      else
       {
-        // We may consider increasing the stop loss here:
-        double nsl = bid+trail;
+        double nsl = _currentEntry - (MathFloor((_currentEntry - ask)/_currentRiskPoints) - 1.0)*_currentRiskPoints;
         if (nsl < sl)
         {
           // logDEBUG("Applying SHORT trail: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
