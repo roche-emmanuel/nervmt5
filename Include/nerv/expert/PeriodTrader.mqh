@@ -13,6 +13,7 @@ class nvPeriodTrader : public nvTrader
 protected:
   ENUM_TIMEFRAMES _period;
   string _symbol;
+  double _point;
   double _maxBalance;
   double _riskAversion;
   double _riskFactor;
@@ -25,6 +26,7 @@ public:
   {
     _period = period;
     _symbol = sec.getSymbol();
+    _point = sec.getPoint();
     _maxBalance = AccountInfoDouble(ACCOUNT_BALANCE);
     _riskAversion = 0.0;
     _riskFactor = 0.01;
@@ -168,7 +170,7 @@ public:
   double getLotSize(double mult)
   {
     double num =  mult*_lot / (1.0 + _riskAversion);
-    num = MathMax(MathFloor(num*100)/100,0.01);
+    num = MathMax(MathCeil(num*100)/100,0.01);
     logDEBUG("Using lot size: "<<num);
     return num;
   }

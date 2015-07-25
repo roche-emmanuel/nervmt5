@@ -145,3 +145,4 @@
 07/19/15-11:38:24: Tested new drawdown management system on PeakTrader: results are not so clear.
 07/20/15-10:52:16: Adding first implementation of ZonRecoveryTrader.
 07/20/15-23:07:19: Implementing improvements on Zone Recovery trader.
+07/25/15-10:03:55: Added initial implementation of Heiken Ashi trader.

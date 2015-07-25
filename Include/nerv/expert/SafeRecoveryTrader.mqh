@@ -3,10 +3,10 @@
 #include <nerv/math.mqh>
 
 /*
-This trader will implement a simple version of the zone recovery trader.
+This trader will implement a safe version of the zone recovery trader.
 */
 
-class ZoneRecoveryTrader : public nvPeriodTrader
+class SafeRecoveryTrader : public nvPeriodTrader
 {
 protected:
   int _ma6Handle;
@@ -21,7 +21,10 @@ protected:
   double _minGain;
   int _bounceCount;
   double _totalLost;
-  nvVecd _maxBounceStats;
+  double _alpha;
+  double _prevBalance;
+  int _maxBounceCount;
+
   double _contractSize;
   ENUM_ORDER_TYPE _prevOrder;
   double _riskLevel;
@@ -32,25 +35,31 @@ protected:
   MqlRates _rates[];
   double _ma6Val[];
   datetime _lastMinute;
-  double _bandSize;
 
 public:
-  ZoneRecoveryTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
+  SafeRecoveryTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
   {
     // Init MA20 Handler:
     _ma6Handle=iMA(_security.getSymbol(),PERIOD_H1,6,0,MODE_EMA,PRICE_CLOSE);
 
-    _lotBaseSize = 0.02;
+    _lotBaseSize = 0.01;
+
+    // Init the previous balance:
+    _prevBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+    // alpha coefficient for the lot size computation:
+    _alpha = 0.1;
 
     // Target profit in number of points:
-    _zoneWidth = 0.0;
+    _zoneWidth = 30.0*_point;
+    _targetProfit = 150.0*_point;
     _zoneLow = 0.0;
     _zoneHigh = 0.0;
     _prevEntry = 0.0;
-    _minGain = 10.0*sec.getPoint();
+    _minGain = 0.0;
     _bounceCount = 0;
     _totalLost = 0.0;
-    _maxBounceStats.resize(500);
+    _maxBounceCount = 0;
 
     // Contract size for this account:
     _contractSize = 100000.0;
@@ -59,14 +68,14 @@ public:
     _riskLevel = 100.0;
 
     // Compute the statistics on the previous hours:
-    _prevPrices.resize(96);
+    _prevPrices.resize(20);
     _priceMean = 0.0;
     _priceDev = 0.0;
     _lastMinute = 0;
     _initialized = false;
   }
 
-  ~ZoneRecoveryTrader()
+  ~SafeRecoveryTrader()
   {
     IndicatorRelease(_ma6Handle);
   }
@@ -107,8 +116,8 @@ public:
 
   double normalizeLotSize(double lot)
   {
-    // return MathMax(MathCeil(lot*100)/100,0.01);
-    return MathMax(MathFloor(lot*100)/100,0.01);
+    return MathMax(MathCeil(lot*100)/100,0.01);
+    // return MathMax(MathFloor(lot*100)/100,0.01);
   }
 
   void toggleHedge(ENUM_ORDER_TYPE order, double entry)
@@ -150,16 +159,26 @@ public:
     // And we want this gain to cover the lost plus say 10 points:
     if(_totalLost==0.0)
     {
+      logDEBUG("Starting trade with "<<_lotBaseSize<<" lots.")
       _prevSize = _lotBaseSize;
     }
     else 
     {
-      _prevSize = (_totalLost+_minGain)/MathAbs(tp - _prevEntry);  
+      double gain = _minGain*MathExp(-3.0*(double)_bounceCount/(double)(_maxBounceCount+1));
+      // logDEBUG("MinGain: "<<gain)
+      _prevSize = (_totalLost+gain)/MathAbs(tp - _prevEntry);  
     }
+    
     
     // round this to a value lot number:
     _prevSize = normalizeLotSize(_prevSize);
     _bounceCount++;
+
+    if(_bounceCount>_maxBounceCount)
+    {
+      _maxBounceCount = _bounceCount;
+      logDEBUG(TimeCurrent()<<": New max Bounce count: "<<_maxBounceCount)
+    }
 
     logDEBUG(TimeCurrent() <<": Bounce " << _bounceCount <<": Entering "<< (order==ORDER_TYPE_BUY ? "LONG" : "SHORT") <<" position at "<< _prevEntry << " with " << _prevSize << " lots. (totalLost: "<<NormalizeDouble(_totalLost,6)<<")")
     if(!sendDealOrder(_prevOrder,_prevSize,_prevEntry,0.0,tp))
@@ -199,17 +218,32 @@ public:
       if(isBuy && bid > _zoneHigh + _targetProfit)
       {
         // Update the stoploss of the position:
-        double nsl = bid-_priceDev/2.0;
-        if( nsl > PositionGetDouble(POSITION_SL))
+        double nsl = _zoneHigh + _targetProfit;
+
+        if(bid>nsl+_priceDev/2.0)
+        {
+          nsl = bid - _priceDev/2.0;
+        }
+
+        double sl = PositionGetDouble(POSITION_SL);
+        if( nsl > sl )
         {
           updateSLTP(nsl);
         } 
       }
+
       if(!isBuy && bid < _zoneLow - _targetProfit)
       {
         // Update the stoploss of the position:
-        double nsl = bid+_priceDev/2.0;
-        if( nsl < PositionGetDouble(POSITION_SL))
+        double nsl = _zoneLow - _targetProfit;
+
+        if(bid < nsl-_priceDev/2.0)
+        {
+          nsl = bid + _priceDev/2.0;
+        };
+
+        double sl = PositionGetDouble(POSITION_SL);
+        if( nsl < sl )
         {
           updateSLTP(nsl);
         }
@@ -225,20 +259,19 @@ public:
       }
     }
     else {
-      // // Record the max bound value:
-      // _maxBounceStats.push_back(_bounceCount);
-
-      // if(_maxBounceStats.front()>0)
-      // {
-      //   logDEBUG("Max bounce mean: "<< _maxBounceStats.mean()<<", max bounce dev: "<<_maxBounceStats.deviation());
-      // }
-
       // Now check if we should enter a trade...
       // to make a decision, we look at the current price value, relative to the
       // mean price value:
       double price = latest_price.bid;
       double spread = latest_price.ask - latest_price.bid;
       // logDEBUG("Current spread: "<<spread)
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance!=_prevBalance)
+      {
+        logDEBUG(TimeCurrent()<<": New balance: "<<balance);
+        _prevBalance = balance;
+      }
 
       if(_priceDev < 4*spread)
       {
@@ -254,11 +287,10 @@ public:
       // Record the zone borders:
       _bounceCount = 0;
       _totalLost = 0.0;
-      _bandSize = _priceDev;
-      _zoneWidth = _bandSize/7.0;
-      _targetProfit = _bandSize*3.0/7.0;
+      _zoneWidth = 2.0*spread;
+      _targetProfit = _zoneWidth/_alpha;
 
-      // Ensre that the resulting zone recovery is not two small:
+      // Ensure that the resulting zone recovery is not two small:
       // double point = _security.getPoint();
       // if(_zoneWidth < 50*point)
       // {
@@ -269,7 +301,8 @@ public:
       if((delta - _priceMean) > _priceDev)
       {
         // We should enter a buy position.
-        logDEBUG(TimeCurrent()<<": Enter LONG position with band size: "<<_bandSize)
+        logDEBUG(TimeCurrent()<<": Enter LONG position with takeProfitTarget: "<<_targetProfit)
+        
         _zoneHigh = latest_price.ask;
         _zoneLow = _zoneHigh - _zoneWidth;
         toggleHedge(ORDER_TYPE_BUY,latest_price.ask);
@@ -277,7 +310,7 @@ public:
 
       if((delta - _priceMean) < -_priceDev)
       {
-        logDEBUG(TimeCurrent()<<": Enter SHORT position with band size: "<<_bandSize)
+        logDEBUG(TimeCurrent()<<": Enter SHORT position with takeProfitTarget: "<<_targetProfit)
         _zoneLow = latest_price.bid;
         _zoneHigh = _zoneLow + _zoneWidth;
         toggleHedge(ORDER_TYPE_SELL,latest_price.bid);
