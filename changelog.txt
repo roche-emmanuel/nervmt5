@@ -149,3 +149,4 @@
 07/25/15-14:08:12: Added our own HeikenAshi indicator. updated in Heiken Ashi trader.
 07/25/15-16:21:40: HeikenAshi trader sustainable during 1 year.
 07/25/15-16:34:40: Implemented risk zone bounded incremental trailing stop.
+07/25/15-16:44:04: Implemented fixed risk size of 50 points.
