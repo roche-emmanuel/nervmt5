@@ -178,21 +178,33 @@ public:
       return;
     }
 
+    double psl = PositionGetDouble(POSITION_SL);
+    double ptp = PositionGetDouble(POSITION_TP);
+
     if(sl==0.0)
     {
-      sl = PositionGetDouble(POSITION_SL);
+      sl = psl;
     }
 
     if(tp==0.0)
     {
-      tp = PositionGetDouble(POSITION_TP);
+      tp = ptp;
+    }
+
+    sl = NormalizeDouble(sl,_security.getDigits());
+    tp = NormalizeDouble(tp,_security.getDigits());
+    
+    if(sl==psl && tp==ptp)
+    {
+      // nothing to update:
+      return;
     }
 
     MqlTradeRequest mrequest;
     ZeroMemory(mrequest);
     mrequest.action = TRADE_ACTION_SLTP;                                  // modify stop loss                
-    mrequest.sl = NormalizeDouble(sl,_security.getDigits());         // Stop Loss
-    mrequest.tp = NormalizeDouble(tp,_security.getDigits());         // take profit
+    mrequest.sl = sl;         // Stop Loss
+    mrequest.tp = tp;         // take profit
     mrequest.symbol = _security.getSymbol();                         // currency pair
     mrequest.magic = _ea_magic;
     
@@ -203,7 +215,7 @@ public:
     // CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
     if(!OrderSend(mrequest,mresult))
     {
-      logERROR("Invalid result of OrderSend()");
+      logERROR("Invalid result of OrderSend(): retcode:"<<mresult.retcode);
       return;
     }
     

@@ -6,6 +6,9 @@
 //+------------------------------------------------------------------+
 #property copyright "2009, MetaQuotes Software Corp."
 #property link      "http://www.mql5.com"
+
+#include <nerv/core.mqh>
+
 //--- indicator settings
 #property indicator_chart_window
 #property indicator_buffers 5
@@ -79,8 +82,14 @@ int OnCalculate(const int rates_total,
       ExtCBuffer[i]=haClose;
 
       //--- set candle color
-      if(haOpen<haClose) ExtColorBuffer[i]=0.0; // set color DodgerBlue
-      else               ExtColorBuffer[i]=10.0; // set color Red
+      if(haOpen<haClose) {
+        // logDEBUG(time[i]<<": nervHA dir: "<<0.0)
+        ExtColorBuffer[i]=0.0; // set color DodgerBlue
+      }
+      else {
+        // logDEBUG(time[i]<<": nervHA dir: "<<1.0)
+        ExtColorBuffer[i]=1.0; // set color Red
+      }               
      }
 //--- done
    return(rates_total);

@@ -19,6 +19,8 @@ protected:
   double _ha1Dir[];
   double _ha1High[];
   double _ha1Low[];
+  double _ha1Open[];
+  double _ha1Close[];
 
   double _trailingRatio;
   double _currentTarget;
@@ -26,15 +28,20 @@ protected:
   double _slOffset;
   double _riskLevel;
   double _targetRatio;
+  double _contractSize;
+  double _spreadRatio;
+  double _breakevenRatio;
+  double _currentEntry;
+  double _breakOffset;
 
 public:
   HeikenAshiTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
   {
     // Init the indicators:
     _ma20Handle=iMA(_symbol,_period,20,0,MODE_EMA,PRICE_CLOSE);
-    _ha4Handle=iCustom(_symbol,PERIOD_H4,"Examples\\Heiken_Ashi");
+    _ha4Handle=iCustom(_symbol,PERIOD_H4,"nerv\\HeikenAshi");
     CHECK(_ha4Handle>0,"Invalid Heiken Ashi 4H handle")
-    _ha1Handle=iCustom(_symbol,_period,"Examples\\Heiken_Ashi");
+    _ha1Handle=iCustom(_symbol,PERIOD_H1,"nerv\\HeikenAshi");
     CHECK(_ha1Handle>0,"Invalid Heiken Ashi 1H handle")
 
     // Trailing stop ratio:
@@ -43,9 +50,18 @@ public:
     _currentTarget = 0.0;
     _currentRiskPoints = 0.0;
     _slOffset = 10*_point;
+    _spreadRatio = 2.0;
+    _breakevenRatio = 0.5;
+    _currentEntry = 0.0;
+    _breakOffset = 5*_point;
+
+    // Contract size for this account:
+    _contractSize = 100000.0;
 
     // factor of risk on the current balance:
     _riskLevel = 0.01; // 0.01 is 1% of value at risk.
+
+    ArrayResize(_ha1Dir,4);
   }
 
   ~HeikenAshiTrader()
@@ -80,7 +96,7 @@ public:
       return true;
     }
 
-    if(_ha1Dir[1]<0.5 && _ha1Dir[2]>0.5 && _ha1Dir[3]<0.5)
+    if(_ha1Dir[0]<0.5 && _ha1Dir[1]<0.5 && _ha1Dir[2]>0.5 && _ha1Dir[3]<0.5)
     {
       // This is a value signal, thus we should buy:
       sl = _ha1Low[2];
@@ -115,7 +131,7 @@ public:
       return true;
     }
 
-    if(_ha1Dir[1]>0.5 && _ha1Dir[2]<0.5 && _ha1Dir[3]>0.5)
+    if(_ha1Dir[0]>0.5 && _ha1Dir[1]>0.5 && _ha1Dir[2]<0.5 && _ha1Dir[3]>0.5)
     {
       // This is a value signal, thus we should buy:
       sl = _ha1High[2];
@@ -127,20 +143,36 @@ public:
   
   void handleBar()
   {
+    // CHECK(CopyBuffer(_ha1Handle,0,1,1,_ha1Open)==1,"Cannot copy HA1 buffer 4");
+    // CHECK(CopyBuffer(_ha1Handle,3,1,1,_ha1Close)==1,"Cannot copy HA1 buffer 4");
+    // double dir = _ha1Open[0]<_ha1Close[0] ? 0.0 : 1.0;
+
+    // logDEBUG(TimeCurrent()<<": HA1 dir: "<<dir)
+
     // When handling a new bar, we first check if we are already in a position or not:
     if(!selectPosition())
     {
       // If we are not in a position we check what the indicators tell us:
       // Retrieve the indicator values:
-      CHECK(CopyBuffer(_ha4Handle,4,0,1,_ha4Dir)==1,"Cannot copy HA4 buffer 4");
-      CHECK(CopyBuffer(_ma20Handle,0,0,4,_ma20Val)==4,"Cannot copy MA20 buffer 0");
-      CHECK(CopyBuffer(_ha1Handle,1,0,4,_ha1High)==4,"Cannot copy HA1 buffer 1");
-      CHECK(CopyBuffer(_ha1Handle,2,0,4,_ha1High)==4,"Cannot copy HA1 buffer 2");
-      CHECK(CopyBuffer(_ha1Handle,4,0,4,_ha1Dir)==4,"Cannot copy HA1 buffer 4");
+      CHECK(CopyBuffer(_ha4Handle,4,1,1,_ha4Dir)==1,"Cannot copy HA4 buffer 4");
+      CHECK(CopyBuffer(_ma20Handle,0,1,4,_ma20Val)==4,"Cannot copy MA20 buffer 0");
+      CHECK(CopyBuffer(_ha1Handle,0,1,4,_ha1Open)==4,"Cannot copy HA1 buffer 0");
+      CHECK(CopyBuffer(_ha1Handle,1,1,4,_ha1High)==4,"Cannot copy HA1 buffer 1");
+      CHECK(CopyBuffer(_ha1Handle,2,1,4,_ha1Low)==4,"Cannot copy HA1 buffer 2");  
+      CHECK(CopyBuffer(_ha1Handle,3,1,4,_ha1Close)==4,"Cannot copy HA1 buffer 3");  
+      
+      for(int i=0;i<4;++i)
+      {
+        _ha1Dir[i] = _ha1Open[i]<_ha1Close[i] ? 0.0 : 1.0;
+      }
+
+      // CHECK(CopyBuffer(_ha1Handle,4,0,4,_ha1Dir)==4,"Cannot copy HA1 buffer 4");
 
       double sl = 0.0;
       MqlTick latest_price;
       CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
+
+      // logDEBUG("Checking entry conditions...")
 
       // Check if we have buy conditions:
       if(checkBuyConditions(sl))
@@ -148,13 +180,31 @@ public:
         // Should place a buy order:
         // Check how many points we have at risk:
         sl -= _slOffset;
-        _currentRiskPoints = latest_price.ask - sl;
+
+        // We also need to take the spread into account:
+        // Otherwise we wont be able to place an order:
+        double spread = latest_price.ask - latest_price.bid;
+        _currentRiskPoints = MathMax(latest_price.ask - sl, _spreadRatio*spread);
+        sl = latest_price.ask - _currentRiskPoints; // Update sl if needed.
+
         double lot = computeLotSize(_currentRiskPoints);
         _currentTarget = latest_price.ask + _currentRiskPoints*_targetRatio;
 
+        _currentEntry = latest_price.ask;
+
         if(lot>0)
         {
-          logDEBUG(TimeCurrent() <<": Entering LONG position at "<< latest_price.ask << " with " << lot << " lots.")
+          logDEBUG(TimeCurrent() <<": Entering LONG position at "<< latest_price.ask << " with " << lot << " lots, sl="<<sl<<", riskPoints="<<_currentRiskPoints)
+          // logDEBUG("ha4Dir[0]="<<_ha4Dir[0]
+          //   <<", ha1Dir[0]="<<_ha1Dir[0]
+          //   <<", ha1Dir[1]="<<_ha1Dir[1]
+          //   <<", ha1Dir[2]="<<_ha1Dir[2]
+          //   <<", ha1Dir[3]="<<_ha1Dir[3]
+          //   <<", maVal[0]="<<_ma20Val[0]
+          //   <<", maVal[1]="<<_ma20Val[1]
+          //   <<", maVal[2]="<<_ma20Val[2]
+          //   <<", maVal[3]="<<_ma20Val[3]
+          //   )
           if(!sendDealOrder(ORDER_TYPE_BUY,lot,latest_price.ask,sl,0.0))
           {
             logERROR("Cannot place BUY order!");
@@ -169,13 +219,30 @@ public:
         // Should place a buy order:
         // Check how many points we have at risk:
         sl += _slOffset;
-        _currentRiskPoints = sl - latest_price.bid ;
+        
+        // We also need to take the spread into account:
+        // Otherwise we wont be able to place an order:
+        double spread = latest_price.ask - latest_price.bid;
+        _currentRiskPoints = MathMax(sl-latest_price.bid, _spreadRatio*spread);
+        sl = latest_price.bid + _currentRiskPoints; // Update sl if needed.
+
         double lot = computeLotSize(_currentRiskPoints);
         _currentTarget = latest_price.bid - _currentRiskPoints*_targetRatio;
+        _currentEntry = latest_price.bid;
 
         if(lot>0)
         {
-          logDEBUG(TimeCurrent() <<": Entering SHORT position at "<< latest_price.bid << " with " << lot << " lots.")
+          logDEBUG(TimeCurrent() <<": Entering SHORT position at "<< latest_price.bid << " with " << lot << " lots, sl="<<sl<<", riskPoints="<<_currentRiskPoints)
+          // logDEBUG("ha4Dir[0]="<<_ha4Dir[0]
+          //   <<", ha1Dir[0]="<<_ha1Dir[0]
+          //   <<", ha1Dir[1]="<<_ha1Dir[1]
+          //   <<", ha1Dir[2]="<<_ha1Dir[2]
+          //   <<", ha1Dir[3]="<<_ha1Dir[3]
+          //   <<", maVal[0]="<<_ma20Val[0]
+          //   <<", maVal[1]="<<_ma20Val[1]
+          //   <<", maVal[2]="<<_ma20Val[2]
+          //   <<", maVal[3]="<<_ma20Val[3]
+          //   )          
           if(!sendDealOrder(ORDER_TYPE_SELL,lot,latest_price.bid,sl,0.0))
           {
             logERROR("Cannot place SELL order!");
@@ -193,7 +260,7 @@ public:
     double VaR = balance*_riskLevel;
     // We how that what we risk loosing in money is: p = l * riskPoints
     // Thus we should have:
-    double lsize = VaR/riskPoints;
+    double lsize = VaR/(riskPoints*_contractSize);
     return normalizeLotSize(lsize); // This may return 0 if the risk tolerance is too low. 
   }
 
@@ -210,31 +277,58 @@ public:
 
       MqlTick latest_price;
       CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
-      double currentPrice = latest_price.bid;
+      double bid = latest_price.bid;
+      double ask = latest_price.ask;
 
       double sl = PositionGetDouble(POSITION_SL);
       bool isBuy = PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
 
       double trail = _currentRiskPoints*_trailingRatio;
+      double breakThrsPoints = MathAbs(_currentTarget-_currentEntry)*_breakevenRatio;
 
-      // If there is an open position then we also know how many points
-      // we initially put at risk, and how many we targeted:
-      if(isBuy && currentPrice > (_currentTarget+trail))
+      // check break even conditions:
+      if(isBuy && bid > (_currentEntry + breakThrsPoints) && breakThrsPoints > _breakOffset)
       {
-        // We may consider increasing the stop loss here:
-        double nsl = currentPrice-trail;
-        if (nsl > sl)
+        // Ensure that we break even:
+        double nsl = _currentEntry + _breakOffset;
+        if(nsl > sl)
         {
+          // logDEBUG("Applying LONG breakeven: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
           updateSLTP(nsl);
         }
       }
 
-      if(!isBuy && currentPrice < (_currentTarget-trail))
+      if(!isBuy && ask < (_currentEntry - breakThrsPoints) && breakThrsPoints > _breakOffset)
+      {
+        // Ensure that we break even:
+        double nsl = _currentEntry - _breakOffset;
+        if(nsl < sl)
+        {
+          // logDEBUG("Applying SHORT breakeven: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
+          updateSLTP(nsl);
+        }
+      }
+
+      // If there is an open position then we also know how many points
+      // we initially put at risk, and how many we targeted:
+      if(isBuy && bid > (_currentTarget+trail))
       {
         // We may consider increasing the stop loss here:
-        double nsl = currentPrice+trail;
+        double nsl = bid-trail;
+        if (nsl > sl)
+        {
+          // logDEBUG("Applying LONG trail: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
+          updateSLTP(nsl);
+        }
+      }
+
+      if(!isBuy && bid < (_currentTarget-trail))
+      {
+        // We may consider increasing the stop loss here:
+        double nsl = bid+trail;
         if (nsl < sl)
         {
+          // logDEBUG("Applying SHORT trail: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
           updateSLTP(nsl);
         }
       }

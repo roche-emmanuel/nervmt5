@@ -146,3 +146,4 @@
 07/20/15-10:52:16: Adding first implementation of ZonRecoveryTrader.
 07/20/15-23:07:19: Implementing improvements on Zone Recovery trader.
 07/25/15-10:03:55: Added initial implementation of Heiken Ashi trader.
+07/25/15-14:08:12: Added our own HeikenAshi indicator. updated in Heiken Ashi trader.
