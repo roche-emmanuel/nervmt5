@@ -33,6 +33,7 @@ protected:
   double _breakevenRatio;
   double _currentEntry;
   double _breakOffset;
+  int _numDir;
 
 public:
   HeikenAshiTrader(const nvSecurity& sec, ENUM_TIMEFRAMES period) : nvPeriodTrader(sec,period)
@@ -40,8 +41,9 @@ public:
     // Init the indicators:
     _ma20Handle=iMA(_symbol,_period,20,0,MODE_EMA,PRICE_CLOSE);
     _ha4Handle=iCustom(_symbol,PERIOD_H4,"nerv\\HeikenAshi");
+    // _ha4Handle=iCustom(_symbol,PERIOD_D1,"nerv\\HeikenAshi");
     CHECK(_ha4Handle>0,"Invalid Heiken Ashi 4H handle")
-    _ha1Handle=iCustom(_symbol,PERIOD_H1,"nerv\\HeikenAshi");
+    _ha1Handle=iCustom(_symbol,_period,"nerv\\HeikenAshi");
     CHECK(_ha1Handle>0,"Invalid Heiken Ashi 1H handle")
 
     // Trailing stop ratio:
@@ -51,7 +53,7 @@ public:
     _currentRiskPoints = 0.0;
     _slOffset = 10*_point;
     _spreadRatio = 2.0;
-    _breakevenRatio = 0.5;
+    _breakevenRatio = 0.3;
     _currentEntry = 0.0;
     _breakOffset = 5*_point;
 
@@ -61,7 +63,8 @@ public:
     // factor of risk on the current balance:
     _riskLevel = 0.01; // 0.01 is 1% of value at risk.
 
-    ArrayResize(_ha1Dir,4);
+    _numDir = 4;
+    ArrayResize(_ha1Dir,_numDir);
   }
 
   ~HeikenAshiTrader()
@@ -89,17 +92,32 @@ public:
 
     // check that the first dir is correct, and then we have 2 down HA candles and then
     // again an up candle:
-    if(_ha1Dir[0]<0.5 && _ha1Dir[1]>0.5 && _ha1Dir[2]>0.5 && _ha1Dir[3]<0.5)
+    bool sig = true;
+    int inv1 = _numDir-2;
+    int inv2 = _numDir-3;
+
+    for(int i=0;i<_numDir;++i)
+    {
+      sig = sig & ( (i==inv1 || i==inv2) ? _ha1Dir[i]>0.5 : _ha1Dir[i]<0.5);
+    }
+
+    if(sig)
     {
       // This is a value signal, thus we should buy:
-      sl = MathMin(_ha1Low[1],_ha1Low[2]);
+      sl = MathMin(_ha1Low[inv1],_ha1Low[inv2]);
       return true;
     }
 
-    if(_ha1Dir[0]<0.5 && _ha1Dir[1]<0.5 && _ha1Dir[2]>0.5 && _ha1Dir[3]<0.5)
+    sig = true;
+    for(int i=0;i<_numDir;++i)
+    {
+      sig = sig & ( i==inv1 ? _ha1Dir[i]>0.5 : _ha1Dir[i]<0.5);
+    }
+
+    if(sig)
     {
       // This is a value signal, thus we should buy:
-      sl = _ha1Low[2];
+      sl = _ha1Low[inv1];
       return true;
     }
 
@@ -122,19 +140,34 @@ public:
       return false;
     }
 
+    bool sig = true;
+    int inv1 = _numDir-2;
+    int inv2 = _numDir-3;
+
+    for(int i=0;i<_numDir;++i)
+    {
+      sig = sig & ( (i==inv1 || i==inv2) ? _ha1Dir[i]<0.5 : _ha1Dir[i]>0.5);
+    }
+
     // check that the first dir is correct, and then we have 2 down HA candles and then
     // again an up candle:
-    if(_ha1Dir[0]>0.5 && _ha1Dir[1]<0.5 && _ha1Dir[2]<0.5 && _ha1Dir[3]>0.5)
+    if(sig)
     {
       // This is a value signal, thus we should buy:
-      sl = MathMin(_ha1High[1],_ha1High[2]);
+      sl = MathMax(_ha1High[inv1],_ha1High[inv2]);
       return true;
     }
 
-    if(_ha1Dir[0]>0.5 && _ha1Dir[1]>0.5 && _ha1Dir[2]<0.5 && _ha1Dir[3]>0.5)
+    sig = true;
+    for(int i=0;i<_numDir;++i)
+    {
+      sig = sig & ( i==inv1 ? _ha1Dir[i]<0.5 : _ha1Dir[i]>0.5);
+    }
+
+    if(sig)
     {
       // This is a value signal, thus we should buy:
-      sl = _ha1High[2];
+      sl = _ha1High[inv1];
       return true;
     }
 
@@ -155,13 +188,13 @@ public:
       // If we are not in a position we check what the indicators tell us:
       // Retrieve the indicator values:
       CHECK(CopyBuffer(_ha4Handle,4,1,1,_ha4Dir)==1,"Cannot copy HA4 buffer 4");
-      CHECK(CopyBuffer(_ma20Handle,0,1,4,_ma20Val)==4,"Cannot copy MA20 buffer 0");
-      CHECK(CopyBuffer(_ha1Handle,0,1,4,_ha1Open)==4,"Cannot copy HA1 buffer 0");
-      CHECK(CopyBuffer(_ha1Handle,1,1,4,_ha1High)==4,"Cannot copy HA1 buffer 1");
-      CHECK(CopyBuffer(_ha1Handle,2,1,4,_ha1Low)==4,"Cannot copy HA1 buffer 2");  
-      CHECK(CopyBuffer(_ha1Handle,3,1,4,_ha1Close)==4,"Cannot copy HA1 buffer 3");  
+      CHECK(CopyBuffer(_ma20Handle,0,1,_numDir,_ma20Val)==_numDir,"Cannot copy MA20 buffer 0");
+      CHECK(CopyBuffer(_ha1Handle,0,1,_numDir,_ha1Open)==_numDir,"Cannot copy HA1 buffer 0");
+      CHECK(CopyBuffer(_ha1Handle,1,1,_numDir,_ha1High)==_numDir,"Cannot copy HA1 buffer 1");
+      CHECK(CopyBuffer(_ha1Handle,2,1,_numDir,_ha1Low)==_numDir,"Cannot copy HA1 buffer 2");  
+      CHECK(CopyBuffer(_ha1Handle,3,1,_numDir,_ha1Close)==_numDir,"Cannot copy HA1 buffer 3");  
       
-      for(int i=0;i<4;++i)
+      for(int i=0;i<_numDir;++i)
       {
         _ha1Dir[i] = _ha1Open[i]<_ha1Close[i] ? 0.0 : 1.0;
       }
@@ -286,28 +319,28 @@ public:
       double trail = _currentRiskPoints*_trailingRatio;
       double breakThrsPoints = MathAbs(_currentTarget-_currentEntry)*_breakevenRatio;
 
-      // check break even conditions:
-      if(isBuy && bid > (_currentEntry + breakThrsPoints) && breakThrsPoints > _breakOffset)
-      {
-        // Ensure that we break even:
-        double nsl = _currentEntry + _breakOffset;
-        if(nsl > sl)
-        {
-          // logDEBUG("Applying LONG breakeven: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
-          updateSLTP(nsl);
-        }
-      }
+      // // check break even conditions:
+      // if(isBuy && bid > (_currentEntry + breakThrsPoints) && breakThrsPoints > _breakOffset)
+      // {
+      //   // Ensure that we break even:
+      //   double nsl = _currentEntry + _breakOffset;
+      //   if(nsl > sl)
+      //   {
+      //     // logDEBUG("Applying LONG breakeven: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
+      //     updateSLTP(nsl);
+      //   }
+      // }
 
-      if(!isBuy && ask < (_currentEntry - breakThrsPoints) && breakThrsPoints > _breakOffset)
-      {
-        // Ensure that we break even:
-        double nsl = _currentEntry - _breakOffset;
-        if(nsl < sl)
-        {
-          // logDEBUG("Applying SHORT breakeven: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
-          updateSLTP(nsl);
-        }
-      }
+      // if(!isBuy && ask < (_currentEntry - breakThrsPoints) && breakThrsPoints > _breakOffset)
+      // {
+      //   // Ensure that we break even:
+      //   double nsl = _currentEntry - _breakOffset;
+      //   if(nsl < sl)
+      //   {
+      //     // logDEBUG("Applying SHORT breakeven: nsl="<<nsl<<", bid="<<bid<<", ask="<<ask)
+      //     updateSLTP(nsl);
+      //   }
+      // }
 
       // If there is an open position then we also know how many points
       // we initially put at risk, and how many we targeted:
