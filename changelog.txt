@@ -150,3 +150,4 @@
 07/25/15-16:21:40: HeikenAshi trader sustainable during 1 year.
 07/25/15-16:34:40: Implemented risk zone bounded incremental trailing stop.
 07/25/15-16:44:04: Implemented fixed risk size of 50 points.
+07/25/15-16:46:12: Implemented fixed risk size of 250 points.

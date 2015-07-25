@@ -218,7 +218,7 @@ public:
         // Otherwise we wont be able to place an order:
         double spread = latest_price.ask - latest_price.bid;
         // _currentRiskPoints = MathMax(latest_price.ask - sl, _spreadRatio*spread);
-        _currentRiskPoints = MathMax(50*_point, _spreadRatio*spread);
+        _currentRiskPoints = MathMax(250*_point, _spreadRatio*spread);
         sl = latest_price.ask - _currentRiskPoints; // Update sl if needed.
 
         double lot = computeLotSize(_currentRiskPoints);
@@ -258,7 +258,7 @@ public:
         // Otherwise we wont be able to place an order:
         double spread = latest_price.ask - latest_price.bid;
         // _currentRiskPoints = MathMax(sl-latest_price.bid, _spreadRatio*spread);
-        _currentRiskPoints = MathMax(50*_point, _spreadRatio*spread);
+        _currentRiskPoints = MathMax(250*_point, _spreadRatio*spread);
         sl = latest_price.bid + _currentRiskPoints; // Update sl if needed.
 
         double lot = computeLotSize(_currentRiskPoints);
