@@ -50,6 +50,12 @@ public:
       return false;
     }
 
+    // We should also ensure that the kijun itself is above the cloud:
+    if(_kijunVal[0] <= _senkouAVal[0] || _kijunVal[0] <= _senkouBVal[0])
+    {
+      return false;
+    }
+
     // We must also ensure that tenkan sen line is above the kijun sen line at that time:
     if(_tenkanVal[0] <= _kijunVal[0])
     {
@@ -64,6 +70,12 @@ public:
   {
     // We can only buy when the close price is above the cloud:
     if(_rates[0].close > _senkouAVal[0] || _rates[0].close > _senkouBVal[0])
+    {
+      return false;
+    }
+
+    // We should also ensure that the kijun itself is under the cloud:
+    if(_kijunVal[0] >= _senkouAVal[0] || _kijunVal[0] >= _senkouBVal[0])
     {
       return false;
     }

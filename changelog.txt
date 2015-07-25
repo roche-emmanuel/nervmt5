@@ -152,3 +152,4 @@
 07/25/15-16:44:04: Implemented fixed risk size of 50 points.
 07/25/15-16:46:12: Implemented fixed risk size of 250 points.
 07/25/15-21:15:19: First wrking implementation of the ichimoku trader.
+07/25/15-21:28:50: Ensuring the kijun sen line is above / under the kumo to enter a position.
