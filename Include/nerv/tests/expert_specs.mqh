@@ -9,14 +9,14 @@ BEGIN_TEST_PACKAGE(expert_specs)
 BEGIN_TEST_SUITE("Security class")
 
 BEGIN_TEST_CASE("should be able to create Security instance")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 	REQUIRE_EQUAL(sec.getSymbol(),"EURUSD");
 	REQUIRE_EQUAL(sec.getDigits(),5);
 	REQUIRE_EQUAL(sec.getPoint(),1e-5);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should support security copy construction")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 
 	nvSecurity sec2(sec);
 	REQUIRE_EQUAL(sec2.getSymbol(),"EURUSD");
@@ -24,19 +24,24 @@ BEGIN_TEST_CASE("should support security copy construction")
 	REQUIRE_EQUAL(sec2.getPoint(),1e-5);
 END_TEST_CASE()
 
+// THe following test will produce an error and thus is disabled.
+XBEGIN_TEST_CASE("should trigger an error for invalid security name")
+	nvSecurity sec("XYZUSD");
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 
-BEGIN_TEST_SUITE("Trader class")
+XBEGIN_TEST_SUITE("Trader class")
 
 BEGIN_TEST_CASE("should be able to create a trader instance")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 
 	nvTrader trader(sec);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should be able to check current position")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 
 	nvTrader trader(sec);
 	trader.closePosition();
@@ -45,7 +50,7 @@ BEGIN_TEST_CASE("should be able to check current position")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should be able to open/close a position")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 
 	nvTrader trader(sec);
 	trader.closePosition();
@@ -59,7 +64,7 @@ BEGIN_TEST_CASE("should be able to open/close a position")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should be able to update a stoploss on a position")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 
 	nvTrader trader(sec);
 	trader.closePosition();
@@ -94,7 +99,7 @@ END_TEST_SUITE()
 BEGIN_TEST_SUITE("PeriodTrader class")
 
 BEGIN_TEST_CASE("Default implementation should throw on handleBar()")
-	nvSecurity sec("EURUSD",5,1e-5);
+	nvSecurity sec("EURUSD");
 
 	class MyData {
 	public:

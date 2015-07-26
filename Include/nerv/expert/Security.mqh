@@ -14,11 +14,30 @@ public:
   
   Class cosntructor
   */
-  nvSecurity(string symbol, int digits, double point)
+  nvSecurity(string symbol)
   {
-    _symbol = symbol;
-    _digits = digits;
-    _point = point;
+
+    // First we should ensure that this symbol exits on the market, 
+    // we throw an error otherwise:
+    CHECK(symbol!="","Empty symbol string.")
+
+    _symbol = "";
+    int num = SymbolsTotal(false);
+    string sname = "";
+    for(int i=0;i<num;++i)
+    {
+      sname = SymbolName(i,false);
+      if(symbol==sname)
+      {
+        // We found a valid symbol, so we can keep a reference on it:
+        _symbol = symbol;
+        SymbolSelect(_symbol,true);
+        _point = SymbolInfoDouble(_symbol,SYMBOL_POINT);
+        _digits = (int)SymbolInfoInteger(_symbol,SYMBOL_DIGITS);
+      }
+    }
+
+    CHECK(_symbol!="","Could not find symbol "<<symbol)
   }
 
   /*

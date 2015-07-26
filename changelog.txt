@@ -154,3 +154,4 @@
 07/25/15-21:15:19: First wrking implementation of the ichimoku trader.
 07/25/15-21:28:50: Ensuring the kijun sen line is above / under the kumo to enter a position.
 07/26/15-21:49:17: Added todo list for ichimoku trader.
+07/26/15-22:11:56: Updated implementation of Security class.
