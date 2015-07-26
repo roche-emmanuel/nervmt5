@@ -3,6 +3,15 @@
 #include <nerv/math.mqh>
 
 /*
+TODO:
+- Do not enter trader when kijun sen is flat
+- consider **crossing** tenkan and kijun instead of relative position
+- add chinkou confirmation.
+- add Heiken ashi support
+- move to higher timeframe
+*/
+
+/*
 This trader will implement a trader based on Ichimoku indicators
 */
 
