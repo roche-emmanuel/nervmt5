@@ -11,6 +11,7 @@ This implementation will use the Heiken Ashi trader
 input int   gTimerPeriod=1;  // Timer period in seconds
 
 #include <nerv/core.mqh>
+#include <nerv/expert/PortfolioManager.mqh>
 
 // Initialization method:
 int OnInit()
@@ -38,6 +39,7 @@ void OnDeinit(const int reason)
 void OnTimer()
 {
   // logDEBUG(TimeCurrent()<<": OnTimer() called.")
-  logDEBUG(TimeLocal()<<": OnTimer() called.")
+  // logDEBUG(TimeLocal()<<": OnTimer() called.")
+  nvPortfolioManager::instance().update();
 }
 
