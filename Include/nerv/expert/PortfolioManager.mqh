@@ -153,6 +153,34 @@ public:
   }
   
   /*
+  Function: getNumCurrencyTraders
+  
+  Retrieve the number of currency traders available in this portfolio.
+  */
+  int getNumCurrencyTraders()
+  {
+    return ArraySize( _traders );
+  }
+  
+  /*
+  Function: removeAllCurrencyTraders
+  
+  Remove all the currency traders available in this portfolio.
+  */
+  void removeAllCurrencyTraders()
+  {
+    int num = ArraySize( _traders );
+    for(int i=0;i<num;++i)
+    {
+      // We should remove that trader from the list:
+      RELEASE_PTR(_traders[i]);
+    }
+
+    // Reset the content of the traders array:
+    ArrayResize( _traders, 0 );    
+  }
+  
+  /*
   Function: update
   
   Method called to update the complete state of this Portfolio Manager

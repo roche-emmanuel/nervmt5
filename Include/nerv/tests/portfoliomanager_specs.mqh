@@ -50,6 +50,46 @@ BEGIN_TEST_CASE("should be able to get a currency trader by symbol")
 	
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should support handling multiple currencies")
+	nvPortfolioManager* man = nvPortfolioManager::instance();
+	man.addCurrencyTrader("EURUSD");
+	man.addCurrencyTrader("GBPUSD");
+	man.addCurrencyTrader("EURGBP");
+	man.addCurrencyTrader("EURJPY");
+
+	REQUIRE_EQUAL(man.getNumCurrencyTraders(),4)
+
+	REQUIRE(man.removeCurrencyTrader("EURUSD"))
+	REQUIRE_NULL(man.getCurrencyTrader("EURUSD"))
+
+	// Should have 3 left:
+	REQUIRE_EQUAL(man.getNumCurrencyTraders(),3)
+	REQUIRE_NOT_NULL(man.getCurrencyTrader("GBPUSD"))
+	REQUIRE_NOT_NULL(man.getCurrencyTrader("EURGBP"))
+	REQUIRE_NOT_NULL(man.getCurrencyTrader("EURJPY"))
+
+	REQUIRE(man.removeCurrencyTrader("EURGBP"))
+	REQUIRE_NULL(man.getCurrencyTrader("EURGBP"))
+
+	// Should have 2 left:
+	REQUIRE_EQUAL(man.getNumCurrencyTraders(),2)
+	REQUIRE_NOT_NULL(man.getCurrencyTrader("GBPUSD"))
+	REQUIRE_NOT_NULL(man.getCurrencyTrader("EURJPY"))
+
+	REQUIRE(man.removeCurrencyTrader("EURJPY"))
+	REQUIRE_NULL(man.getCurrencyTrader("EURJPY"))
+
+	// Should have 1 left:
+	REQUIRE_EQUAL(man.getNumCurrencyTraders(),1)
+	REQUIRE_NOT_NULL(man.getCurrencyTrader("GBPUSD"))
+
+	// reset the portfolio:
+	man.addCurrencyTrader("EURUSD");	
+	man.removeAllCurrencyTraders();
+
+	REQUIRE_EQUAL(man.getNumCurrencyTraders(),0)
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

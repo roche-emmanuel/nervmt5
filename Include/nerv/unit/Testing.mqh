@@ -94,6 +94,8 @@
 #define REQUIRE_CLOSE_MSG(v1,v2,eps,msg) if(v1!=v2 && MathAbs(v1-v2)/(0.5*(MathAbs(v1)+MathAbs(v2))) > eps) SHOWFATAL(msg)
 #define REQUIRE_VALID_PTR_MSG(ptr,msg) if(!IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
 #define REQUIRE_NULL_PTR_MSG(ptr,msg) if(IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
+#define REQUIRE_NULL_MSG(ptr,msg) if(ptr!=NULL) SHOWFATAL(msg)
+#define REQUIRE_NOT_NULL_MSG(ptr,msg) if(ptr==NULL) SHOWFATAL(msg)
 
 #define REQUIRE_ERROR_MSG(msg) REQUIRE_EQUAL_MSG(LAST_ERROR_MSG,msg,"Invalid expected error message.")
 #define REQUIRE_ERROR_COUNT(count) REQUIRE_EQUAL_MSG(ERROR_COUNT,count,"Invalid expected error count.")
@@ -111,6 +113,9 @@
 #define REQUIRE_CLOSE(v1,v2,eps) REQUIRE_CLOSE_MSG(v1,v2,eps,"Close value assertion failed: relative_change("<<(v1)<<","<<(v2)<<") > "<<eps)
 #define REQUIRE_VALID_PTR(ptr) REQUIRE_VALID_PTR_MSG(ptr,"Invalid pointer detected.")
 #define REQUIRE_NULL_PTR(ptr) REQUIRE_NULL_PTR_MSG(ptr,"Non NULL pointer detected.")
+#define REQUIRE_NULL(ptr) REQUIRE_NULL_MSG(ptr,"Non NULL pointer detected.")
+#define REQUIRE_NOT_NULL(ptr) REQUIRE_NOT_NULL_MSG(ptr,"Non NULL pointer detected.")
+
 #define BEGIN_REQUIRE_ERROR(msg) { string __err_msg = msg; CATCH_ERRORS(true);
 #define END_REQUIRE_ERROR(arg) int __err_count = nvExceptionCatcher::instance().getErrorCount(); \
   string __last_err_msg = nvExceptionCatcher::instance().getLastError(); \
