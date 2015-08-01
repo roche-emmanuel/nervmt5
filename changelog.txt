@@ -161,3 +161,4 @@
 08/01/15-16:41:54: Extended test system with support for error testing. Performed initial tests on PortfolioManager.
 08/01/15-22:27:35: Added final report for unit tests.
 08/01/15-23:09:56: Added test for handling of multiple CurrencyTraders.
+08/01/15-23:40:32: Added test on nvRemoveItem.
