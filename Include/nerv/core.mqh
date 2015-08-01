@@ -15,22 +15,29 @@
 #ifdef __WITH_POINTER_EXCEPTION__
 #define THROW(msg) { nvStringStream __ss__; \
     __ss__ << msg; \
-    Print(__ss__.str()); \
-    CObject* obj = NULL; \
-    obj.Next(); \
+    nvExceptionCatcher* ec = nvExceptionCatcher::instance(); \
+    ec.setLastError(__ss__.str()); \
+    if (!ec.isEnabled()) { \
+      CObject* obj = NULL; \
+      obj.Next(); \            
+    } \
   }
 #else
 #define THROW(msg) { nvStringStream __ss__; \
     __ss__ << msg; \
-    Print(__ss__.str()); \
-    ExpertRemove(); \
-    return; \
+    nvExceptionCatcher* ec = nvExceptionCatcher::instance(); \
+    ec.setLastError(__ss__.str()); \
+    if (!ec.isEnabled()) { \      
+      ExpertRemove(); \
+      return; \
+    } \
   }
 #endif
 
-#define CHECK(val,msg) if(!(val)) THROW(__FILE__ << "(" << __LINE__ <<") :" << msg)
+#define CHECK(val,msg) if(!(val)) { THROW(__FILE__ << "(" << __LINE__ <<"): " << msg); return; }
+#define CHECK_RET(val,ret,msg) if(!(val)) { THROW(__FILE__ << "(" << __LINE__ <<"): " << msg); return ret;}
 #define CHECK_PTR(ptr, msg) CHECK(IS_VALID_POINTER(ptr),msg)
-#define NO_IMPL(arg) THROW("This method is not implemented.");
+#define NO_IMPL(arg) THROW(__FILE__ << "(" << __LINE__ <<"): This method is not implemented.");
 
 #include <Object.mqh>
 #include <Arrays/List.mqh>
@@ -39,6 +46,7 @@
 #include <nerv/core/StringStream.mqh>
 #include <nerv/core/Log.mqh>
 #include <nerv/core/ObjectMap.mqh>
+#include <nerv/core/ExceptionCatcher.mqh>
 
 #import "shell32.dll"
 int ShellExecuteW(int hwnd,string Operation,string File,string Parameters,string Directory,int ShowCmd);
@@ -48,7 +56,7 @@ string nvReadFile(string filename, int flags = FILE_ANSI)
 {
   int handle = FileOpen(filename, FILE_READ | flags);
 
-  CHECK(handle != INVALID_HANDLE, "Could not open file " << filename << " for reading.");
+  CHECK_RET(handle != INVALID_HANDLE,"","Could not open file " << filename << " for reading.");
 
   string content = "";
 

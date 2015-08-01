@@ -103,7 +103,12 @@ public:
 
   void addSink(nvLogSink* sink)
   {
-    CHECK(sink!=NULL,"Invalid logSink argument.");
+    if(sink==NULL)
+    {
+      Print("ERROR: Invalid logSink argument.");
+      return;
+    }
+
     _sinks.Add(sink);
   }
 

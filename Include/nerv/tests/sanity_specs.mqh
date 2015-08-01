@@ -71,6 +71,34 @@ BEGIN_TEST_PACKAGE(sanity_specs)
 
 BEGIN_TEST_SUITE("Sanity checks")
 
+BEGIN_TEST_CASE("Should support throwing an error")
+  nvExceptionCatcher* ec_ = nvExceptionCatcher::instance();
+  ec_.setEnabled(true);
+  THROW("This is an error.")
+  ASSERT_EQUAL(ec_.getErrorCount(),1)
+  ASSERT_EQUAL(ec_.getLastError(),"This is an error.")
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should support encapsulating an error")
+  
+  BEGIN_REQUIRE_ERROR("This is an error.")
+  THROW("This is an error.")
+  END_REQUIRE_ERROR()
+
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should support retrieving error count")
+  
+  CATCH_ERRORS(true)
+  THROW("This is an error 1.")
+  THROW("This is an error 2.")
+  CATCH_ERRORS(false)
+  ASSERT_EQUAL(ERROR_COUNT,2)
+  ASSERT_EQUAL(LAST_ERROR_MSG,"This is an error 2.")
+
+END_TEST_CASE()
+
+
 BEGIN_TEST_CASE("should failed on 1==0")
   ASSERT_EQUAL(1,1);
 END_TEST_CASE()

@@ -59,14 +59,14 @@ public:
   {
     if (_currentResult == NULL)
     {
-      Print("ERROR: Invalid current result.");
+      logERROR("Invalid current result.");
     }
 
     if(severity==SEV_INFO) {
-      Print(time,": ",content);
+      logINFO(time<<": "<<content);
     }
     else {
-      Print(time,": ",filename,"(",lineNum,"): ",content);
+      logERROR(time<<": "<<filename<<"("<<lineNum<<"): "<<content);
     }
     
     _currentResult.addMessage(time,severity,content,filename,lineNum);

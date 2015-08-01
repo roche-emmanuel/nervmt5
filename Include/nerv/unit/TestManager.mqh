@@ -18,11 +18,6 @@ protected:
   {
     _targetLocation = "TestResults";
     
-    nvLogManager* lm = nvLogManager::instance();
-    string fname = "test_results.log";
-    nvFileLogger* logger = new nvFileLogger(fname);
-    lm.addSink(logger);
-
     logDEBUG("Creating TestManager.");
   };
 
@@ -42,6 +37,11 @@ public:
   void setTargetLocation(string loc)
   {
     _targetLocation = loc;
+
+    nvLogManager* lm = nvLogManager::instance();
+    string fname = _targetLocation + ".log";
+    nvFileLogger* logger = new nvFileLogger(fname);
+    lm.addSink(logger);
   }
 
   void run()
@@ -52,6 +52,7 @@ public:
 
     // At that point we can generate the human friendly result page from the Session result:
     displayResults(GetPointer(sessionResult));
+    logDEBUG(TimeLocal()<<": all tests completed.")
   }
 
   void displayResults(nvTestSessionResult* results)

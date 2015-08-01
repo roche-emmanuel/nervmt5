@@ -61,6 +61,26 @@ public:
   }
 
   /*
+  Function: isSymbolValid
+  
+  Method used to check if a given symbol is valid.
+  This will be used when a request to create a new CurrencyTrader is made.
+  */
+  bool isSymbolValid(string symbol)
+  {
+    int num = SymbolsTotal(false);
+    for(int i=0;i<num;++i)
+    {
+      if(symbol==SymbolName(i,false))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+  
+  /*
   Function: getCurrencyTrader
   
   Iterate on the currency trader list to retrieve
@@ -72,7 +92,7 @@ public:
     int num = ArraySize( _traders );
     for(int i=0;i<num;++i)
     {
-      if(_traders[i].getSymbol() == Symbol())
+      if(_traders[i].getSymbol() == symbol)
       {
         return _traders[i];
       }
@@ -80,7 +100,7 @@ public:
 
     return NULL;
   }
-  
+
   /*
   Function: addCurrencyTrader
   
@@ -97,6 +117,9 @@ public:
       return NULL;
     }
 
+    // Check if the given symbol is valid:
+    CHECK_RET(isSymbolValid(symbol),NULL,"Invalid symbol.")
+    
     // Create a new trader:
     nvCurrencyTrader* trader = new nvCurrencyTrader(symbol);
     int num = ArraySize( _traders );
@@ -117,7 +140,7 @@ public:
     int i;
     for(i=0;i<num;++i)
     {
-      if(_traders[i].getSymbol() == Symbol())
+      if(_traders[i].getSymbol() == symbol)
       {
         // We should remove that trader from the list:
         RELEASE_PTR(_traders[i]);

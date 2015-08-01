@@ -96,7 +96,8 @@ public:
   void run(nvTestSessionResult* result, int& numPassed, int& numFailed)
   {
     // Print("Entering Test Suite ", _name);
-    logDEBUG("Entering Test suite "<<_name)
+    logDEBUG("==== Test suite '"<<_name<<"' ====")
+    logDEBUG("")
     numPassed = 0;
     numFailed = 0;
 
@@ -138,7 +139,8 @@ public:
 
     int total = numPassed+numFailed;
 
-    logDEBUG("Leaving Test suite "<<_name<<": Success ratio: "<<numPassed<<"/"<<total)
+    logDEBUG("Leaving Test suite '"<<_name<<"': Success ratio: "<<numPassed<<"/"<<total)
+    logDEBUG("")
     // Print("Leaving Test Suite ", _name, ": Success ratio: ",numPassed,"/",total);
   }
 };

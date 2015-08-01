@@ -73,6 +73,11 @@
     return TEST_FAILED; \
   }
 
+#define CATCH_ERRORS(enabled) nvExceptionCatcher::instance().setEnabled(enabled);
+
+#define LAST_ERROR_MSG nvExceptionCatcher::instance().getLastError()
+#define ERROR_COUNT nvExceptionCatcher::instance().getErrorCount()
+
 #define MESSAGE(msg) SHOWINFO(msg)
 #define DISPLAY(val) MESSAGE(TOSTR(val) << " = " << val)
 
@@ -90,6 +95,9 @@
 #define REQUIRE_VALID_PTR_MSG(ptr,msg) if(!IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
 #define REQUIRE_NULL_PTR_MSG(ptr,msg) if(IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
 
+#define REQUIRE_ERROR_MSG(msg) REQUIRE_EQUAL_MSG(LAST_ERROR_MSG,msg,"Invalid expected error message.")
+#define REQUIRE_ERROR_COUNT(count) REQUIRE_EQUAL_MSG(ERROR_COUNT,count,"Invalid expected error count.")
+
 #define ASSUME(val) ASSUME_MSG(val,"Assumption "<< TOSTR(val) << " is invalid.")
 #define ASSERT(val) ASSERT_MSG(val,"Assertion "<< TOSTR(val) << " failed.")
 #define REQUIRE(val) REQUIRE_MSG(val,"Assertion "<< TOSTR(val) << " failed.")
@@ -103,3 +111,9 @@
 #define REQUIRE_CLOSE(v1,v2,eps) REQUIRE_CLOSE_MSG(v1,v2,eps,"Close value assertion failed: relative_change("<<(v1)<<","<<(v2)<<") > "<<eps)
 #define REQUIRE_VALID_PTR(ptr) REQUIRE_VALID_PTR_MSG(ptr,"Invalid pointer detected.")
 #define REQUIRE_NULL_PTR(ptr) REQUIRE_NULL_PTR_MSG(ptr,"Non NULL pointer detected.")
+#define BEGIN_REQUIRE_ERROR(msg) { string __err_msg = msg; CATCH_ERRORS(true);
+#define END_REQUIRE_ERROR(arg) int __err_count = nvExceptionCatcher::instance().getErrorCount(); \
+  string __last_err_msg = nvExceptionCatcher::instance().getLastError(); \
+  CATCH_ERRORS(false); \
+  REQUIRE_EQUAL_MSG(__err_count,1,"Invalid error count: "<< __err_count <<"!=1"); \
+  if(__err_msg!="") { REQUIRE_EQUAL_MSG(__last_err_msg,__err_msg,"Invalid error message: '"<<__last_err_msg<<"' != '"<<__err_msg<<"'"); } }

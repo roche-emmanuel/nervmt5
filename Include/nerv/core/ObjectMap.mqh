@@ -85,7 +85,7 @@ public:
 
         // Now need to resize the array:
         _len--;
-        CHECK(ArrayResize(_nodes, _len) == _len, "Invalid result for resize.");
+        CHECK_RET(ArrayResize(_nodes, _len) == _len,false, "Invalid result for resize.");
         return true;
       }
     }
@@ -134,13 +134,13 @@ public:
 
   string getKey(int index) const
   {
-    CHECK(index >= 0 && index < _len, "Out of range index " << index);
+    CHECK_RET(index >= 0 && index < _len,"", "Out of range index " << index);
     return _nodes[index].key;
   }
 
   nvObject *getValue(int index) const
   {
-    CHECK(index >= 0 && index < _len, "Out of range index " << index);
+    CHECK_RET(index >= 0 && index < _len,NULL, "Out of range index " << index);
     return _nodes[index].value;
   }
 
