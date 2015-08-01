@@ -12,6 +12,7 @@ input int   gTimerPeriod=1;  // Timer period in seconds
 
 #include <nerv/core.mqh>
 #include <nerv/expert/PortfolioManager.mqh>
+#include <nerv/expert/CurrencyTrader.mqh>
 
 // Initialization method:
 int OnInit()

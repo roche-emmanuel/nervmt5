@@ -1,5 +1,6 @@
 
 #include "TestResult.mqh"
+#include <nerv/core.mqh>
 
 enum nvTestStatusCode
 {
@@ -27,6 +28,7 @@ public:
 
   nvTestResult *run(nvTestSuite *suite)
   {
+    logDEBUG("Entering test case '"<<_name<<"'")
     nvTestResult *result = new nvTestResult(_name, suite);
 
     // Assign current result:
@@ -41,6 +43,7 @@ public:
 
     result.setStatus(status);
     result.setDuration(((double)(end - start)) / 1000.0);
+    logDEBUG("Leaving test case '"<<_name<<"'")
     return result;
   }
 

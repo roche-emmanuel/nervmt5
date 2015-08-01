@@ -1,11 +1,10 @@
 
 #include "TestSuite.mqh"
+#include <nerv/core.mqh>
 
 #import "shell32.dll"
 int ShellExecuteW(int hwnd,string Operation,string File,string Parameters,string Directory,int ShowCmd);
 #import
-
-
 
 // The Test manager root class, which is also a test suite itself.
 class nvTestManager : public nvTestSuite
@@ -18,12 +17,18 @@ protected:
   nvTestManager() : nvTestSuite("Test session")
   {
     _targetLocation = "TestResults";
-    Print("Creating TestManager.");
+    
+    nvLogManager* lm = nvLogManager::instance();
+    string fname = "test_results.log";
+    nvFileLogger* logger = new nvFileLogger(fname);
+    lm.addSink(logger);
+
+    logDEBUG("Creating TestManager.");
   };
 
   ~nvTestManager(void)
   {
-    Print("Destroying TestManager.");
+    logDEBUG("Destroying TestManager.");
   };
 
 public:

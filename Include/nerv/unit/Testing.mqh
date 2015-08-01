@@ -88,6 +88,7 @@
 #define REQUIRE_NOT_EQUAL_MSG(v1,v2,msg) if(v1==v2) SHOWFATAL(msg)
 #define REQUIRE_CLOSE_MSG(v1,v2,eps,msg) if(v1!=v2 && MathAbs(v1-v2)/(0.5*(MathAbs(v1)+MathAbs(v2))) > eps) SHOWFATAL(msg)
 #define REQUIRE_VALID_PTR_MSG(ptr,msg) if(!IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
+#define REQUIRE_NULL_PTR_MSG(ptr,msg) if(IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
 
 #define ASSUME(val) ASSUME_MSG(val,"Assumption "<< TOSTR(val) << " is invalid.")
 #define ASSERT(val) ASSERT_MSG(val,"Assertion "<< TOSTR(val) << " failed.")
@@ -101,3 +102,4 @@
 #define REQUIRE_NOT_EQUAL(v1,v2) REQUIRE_NOT_EQUAL_MSG(v1,v2,"Not equality assertion failed: "<<(v1)<<"=="<<(v2))
 #define REQUIRE_CLOSE(v1,v2,eps) REQUIRE_CLOSE_MSG(v1,v2,eps,"Close value assertion failed: relative_change("<<(v1)<<","<<(v2)<<") > "<<eps)
 #define REQUIRE_VALID_PTR(ptr) REQUIRE_VALID_PTR_MSG(ptr,"Invalid pointer detected.")
+#define REQUIRE_NULL_PTR(ptr) REQUIRE_NULL_PTR_MSG(ptr,"Non NULL pointer detected.")

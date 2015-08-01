@@ -95,7 +95,8 @@ public:
   // Run the current test suite:
   void run(nvTestSessionResult* result, int& numPassed, int& numFailed)
   {
-    Print("Entering Test Suite ", _name);
+    // Print("Entering Test Suite ", _name);
+    logDEBUG("Entering Test suite "<<_name)
     numPassed = 0;
     numFailed = 0;
 
@@ -123,18 +124,21 @@ public:
       if (res == TEST_PASSED)
       {
         numPassed++;
-        Print("=> Test PASSED");
+        // Print("=> Test PASSED");
+        logDEBUG("=> Test PASSED")
       }
       else
       {
         numFailed++;
-        Print("=> Test FAILED");
+        // Print("=> Test FAILED");
+        logDEBUG("=> Test FAILED")
       }
       tcase = (nvTestCase*)_cases.GetNextNode();
     }
 
     int total = numPassed+numFailed;
 
-    Print("Leaving Test Suite ", _name, ": Success ratio: ",numPassed,"/",total);
+    logDEBUG("Leaving Test suite "<<_name<<": Success ratio: "<<numPassed<<"/"<<total)
+    // Print("Leaving Test Suite ", _name, ": Success ratio: ",numPassed,"/",total);
   }
 };
