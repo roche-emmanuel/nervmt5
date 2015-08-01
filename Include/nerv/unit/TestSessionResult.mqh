@@ -89,6 +89,56 @@ public:
     }
   }
 
+  /*
+  Function: writeReport
+  
+  Method called to write the complete report to string
+  */
+  void writeReport()
+  {
+    nvTestSuite* currentSuite = NULL;
+    string report = "Unit tests report:\n\nReport time: "+(string)TimeLocal()+"\n";
+    string prefix = "  ";
+
+    nvTestResult *result = (nvTestResult *)_testResults.GetFirstNode();
+    int passed = 0;
+    int failed = 0;
+    double duration = 0.0;
+    int status;
+
+    while(result)
+    {
+      if(result.getParent() != currentSuite)
+      {
+        currentSuite = result.getParent();
+        report += "\n==== " + currentSuite.getName() +" ====\n";
+      }
+
+      // Write the result data:
+      string inter;
+      StringInit(inter,80-StringLen(result.getName()),'.');
+
+      status=result.getStatus();
+      if(status==TEST_PASSED)
+      {
+        passed++;
+      }
+      if(status==TEST_FAILED)
+      {
+        failed++;
+      }
+      duration += result.getDuration();
+
+      report += prefix + result.getName() + inter + (status == TEST_PASSED ? "[P]" : "[F]") + "\n";
+
+      result = (nvTestResult *)_testResults.GetNextNode();
+    }
+
+    report += StringFormat("\n=> %d passed, %d failed. Total duration: %.3f seconds.\n\n",passed,failed,duration);
+    
+    logINFO(report)
+  }
+  
   void writeFile(int handle)
   {
 

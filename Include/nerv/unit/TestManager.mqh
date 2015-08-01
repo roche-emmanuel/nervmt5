@@ -60,12 +60,11 @@ public:
     // Generate the output file:
     generateOutput(results);
 
-    string terminal_data_path = TerminalInfoString(TERMINAL_DATA_PATH);
-
-    string file = terminal_data_path +"/MQL5/Files/"+_targetLocation+".html";
-    Print("Should open file: ", file);
-
-    shell32::ShellExecuteW(0,"open",file,"","",3);
+    // Following calls were used to display an HTML report.
+    // string terminal_data_path = TerminalInfoString(TERMINAL_DATA_PATH);
+    // string file = terminal_data_path +"/MQL5/Files/"+_targetLocation+".html";
+    // Print("Should open file: ", file);
+    // shell32::ShellExecuteW(0,"open",file,"","",3);
 
     // Just display a web page for now:
     //Print("Opening web page...");
@@ -75,11 +74,16 @@ public:
 
   void generateOutput(nvTestSessionResult* results)
   {
-    string fname = _targetLocation+".html";
-    int handle = FileOpen(fname, FILE_WRITE|FILE_ANSI);
-    
-    results.writeFile(handle);
+    results.writeReport();
+  
+    // The following calls where used to write an HTML report, but this proved
+    // unhandy for handling numerous tests. Thus we only rely on text output above now.
 
-    FileClose(handle);
+    // string fname = _targetLocation+".html";
+    // int handle = FileOpen(fname, FILE_WRITE|FILE_ANSI);
+    
+    // results.writeFile(handle);
+
+    // FileClose(handle);
   }
 };
