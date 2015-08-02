@@ -16,6 +16,14 @@ protected:
   // List of currency traders:
   nvCurrencyTrader* _traders[];
 
+  // Value used to determine how efficient the Utility assignment should
+  // be considered at a given time. When the value is high then "high"
+  // utilities should be given an "high" weight relative to lower utilities.
+  // when the value is low, then the difference in the weights should
+  // be less obvious, and the utility assignment should be considered less
+  // effective.
+  double _utilityEfficiencyFactor;
+
 protected:
   // Following methods are protected to respect the singleton pattern
 
@@ -26,6 +34,9 @@ protected:
   {
     // By default there should be no currency trader available:
     ArrayResize( _traders, 0 );
+
+    // Default utility efficiency factor value:
+    _utilityEfficiencyFactor = 1.0;
   }
 
   /*
@@ -125,6 +136,11 @@ public:
     int num = ArraySize( _traders );
     ArrayResize( _traders, num+1 );
     _traders[num] = trader;
+
+    // Each time a new currency trader is created the weights should be
+    // updated:
+    updateWeights();
+    
     return trader;
   }
 
@@ -189,5 +205,46 @@ public:
   {
     logDEBUG(TimeLocal()<<": Updating Portfolio Manager.")
   }
+
+/*
+  Function: updateWeights
   
+  Method called each time the currency traders weights should
+  be updated.
+  */
+  void updateWeights()
+  {
+    // Update the weights using the current utility efficiency factor:
+    int num = getNumCurrencyTraders();
+    if(num<=0)
+    {
+      // there is nothing to update here.
+      return;
+    }
+
+    // Otherwise we need to compute the current weights using the 
+    // current value of the utility of the traders:
+    double exps[];
+    ArrayResize( exps, num );
+
+    // TODO: here we should update the utility efficiency considered the
+    // previous deals and how we could have optimized our profits.
+
+    double alpha = _utilityEfficiencyFactor;
+    double u;
+    double denom = 0.0; // will contain the sum of all exp factors.
+    for(int i=0;i<num;++i)
+    {
+      u = _traders[i].getUtility();
+      exps[i] = MathExp(alpha*u);
+      denom += exps[i];
+    }
+
+    // Now assign each weight back to its corresponding trader:
+    for(int i=0;i<num;++i)
+    {
+      _traders[i].setWeight(exps[i]/denom);
+    }
+  }
+    
 };

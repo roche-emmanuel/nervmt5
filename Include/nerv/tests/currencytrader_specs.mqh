@@ -11,6 +11,12 @@ BEGIN_TEST_CASE("should be able to create a CurrencyTrader instance")
 	REQUIRE_EQUAL(ct.getSymbol(),"EURUSD");
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide access to its utility value")
+  nvCurrencyTrader ct("EURUSD");
+  // By default the utility value should be 0.0:
+  REQUIRE_EQUAL(ct.getUtility(),0.0);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

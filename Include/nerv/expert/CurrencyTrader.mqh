@@ -18,6 +18,14 @@ protected:
   // range [0,1]
   double _weight;
 
+  /*
+  Utility value for this currency trader: determine how efficiency this
+  trader is in generating profits instead of losses.
+  Default value will be 0.0, indicating no bias towards profits or losses.
+  Then positive values should indicates that this currency trader is generating
+  profits whereas negative values would indicate losses.
+  */
+  double _utility;
 public:
   /*
     Class constructor.
@@ -26,6 +34,9 @@ public:
   {
     // Store the symbol assigned to this trader:
     _symbol = symbol;
+
+    // Set default utility value:
+    _utility = 0.0;
   }
 
   /*
@@ -73,7 +84,27 @@ public:
     CHECK(val>=0.0 && val<=1.0,"Invalid weight value: "<<val)
     _weight = val;
   }
+
+  /*
+  Function: getWeight
   
+  Retrieve the weight currently assigned to this trader
+  */
+  double getWeight()
+  {
+    return _weight;
+  }
+  
+  /*
+  Function: getUtility
+  
+  Retrieve the current utility value of this trader
+  */
+  double getUtility()
+  {
+    return _utility;
+  }
+    
   /*
   Function: update
   
@@ -83,5 +114,4 @@ public:
   {
     logDEBUG(TimeLocal()<<": Updating CurrencyTrader.")
   }
-  
 };
