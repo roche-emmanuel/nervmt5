@@ -105,6 +105,7 @@ public:
     int failed = 0;
     double duration = 0.0;
     int status;
+    string failures = "";
 
     while(result)
     {
@@ -126,7 +127,26 @@ public:
       if(status==TEST_FAILED)
       {
         failed++;
+        
+        // Add the failure details to the failure report:
+        failures += "\n["+currentSuite.getName()+"] "+result.getName()+":\n";
+
+        // Retrieve all the messages on that test:
+        CList *mlist = result.getMessages();
+        if (mlist.Total() > 0)
+        {
+          nvTestMessage *m = (nvTestMessage *)mlist.GetFirstNode();
+          string sev;
+          while (m)
+          {
+            sev = m.getSeverity() == SEV_INFO ? "INFO" : m.getSeverity() == SEV_ERROR ? "ERROR" : "FATAL";
+            failures += StringFormat("[%s] %s: %s(%d):\n  %s\n",sev,(string)m.getDateTime(),m.getFilename(),m.getLineNumber(),m.getContent());
+
+            m = (nvTestMessage *)mlist.GetNextNode();
+          }
+        }        
       }
+
       duration += result.getDuration();
 
       report += prefix + result.getName() + inter + (status == TEST_PASSED ? "[P]" : "[F]") + "\n";
@@ -136,6 +156,13 @@ public:
 
     report += StringFormat("\n=> %d passed, %d failed. Total duration: %.3f seconds.\n\n",passed,failed,duration);
     
+    if(failures!="")
+    {
+      string sep;
+      StringInit(sep,82,'-');
+      report += "Current issues:\n" + sep + failures + sep + "\n";
+    }
+
     logINFO(report)
   }
   
