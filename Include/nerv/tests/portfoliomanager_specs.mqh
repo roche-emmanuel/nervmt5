@@ -108,6 +108,14 @@ BEGIN_TEST_CASE("Should allow updating the currency traders weights")
 	REQUIRE_EQUAL(ct2.getWeight(),0.5);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide new unique IDs")
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+  int id1 = man.getNewID();
+  int id2 = man.getNewID();
+  REQUIRE_EQUAL(id1+1,id2);
+  REQUIRE_GE(id1,10000);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

@@ -24,6 +24,10 @@ protected:
   // effective.
   double _utilityEfficiencyFactor;
 
+  // ID to use for the magic ID of the next currency trader.
+  // will be returned/incremented with the method getNewID()
+  int _nextTraderID;
+
 protected:
   // Following methods are protected to respect the singleton pattern
 
@@ -37,6 +41,9 @@ protected:
 
     // Default utility efficiency factor value:
     _utilityEfficiencyFactor = 1.0;
+
+    // Initialize the next Trader ID;
+    _nextTraderID = 10000;
   }
 
   /*
@@ -206,7 +213,7 @@ public:
     logDEBUG(TimeLocal()<<": Updating Portfolio Manager.")
   }
 
-/*
+  /*
   Function: updateWeights
   
   Method called each time the currency traders weights should
@@ -246,5 +253,16 @@ public:
       _traders[i].setWeight(exps[i]/denom);
     }
   }
-    
+
+  /*
+  Function: getNewID
+
+  Method used to retrieve the next ID to use when creating a new
+  currency trader.
+  */
+  int getNewID()
+  {
+   return _nextTraderID++;
+  }
+
 };

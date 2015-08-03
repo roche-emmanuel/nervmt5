@@ -164,3 +164,4 @@
 08/01/15-23:40:32: Added test on nvRemoveItem.
 08/02/15-22:55:45: Added support for failed tests reporting after global unit test report.
 08/02/15-23:39:14: Added weight computation support for CurrencyTrader.
+08/03/15-21:40:48: Adding test for getNewID().
