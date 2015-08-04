@@ -289,4 +289,29 @@ public:
    return _nextTraderID++;
   }
 
+  /*
+  Function: getUtilityEfficiency
+  
+  Retrieve the current utility efficiency:
+  */
+  double getUtilityEfficiency()
+  {
+    return _utilityEfficiencyFactor;
+  }
+  
+  /*
+  Function: getUtilities
+  
+  Retrieve the list of all current utilities from all traders.
+  */
+  void getUtilities(double &arr[])
+  {
+    int num = getNumCurrencyTraders();
+    ArrayResize( arr, num );
+    for(int i=0;i<num;++i)
+    {
+      arr[i] = _traders[i].getUtility();
+    }
+  }
+  
 };

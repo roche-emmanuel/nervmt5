@@ -68,6 +68,28 @@ BEGIN_TEST_CASE("Should provide the list of utilities from all traders")
   REQUIRE_EQUAL(ArraySize(list),0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to open a deal")
+  nvDeal deal;
+
+  nvPortfolioManager::instance().addCurrencyTrader("EURUSD");
+	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
+
+	datetime time = TimeLocal();
+	deal.open(ct.getID(),1.23456,time);
+
+	REQUIRE_EQUAL(deal.getEntryPrice(),1.23456);
+	REQUIRE_EQUAL(deal.getEntryTime(),time);
+
+  double list[];
+  deal.getUtilities(list);
+  REQUIRE_EQUAL(ArraySize(list),2);
+  REQUIRE_EQUAL(list[0],0.0);
+  REQUIRE_EQUAL(list[1],0.0);
+  
+  // Reset the content:
+  nvPortfolioManager::instance().removeAllCurrencyTraders();	
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

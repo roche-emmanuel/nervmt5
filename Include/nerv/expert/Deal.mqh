@@ -25,6 +25,18 @@ protected:
   // utilities of all traders when the deal is initialized:
   double _utilities[];
 
+  // Utility of the trader owning this deal when it is initialized:
+  double _traderUtility;
+
+  // Utility efficiency when this deal is initialized:
+  double _utilityEfficiency;
+
+  // price when entering this deal:
+  double _entryPrice;
+
+  // datetime of the entry of this deal:
+  datetime _entryTime;
+
 public:
   /*
     Class constructor.
@@ -35,6 +47,10 @@ public:
     _numPoints = 0.0; // No profit by default.
     _profit = 0.0;
     ArrayResize( _utilities, 0 ); // No utilities by default.
+    _traderUtility = 0.0; // Default utility value.
+    _utilityEfficiency = 1.0; // Default efficiency of the utility assignment.
+    _entryPrice = 0.0;
+    _entryTime = 0;
   }
 
   /*
@@ -138,4 +154,59 @@ public:
       CHECK(ArrayCopy(arr, _utilities)==num,"Could not copy all utilities elements.");
     }
   }
+
+  /*
+  Function: open
+  
+  Method called when this deal should be opened.
+  This method we retrieve the current settings from the currency trader
+  and portfolio manager.
+  */
+  void open(int id, double entryPrice, datetime entryTime)
+  {
+    _entryPrice = entryPrice;
+    _entryTime = entryTime;
+
+    // Assign the trader ID:
+    setTraderID(id);
+
+    // We assume that the trader ID is available here:
+    CHECK(_traderID!=INVALID_TRADER_ID,"Invalid trader ID in open.");
+
+    nvPortfolioManager* man = nvPortfolioManager::instance();
+
+    // Retrieve the corresponding trader:
+    nvCurrencyTrader* ct = man.getCurrencyTraderByID(_traderID);
+    CHECK(ct,"Invalid currency trader.");
+
+    // Assign the current utility of the parent trader:
+    _traderUtility = ct.getUtility();
+
+    // also keep a ref on the utitity efficiency:
+    _utilityEfficiency = man.getUtilityEfficiency();
+
+    // Also keep a list of all current utilities:
+    man.getUtilities(_utilities);
+  }
+  
+  /*
+  Function: getEntryPrice
+  
+  Retrieve the entry price of this deal
+  */
+  double getEntryPrice()
+  {
+    return _entryPrice;
+  }
+  
+  /*
+  Function: getEntryTime
+  
+  Retrieve the entry time of that deal
+  */
+  datetime getEntryTime()
+  {
+    return _entryTime;
+  }
+  
 };
