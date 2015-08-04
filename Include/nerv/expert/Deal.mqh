@@ -16,6 +16,9 @@ protected:
   // ID of the trader owning this deal:
   int _traderID;
 
+  // Number of points of profit received in this deal:
+  double _numPoints;
+
 public:
   /*
     Class constructor.
@@ -23,6 +26,7 @@ public:
   nvDeal()
   {
     _traderID = INVALID_TRADER_ID; // invalid default value.
+    _numPoints = 0.0; // No profit by default.
   }
 
   /*
@@ -70,5 +74,26 @@ public:
     CHECK(nvPortfolioManager::instance().getCurrencyTraderByID(id)!=NULL,"Invalid trader ID");
     _traderID = id;
   }
+
+  /*
+  Function: getNumPoints
+  
+  Retrieve the number of points of profit for this deal
+  */
+  double getNumPoints()
+  {
+    return _numPoints;
+  }
+  
+  /*
+  Function: setNumPoints
+  
+  Set the number of points of profit for this deal.
+  */
+  void setNumPoints(double points)
+  {
+    _numPoints = points;
+  }
+  
   
 };

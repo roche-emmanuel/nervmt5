@@ -37,6 +37,17 @@ BEGIN_TEST_CASE("Should provide trader ID")
   nvPortfolioManager::instance().removeAllCurrencyTraders();
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should also provide a number of points of profit")
+  nvDeal deal;
+
+  // Default profit is 0.0:
+  REQUIRE_EQUAL(deal.getNumPoints(),0.0);
+  
+  // Set the number of profit points:
+  deal.setNumPoints(0.12345);
+  REQUIRE_EQUAL(deal.getNumPoints(),0.12345);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
