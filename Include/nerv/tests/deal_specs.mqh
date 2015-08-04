@@ -48,6 +48,17 @@ BEGIN_TEST_CASE("Should also provide a number of points of profit")
   REQUIRE_EQUAL(deal.getNumPoints(),0.12345);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide the profit value")
+  nvDeal deal;
+
+  // Default profit is 0.0:
+  REQUIRE_EQUAL(deal.getProfit(),0.0);
+  
+  // Set the number of profit points:
+  deal.setProfit(10.12);
+  REQUIRE_EQUAL(deal.getProfit(),10.12);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

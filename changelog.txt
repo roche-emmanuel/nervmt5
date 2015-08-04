@@ -167,3 +167,4 @@
 08/03/15-21:40:48: Adding test for getNewID().
 08/04/15-14:13:22: Added initial implementation for nvDeal class.
 08/04/15-14:38:09: Added number of points in Deal class.
+08/04/15-14:43:47: Added support for profit value in nvDeal.

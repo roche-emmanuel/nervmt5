@@ -19,6 +19,9 @@ protected:
   // Number of points of profit received in this deal:
   double _numPoints;
 
+  // profit of this deal in the same currency as the balance:
+  double _profit;
+
 public:
   /*
     Class constructor.
@@ -27,6 +30,7 @@ public:
   {
     _traderID = INVALID_TRADER_ID; // invalid default value.
     _numPoints = 0.0; // No profit by default.
+    _profit = 0.0;
   }
 
   /*
@@ -95,5 +99,23 @@ public:
     _numPoints = points;
   }
   
+  /*
+  Function: getProfit
   
+  Retrieve the profit of this deal
+  */
+  double getProfit()
+  {
+    return _profit;
+  }
+  
+  /*
+  Function: setProfit
+  
+  Set the profit of this deal
+  */
+  void setProfit(double profit)
+  {
+    _profit = profit;
+  }
 };
