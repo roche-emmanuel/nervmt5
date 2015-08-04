@@ -17,6 +17,13 @@ BEGIN_TEST_CASE("Should provide access to its utility value")
   REQUIRE_EQUAL(ct.getUtility(),0.0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should increment the unique ID properly")
+  nvCurrencyTrader ct("EURUSD");
+  nvCurrencyTrader ct2("EURJPY");
+  
+  REQUIRE_EQUAL(ct2.getID(),ct.getID()+1);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

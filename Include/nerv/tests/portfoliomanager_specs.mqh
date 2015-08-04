@@ -106,6 +106,10 @@ BEGIN_TEST_CASE("Should allow updating the currency traders weights")
 	REQUIRE_NOT_NULL(ct2);
 	REQUIRE_EQUAL(ct.getWeight(),0.5);
 	REQUIRE_EQUAL(ct2.getWeight(),0.5);
+
+	// reset the current status:
+	man.removeAllCurrencyTraders();
+	REQUIRE_EQUAL(man.getNumCurrencyTraders(),0);	
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide new unique IDs")
@@ -114,6 +118,32 @@ BEGIN_TEST_CASE("Should provide new unique IDs")
   int id2 = man.getNewID();
   REQUIRE_EQUAL(id1+1,id2);
   REQUIRE_GE(id1,10000);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to retrieve a currency trader by ID")
+	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvCurrencyTrader* ct1 = man.addCurrencyTrader("EURUSD");
+	REQUIRE_NOT_NULL(ct1);
+	nvCurrencyTrader* ct2 = man.addCurrencyTrader("GBPUSD");
+	REQUIRE_NOT_NULL(ct2);
+	nvCurrencyTrader* ct3 = man.addCurrencyTrader("EURGBP");
+	REQUIRE_NOT_NULL(ct3);
+
+	REQUIRE_EQUAL(ct2.getID(),ct1.getID()+1);
+	REQUIRE_EQUAL(ct3.getID(),ct2.getID()+1);
+
+	nvCurrencyTrader* ct1b = man.getCurrencyTraderByID(ct1.getID());
+	nvCurrencyTrader* ct2b = man.getCurrencyTraderByID(ct2.getID());
+	nvCurrencyTrader* ct3b = man.getCurrencyTraderByID(ct3.getID());
+
+	REQUIRE_EQUAL(ct1,ct1b);
+	REQUIRE_EQUAL(ct2,ct2b);
+	REQUIRE_EQUAL(ct3,ct3b);
+	
+	REQUIRE_EQUAL(ct2.getID(),ct2b.getID());
+
+	// reset the current status:
+	man.removeAllCurrencyTraders();	
 END_TEST_CASE()
 
 END_TEST_SUITE()

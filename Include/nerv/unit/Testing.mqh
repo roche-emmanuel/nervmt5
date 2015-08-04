@@ -96,6 +96,8 @@
 #define REQUIRE_NULL_PTR_MSG(ptr,msg) if(IS_VALID_POINTER(ptr)) SHOWFATAL(msg)
 #define REQUIRE_NULL_MSG(ptr,msg) if(ptr!=NULL) SHOWFATAL(msg)
 #define REQUIRE_NOT_NULL_MSG(ptr,msg) if(ptr==NULL) SHOWFATAL(msg)
+#define REQUIRE_CONTAINS_MSG(str,pattern,msg) if(StringFind(str,pattern)==-1) SHOWFATAL(msg)
+
 
 #define REQUIRE_ERROR_MSG(msg) REQUIRE_EQUAL_MSG(LAST_ERROR_MSG,msg,"Invalid expected error message.")
 #define REQUIRE_ERROR_COUNT(count) REQUIRE_EQUAL_MSG(ERROR_COUNT,count,"Invalid expected error count.")
@@ -115,10 +117,11 @@
 #define REQUIRE_NULL_PTR(ptr) REQUIRE_NULL_PTR_MSG(ptr,"Non NULL pointer detected.")
 #define REQUIRE_NULL(ptr) REQUIRE_NULL_MSG(ptr,"Non NULL pointer detected.")
 #define REQUIRE_NOT_NULL(ptr) REQUIRE_NOT_NULL_MSG(ptr,"Non NULL pointer detected.")
+#define REQUIRE_CONTAINS(msg,pattern) REQUIRE_CONTAINS_MSG(msg,pattern,"String: '"<<msg<<"' doesn't contain pattern: '"<<pattern<<"'")
 
 #define BEGIN_REQUIRE_ERROR(msg) { string __err_msg = msg; CATCH_ERRORS(true);
 #define END_REQUIRE_ERROR(arg) int __err_count = nvExceptionCatcher::instance().getErrorCount(); \
   string __last_err_msg = nvExceptionCatcher::instance().getLastError(); \
   CATCH_ERRORS(false); \
   REQUIRE_EQUAL_MSG(__err_count,1,"Invalid error count: "<< __err_count <<"!=1"); \
-  if(__err_msg!="") { REQUIRE_EQUAL_MSG(__last_err_msg,__err_msg,"Invalid error message: '"<<__last_err_msg<<"' != '"<<__err_msg<<"'"); } }
+  if(__err_msg!="") { REQUIRE_CONTAINS_MSG(__last_err_msg,__err_msg,"Invalid error message: '"<<__last_err_msg<<"' doesn't contain '"<<__err_msg<<"'"); } }

@@ -4,6 +4,10 @@
 // Forward declaration of the currency trader class:
 class nvCurrencyTrader;
 
+enum nv_misc_enum {
+  INVALID_TRADER_ID = -1
+};
+
 /*
 Class: nvPortfolioManager
 
@@ -12,6 +16,7 @@ It is used as a singleton.
 */
 class nvPortfolioManager : public nvObject
 {
+
 protected:
   // List of currency traders:
   nvCurrencyTrader* _traders[];
@@ -119,6 +124,25 @@ public:
     return NULL;
   }
 
+  /*
+  Function: getCurrencyTraderByID
+  
+  Retrieve a currency trader by its ID
+  */
+  nvCurrencyTrader* getCurrencyTraderByID(int id)
+  {
+    int num = ArraySize( _traders );
+    for(int i=0;i<num;++i)
+    {
+      if(_traders[i].getID() == id)
+      {
+        return _traders[i];
+      }
+    }
+
+    return NULL;
+  }
+  
   /*
   Function: addCurrencyTrader
   

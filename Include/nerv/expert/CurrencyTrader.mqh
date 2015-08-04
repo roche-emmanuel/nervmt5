@@ -26,6 +26,10 @@ protected:
   profits whereas negative values would indicate losses.
   */
   double _utility;
+
+  // Unique ID used to identify this trader:
+  int _id;
+
 public:
   /*
     Class constructor.
@@ -37,6 +41,9 @@ public:
 
     // Set default utility value:
     _utility = 0.0;
+
+    // Retrieve a new unique ID for this trader from the PortfolioManager:
+    _id = nvPortfolioManager::instance().getNewID();
   }
 
   /*
@@ -104,7 +111,17 @@ public:
   {
     return _utility;
   }
-    
+  
+  /*
+  Function: getID
+  
+  Retrieve the unique ID assigned to this trader.
+  */
+  int getID()
+  {
+    return _id;
+  }
+
   /*
   Function: update
   
