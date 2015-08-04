@@ -199,7 +199,13 @@ public:
       {
         // Increment the count of deals taken into account:
         dcount++; 
-        profit = ptr.getProfit();
+        
+        // Note: we use the nominal profit here, because the computation of the utility
+        // should be unbiased, and thus should not consider the actual weight that was given to 
+        // the trader when performing that deal. Instead, it should compute the utility as if 
+        // the trader was constantly assigned a weight of 1.0:
+        // profit = ptr.getProfit();
+        profit = ptr.getNominalProfit();
         
         // compute the elapsed time since the last trade (in hours)
         delta = (double)(dtime - (lastTime==0 ? ptr.getEntryTime() : lastTime))/3600.0;

@@ -28,6 +28,9 @@ protected:
   // Utility of the trader owning this deal when it is initialized:
   double _traderUtility;
 
+  // Weight of the trader owning this deal when it is initiated:
+  double _traderWeight;
+
   // Utility efficiency when this deal is initialized:
   double _utilityEfficiency;
 
@@ -67,6 +70,7 @@ public:
     _exitTime = 0;
     _orderType = 0;
     _isDone = false;
+    _traderWeight = 0.0;
   }
 
   /*
@@ -146,6 +150,20 @@ public:
   }
   
   /*
+  Function: getNominalProfit
+  
+  Retrieve the profit that would have been achieved with this deal
+  if the trader weight was 1.0 when it was initiated.
+  This method will simply defined the observed profit by the trader weight
+  at that time.
+  */
+  double getNominalProfit()
+  {
+    CHECK_RET(_traderWeight>0.0,0.0,"Invalid trader weight.");
+    return _profit/_traderWeight;
+  }
+  
+  /*
   Function: setProfit
   
   Set the profit of this deal
@@ -201,6 +219,10 @@ public:
     // Assign the current utility of the parent trader:
     _traderUtility = ct.getUtility();
 
+    // Also store the trader weight for convinient access:
+    _traderWeight = ct.getWeight();
+    CHECK(_traderWeight>0.0,"Invalid trader weight.");
+
     // also keep a ref on the utitity efficiency:
     _utilityEfficiency = man.getUtilityEfficiency();
 
@@ -229,7 +251,7 @@ public:
 
     // assign the profit value:
     _profit = profit;
-    
+
     // Mark this deal as done:
     _isDone = true;
   }

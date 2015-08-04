@@ -176,3 +176,4 @@
 08/04/15-22:59:32: Adding support for utility computation and onDeal callback in currencytrader.
 08/04/15-23:08:10: Added test to ensure only opened deals can be closed.
 08/04/15-23:23:27: Adding profit argument in nvDeal::close().
+08/04/15-23:34:44: Added support for nominal profit in nvDeal.
