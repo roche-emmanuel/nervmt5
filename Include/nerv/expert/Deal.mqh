@@ -37,6 +37,12 @@ protected:
   // datetime of the entry of this deal:
   datetime _entryTime;
 
+  // pricewhen exiting this deal:
+  double _exitPrice;
+
+  // datetime of the exit of this deal:
+  datetime _exitTime;
+
 public:
   /*
     Class constructor.
@@ -51,6 +57,8 @@ public:
     _utilityEfficiency = 1.0; // Default efficiency of the utility assignment.
     _entryPrice = 0.0;
     _entryTime = 0;
+    _exitPrice = 0.0;
+    _exitTime = 0;
   }
 
   /*
@@ -190,6 +198,23 @@ public:
   }
   
   /*
+  Function: close
+  
+  Method called to close this deal with a given price at a given time
+  */
+  void close(double exitPrice, datetime exitTime)
+  {
+    _exitPrice = exitPrice;
+    _exitTime = exitTime;
+
+    // Ensure that the timestamps are correct:
+    CHECK(_entryTime<_exitTime,"Invalid entry/exit times");
+
+    // At this point we can also compute the profit in number of points:
+    _numPoints = _exitPrice - _entryPrice;
+  }
+  
+  /*
   Function: getEntryPrice
   
   Retrieve the entry price of this deal
@@ -209,4 +234,23 @@ public:
     return _entryTime;
   }
   
+  /*
+  Function: getExitPrice
+  
+  Retrieve the exit price of this deal:
+  */
+  double getExitPrice()
+  {
+    return _exitPrice;
+  }
+  
+  /*
+  Function: getExitTime
+  
+  Retrieve the exit time of this deal
+  */
+  datetime getExitTime()
+  {
+    return _exitTime;
+  }
 };

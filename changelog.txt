@@ -170,3 +170,4 @@
 08/04/15-14:43:47: Added support for profit value in nvDeal.
 08/04/15-15:02:10: Added initial support for utilities in nvDeal.
 08/04/15-15:50:54: Adding initial implementation for deal open method.
+08/04/15-16:10:56: Added support for close method in deal class.

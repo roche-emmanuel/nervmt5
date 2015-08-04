@@ -90,6 +90,27 @@ BEGIN_TEST_CASE("Should be able to open a deal")
   nvPortfolioManager::instance().removeAllCurrencyTraders();	
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to close a deal and update number of points")
+  nvDeal deal;
+
+  nvPortfolioManager::instance().addCurrencyTrader("EURUSD");
+	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
+
+	datetime time = TimeLocal();
+	deal.open(ct.getID(),1.23456,time);
+
+	// Now close the deal:
+	deal.close(1.23457,time+1);
+
+	REQUIRE_EQUAL(deal.getExitPrice(),1.23457);
+	REQUIRE_EQUAL(deal.getExitTime(),time+1);
+	
+	REQUIRE_EQUAL(NormalizeDouble(deal.getNumPoints(),5),0.00001);
+	
+  // Reset the content:
+  nvPortfolioManager::instance().removeAllCurrencyTraders();	
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
