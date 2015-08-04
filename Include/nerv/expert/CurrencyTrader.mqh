@@ -221,6 +221,13 @@ public:
       lastTime = dtime;
     }
 
+    // If there is deal in the target period the we cannot compute anything:
+    if(dcount==0)
+    {
+      logDEBUG("Utility computation: no deal found in period from "<<startTime<<" to "<<stopTime);
+      return 0.0;
+    }
+
     // Once we have iterated on all deals we may return the utility value:
     // Computed here as a DDR ratio:
     // Note that we add +1.0 in the denominator here to ensure that this ratio is

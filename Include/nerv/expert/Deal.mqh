@@ -181,7 +181,7 @@ public:
   void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime)
   {
     CHECK(entryPrice>0.0 && entryTime>0,"Invalid entry price and/or time");
-    
+
     _entryPrice = entryPrice;
     _entryTime = entryTime;
     _orderType = orderType;
@@ -213,7 +213,7 @@ public:
   
   Method called to close this deal with a given price at a given time
   */
-  void close(double exitPrice, datetime exitTime)
+  void close(double exitPrice, datetime exitTime, double profit)
   {
     // Ensure that the deal was opened first:
     CHECK(_entryTime>0 && _entryPrice>0.0,"Cannot close not opened deal.");
@@ -227,6 +227,9 @@ public:
     // At this point we can also compute the profit in number of points:
     _numPoints = _orderType==ORDER_TYPE_BUY ? _exitPrice - _entryPrice : _entryPrice - _exitPrice;
 
+    // assign the profit value:
+    _profit = profit;
+    
     // Mark this deal as done:
     _isDone = true;
   }

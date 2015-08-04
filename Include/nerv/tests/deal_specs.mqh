@@ -100,10 +100,11 @@ BEGIN_TEST_CASE("Should be able to close a deal and update number of points")
 	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time);
 
 	// Now close the deal:
-	deal.close(1.23457,time+1);
+	deal.close(1.23457,time+1,12.3);
 
 	REQUIRE_EQUAL(deal.getExitPrice(),1.23457);
 	REQUIRE_EQUAL(deal.getExitTime(),time+1);
+	REQUIRE_EQUAL(deal.getProfit(),12.3);
 	
 	REQUIRE_EQUAL(NormalizeDouble(deal.getNumPoints(),5),0.00001);
 	
@@ -125,7 +126,7 @@ BEGIN_TEST_CASE("Should not be done until it is closed")
 	REQUIRE_EQUAL(deal.isDone(),false);
 	
 	// Now close the deal:
-	deal.close(1.23457,time+1);
+	deal.close(1.23457,time+1,10.0);
 
 	REQUIRE_EQUAL(deal.isDone(),true);
 	
@@ -137,7 +138,7 @@ BEGIN_TEST_CASE("Should throw an error if trying to close an non opened deal")
   nvDeal deal;
 
 	BEGIN_REQUIRE_ERROR("Cannot close not opened deal")
-	  deal.close(1.23457,TimeLocal());
+	  deal.close(1.23457,TimeLocal(),10.0);
 	END_REQUIRE_ERROR();
 END_TEST_CASE()
 

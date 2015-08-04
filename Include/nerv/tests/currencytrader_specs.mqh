@@ -34,7 +34,14 @@ BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
   	
   // Now we generate a new deal:
   nvDeal* deal = new nvDeal();
-  
+
+	datetime time = TimeLocal();
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time);
+	deal.close(1.23457,time+3600,10.0);
+
+	// Send the deal to the CurrencyTrader:
+	ct.onDeal(deal);
+
   // Reset the portfolio manager:
   nvPortfolioManager::instance().removeAllCurrencyTraders();
 END_TEST_CASE()
