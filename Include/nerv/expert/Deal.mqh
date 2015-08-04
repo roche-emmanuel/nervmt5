@@ -43,6 +43,9 @@ protected:
   // datetime of the exit of this deal:
   datetime _exitTime;
 
+  // order type of this deal:
+  ENUM_ORDER_TYPE _orderType;
+
 public:
   /*
     Class constructor.
@@ -59,6 +62,7 @@ public:
     _entryTime = 0;
     _exitPrice = 0.0;
     _exitTime = 0;
+    _orderType = 0;
   }
 
   /*
@@ -170,10 +174,11 @@ public:
   This method we retrieve the current settings from the currency trader
   and portfolio manager.
   */
-  void open(int id, double entryPrice, datetime entryTime)
+  void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime)
   {
     _entryPrice = entryPrice;
     _entryTime = entryTime;
+    _orderType = orderType;
 
     // Assign the trader ID:
     setTraderID(id);
@@ -211,7 +216,7 @@ public:
     CHECK(_entryTime<_exitTime,"Invalid entry/exit times");
 
     // At this point we can also compute the profit in number of points:
-    _numPoints = _exitPrice - _entryPrice;
+    _numPoints = _orderType==ORDER_TYPE_BUY ? _exitPrice - _entryPrice : _entryPrice - _exitPrice;
   }
   
   /*
