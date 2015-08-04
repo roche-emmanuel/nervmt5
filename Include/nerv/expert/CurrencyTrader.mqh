@@ -1,6 +1,7 @@
 #include <nerv/core.mqh>
 
 #include <nerv/expert/PortfolioManager.mqh>
+#include <nerv/expert/Deal.mqh>
 
 /*
 Class: nvCurrencyTrader
@@ -30,6 +31,9 @@ protected:
   // Unique ID used to identify this trader:
   int _id;
 
+  // List of past deals executed byt this trader:
+  nvDeal* _previousDeals[];
+
 public:
   /*
     Class constructor.
@@ -44,6 +48,9 @@ public:
 
     // Retrieve a new unique ID for this trader from the PortfolioManager:
     _id = nvPortfolioManager::instance().getNewID();
+
+    // Initialize the previous deals array:
+    ArrayResize( _previousDeals, 0 );
   }
 
   /*
@@ -131,4 +138,124 @@ public:
   {
     logDEBUG(TimeLocal()<<": Updating CurrencyTrader.")
   }
+
+  /*
+  Function: onDeal
+  
+  Method called each time a new deal owned by this trader is completed.
+  */
+  void onDeal(nvDeal* deal)
+  {
+    // Ensure this deal is valid:
+    CHECK(deal!=NULL,"Invalid deal pointer.");
+    CHECK(deal.getTraderID()==_id,"Invalid deal trader ID: "<<deal.getTraderID());
+    CHECK(deal.isDone(),"Received not done deal");
+
+    // We add this new deal to the previous deals list:
+    int num = ArraySize( _previousDeals );
+    if(num<TRADER_MAX_NUM_DEALS)
+    {
+      // We can just push the new deal:
+      ArrayResize( _previousDeals, num+1 );
+      _previousDeals[num] = deal;
+    }
+    else 
+    {
+      // We should not resize the array, but instead, pop
+      // the oldest deal (and delete it in the process)
+      nvDeal* old = _previousDeals[0];
+      CHECK(ArrayCopy( _previousDeals, _previousDeals, 0, 1, num-1 )==num-1,"Invalid result for array copy operation");
+      RELEASE_PTR(old);
+      _previousDeals[num-1] = deal;
+    }
+
+    // Now we should update the utility of this trader:
+    updateUtility();
+  }
+  
+  /*
+  Function: computeProfitUtility
+  
+  Method used to compute the profit based utility value
+  */
+  double computeProfitUtility(datetime startTime, datetime stopTime)
+  {
+    int num = ArraySize( _previousDeals );
+    nvDeal* ptr = NULL;
+    datetime dtime;
+    int dcount = 0;
+    double sum = 0.0;
+    double dd = 0.0; // drawdown deviation.
+    double profit;
+    double delta;
+    datetime lastTime = 0;
+
+    for(int i=0;i<num;++i)
+    {
+      ptr = _previousDeals[i];
+      dtime = ptr.getExitTime();
+
+      if(startTime <= dtime && dtime <= stopTime)
+      {
+        // Increment the count of deals taken into account:
+        dcount++; 
+        profit = ptr.getProfit();
+        
+        // compute the elapsed time since the last trade (in hours)
+        delta = (double)(dtime - (lastTime==0 ? ptr.getEntryTime() : lastTime))/3600.0;
+        CHECK_RET(delta>0.0,0.0,"Detected invalid deal duration.");
+
+        // Now we compute the profit per unit of time (eg. per hour in this case):
+        profit /= delta;
+
+        sum += profit;
+        if(profit<0.0)
+        {
+          // add the square of the profit value to the dd:
+          dd += profit*profit;
+        }
+      }
+
+      // Update the value of the lastTime with the exitTime of the current deal:
+      // So that we can integrate the trading frequency into the utility loop above:
+      lastTime = dtime;
+    }
+
+    // Once we have iterated on all deals we may return the utility value:
+    // Computed here as a DDR ratio:
+    // Note that we add +1.0 in the denominator here to ensure that this ratio is
+    // always defined even if we have no negative profit. And the value of 1 correspond to
+    // 1 unit of the balance currency which is quite close to the minimal drawdown deviation that could
+    // be observed, and those the drawdown part of the denom will still have its full range of effect.
+    return (sum/(double)dcount)/(1.0+MathSqrt(dd));
+  }
+  
+  /*
+  Function: updateUtility
+  
+  Update the utility of this trader using the deal history:
+  */
+  void updateUtility()
+  {
+    nvPortfolioManager* man = nvPortfolioManager::instance();
+
+    // We should consider only a fixed period of time in the past to perform the utility computation
+    // this duration is retrieved from the portfolio manager itself,
+    // as a number of seconds.
+    int duration = man.getUtilityWindowSize();
+
+    // We use the current server time as reference, and we compute the starting point of the window
+    // from that:
+    datetime stopTime = TimeCurrent();
+    datetime startTime = stopTime-duration;
+
+    // We now iterate in the deal history, and we compute the utility using only the deals that finished in that time
+    // frame:
+    _utility = computeProfitUtility(startTime,stopTime);
+
+    // Once the utility value is updated,
+    // we should request a weight update from the portfolio manager:
+    man.updateWeights();
+  }
+  
 };

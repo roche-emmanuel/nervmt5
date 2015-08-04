@@ -173,3 +173,4 @@
 08/04/15-16:10:56: Added support for close method in deal class.
 08/04/15-17:36:17: Added support for number of assertions reporting in unit tests.
 08/04/15-18:00:36: Added support for order type specification in nvDeal::open().
+08/04/15-22:59:32: Adding support for utility computation and onDeal callback in currencytrader.

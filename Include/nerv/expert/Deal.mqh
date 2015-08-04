@@ -46,6 +46,9 @@ protected:
   // order type of this deal:
   ENUM_ORDER_TYPE _orderType;
 
+  // Boolean to check if this deal is done or not:
+  bool _isDone;
+
 public:
   /*
     Class constructor.
@@ -63,6 +66,7 @@ public:
     _exitPrice = 0.0;
     _exitTime = 0;
     _orderType = 0;
+    _isDone = false;
   }
 
   /*
@@ -217,6 +221,19 @@ public:
 
     // At this point we can also compute the profit in number of points:
     _numPoints = _orderType==ORDER_TYPE_BUY ? _exitPrice - _entryPrice : _entryPrice - _exitPrice;
+
+    // Mark this deal as done:
+    _isDone = true;
+  }
+  
+  /*
+  Function: isDone
+  
+  Check if this deal is done or not.
+  */
+  bool isDone()
+  {
+    return _isDone;
   }
   
   /*

@@ -1,6 +1,9 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 
+// Maximum number of deals that can be stored in a CurrencyTrader:
+#define TRADER_MAX_NUM_DEALS 1000
+
 // Forward declaration of the currency trader class:
 class nvCurrencyTrader;
 
@@ -312,6 +315,17 @@ public:
     {
       arr[i] = _traders[i].getUtility();
     }
+  }
+  
+  /*
+  Function: getUtilityWindowSize
+  
+  Retrieve the period used for the utility computation of each currency trader.
+  The value returned in is number of seconds.
+  */
+  int getUtilityWindowSize()
+  {
+    return 24*3600; // one day fixed for now.
   }
   
 };
