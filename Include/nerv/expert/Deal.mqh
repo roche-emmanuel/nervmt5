@@ -180,6 +180,8 @@ public:
   */
   void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime)
   {
+    CHECK(entryPrice>0.0 && entryTime>0,"Invalid entry price and/or time");
+    
     _entryPrice = entryPrice;
     _entryTime = entryTime;
     _orderType = orderType;
@@ -213,6 +215,9 @@ public:
   */
   void close(double exitPrice, datetime exitTime)
   {
+    // Ensure that the deal was opened first:
+    CHECK(_entryTime>0 && _entryPrice>0.0,"Cannot close not opened deal.");
+
     _exitPrice = exitPrice;
     _exitTime = exitTime;
 

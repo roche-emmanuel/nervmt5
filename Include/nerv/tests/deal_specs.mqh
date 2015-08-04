@@ -133,6 +133,14 @@ BEGIN_TEST_CASE("Should not be done until it is closed")
   nvPortfolioManager::instance().removeAllCurrencyTraders();	  
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should throw an error if trying to close an non opened deal")
+  nvDeal deal;
+
+	BEGIN_REQUIRE_ERROR("Cannot close not opened deal")
+	  deal.close(1.23457,TimeLocal());
+	END_REQUIRE_ERROR();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

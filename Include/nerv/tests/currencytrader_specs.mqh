@@ -24,6 +24,21 @@ BEGIN_TEST_CASE("Should increment the unique ID properly")
   REQUIRE_EQUAL(ct2.getID(),ct.getID()+1);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  
+  // initial utility should be 0.0:
+  REQUIRE_EQUAL(ct.getUtility(),0.0);
+  	
+  // Now we generate a new deal:
+  nvDeal* deal = new nvDeal();
+  
+  // Reset the portfolio manager:
+  nvPortfolioManager::instance().removeAllCurrencyTraders();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
