@@ -106,6 +106,7 @@ public:
     double duration = 0.0;
     int status;
     string failures = "";
+    int assertCount = 0;
 
     while(result)
     {
@@ -118,6 +119,8 @@ public:
       // Write the result data:
       string inter;
       StringInit(inter,80-StringLen(result.getName()),'.');
+
+      assertCount += result.getAssertionCount();
 
       status=result.getStatus();
       if(status==TEST_PASSED)
@@ -154,7 +157,7 @@ public:
       result = (nvTestResult *)_testResults.GetNextNode();
     }
 
-    report += StringFormat("\n=> %d passed, %d failed. Total duration: %.3f seconds.\n\n",passed,failed,duration);
+    report += StringFormat("\n=> %d passed, %d failed. %d assertions. Total duration: %.3f seconds.\n\n",passed,failed,assertCount,duration);
     
     if(failures!="")
     {

@@ -14,16 +14,21 @@ class nvTestCase : public CObject
 {
 protected:
   string _name;
+  int _assertCount;
   nvTestResult* _currentResult;
 
 public:
-  nvTestCase() : _currentResult(NULL) {};
+  nvTestCase() : _currentResult(NULL), _assertCount(0) {};
 
   ~nvTestCase() {};
 
   string getName() const
   {
     return _name;
+  }
+  void incrementAsserts()
+  {
+    _assertCount++;
   }
 
   nvTestResult *run(nvTestSuite *suite)
@@ -41,6 +46,7 @@ public:
 
     _currentResult = NULL;
 
+    result.setAssertionCount(_assertCount);
     result.setStatus(status);
     result.setDuration(((double)(end - start)) / 1000.0);
     logDEBUG("Leaving test case '"<<_name<<"'")

@@ -12,6 +12,7 @@ class nvTestResult : public CObject
 protected:
   string _name;
   int _status;
+  int _assertCount;
   double _duration;
   nvTestSuite *_parent;
   CList _messages; // list of messages emitted during this test.
@@ -31,6 +32,16 @@ public:
     return _status;
   }
 
+  void setAssertionCount(int count)
+  {
+    _assertCount = count;
+  }
+
+  int getAssertionCount()
+  {
+    return _assertCount;
+  }
+  
   void setDuration(double dur)
   {
     _duration = dur;
