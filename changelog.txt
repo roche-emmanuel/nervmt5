@@ -168,3 +168,4 @@
 08/04/15-14:13:22: Added initial implementation for nvDeal class.
 08/04/15-14:38:09: Added number of points in Deal class.
 08/04/15-14:43:47: Added support for profit value in nvDeal.
+08/04/15-15:02:10: Added initial support for utilities in nvDeal.

@@ -59,6 +59,15 @@ BEGIN_TEST_CASE("Should provide the profit value")
   REQUIRE_EQUAL(deal.getProfit(),10.12);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide the list of utilities from all traders")
+  nvDeal deal;
+
+  // no utility values by default:
+  double list[];
+  deal.getUtilities(list);
+  REQUIRE_EQUAL(ArraySize(list),0);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

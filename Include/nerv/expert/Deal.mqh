@@ -22,6 +22,9 @@ protected:
   // profit of this deal in the same currency as the balance:
   double _profit;
 
+  // utilities of all traders when the deal is initialized:
+  double _utilities[];
+
 public:
   /*
     Class constructor.
@@ -31,6 +34,7 @@ public:
     _traderID = INVALID_TRADER_ID; // invalid default value.
     _numPoints = 0.0; // No profit by default.
     _profit = 0.0;
+    ArrayResize( _utilities, 0 ); // No utilities by default.
   }
 
   /*
@@ -117,5 +121,21 @@ public:
   void setProfit(double profit)
   {
     _profit = profit;
+  }
+
+  /*
+  Function: getUtilities
+  
+  Retrieve all the utilities from all traders by the time
+  this deal is initialized.
+  */
+  void getUtilities(double& arr[])
+  {
+    int num = ArraySize( _utilities );
+    ArrayResize( arr, num );
+    if(num>0)
+    {
+      CHECK(ArrayCopy(arr, _utilities)==num,"Could not copy all utilities elements.");
+    }
   }
 };
