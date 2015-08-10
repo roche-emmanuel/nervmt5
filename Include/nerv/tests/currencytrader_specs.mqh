@@ -87,6 +87,8 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 	
+	// TODO: add another deal here.
+	
   // Reset the portfolio manager:
   nvPortfolioManager::instance().removeAllCurrencyTraders();
 END_TEST_CASE()
