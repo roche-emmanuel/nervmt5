@@ -74,7 +74,13 @@ public:
   */
   ~nvCurrencyTrader()
   {
-    // No op.
+    // On deletion we should release all the deals contained in this trader:
+    int num = ArraySize( _previousDeals );
+    for(int i=0;i<num;++i)
+    {
+      RELEASE_PTR(_previousDeals[i]);
+    }
+    ArrayResize( _previousDeals, 0 );
   }
 
   /*

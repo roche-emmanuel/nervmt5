@@ -328,4 +328,16 @@ public:
     return 24*3600; // one day fixed for now.
   }
   
+  /*
+  Function: reset
+  
+  Method called to reset completed the state of this portfolio manager.
+  This method will effectively delete all the currency traders created in this
+  portfolio.
+  */
+  void reset()
+  {
+    removeAllCurrencyTraders();
+  }
+  
 };

@@ -146,6 +146,19 @@ BEGIN_TEST_CASE("Should be able to retrieve a currency trader by ID")
 	man.removeAllCurrencyTraders();	
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should have a method reset to remove everything")
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvCurrencyTrader* ct1 = man.addCurrencyTrader("EURUSD");
+	REQUIRE_NOT_NULL(ct1);
+	nvCurrencyTrader* ct2 = man.addCurrencyTrader("GBPUSD");
+	REQUIRE_NOT_NULL(ct2);
+
+	man.reset();
+
+	ASSERT(!IS_VALID_POINTER(ct1));
+	ASSERT(!IS_VALID_POINTER(ct2));
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

@@ -181,3 +181,4 @@
 08/10/15-21:57:53: Added template on support and resistance computation with indicator.
 08/14/15-23:11:25: Fixed issue #2: Added support for lot size in nvDeal.
 08/14/15-23:26:11: Fixed issue #4: Added additional test in currency trader for drawdown computation.
+08/14/15-23:55:51: Fixed issue #3: Ensured that nvDeal and nvCurrencyTraders are deleted properly.
