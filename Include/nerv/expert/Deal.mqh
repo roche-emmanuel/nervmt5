@@ -52,6 +52,9 @@ protected:
   // Boolean to check if this deal is done or not:
   bool _isDone;
 
+  // Lot size for this deal:
+  double _lotSize;
+
 public:
   /*
     Class constructor.
@@ -71,6 +74,7 @@ public:
     _orderType = 0;
     _isDone = false;
     _traderWeight = 0.0;
+    _lotSize = 0.0;
   }
 
   /*
@@ -152,15 +156,18 @@ public:
   /*
   Function: getNominalProfit
   
+
   Retrieve the profit that would have been achieved with this deal
-  if the trader weight was 1.0 when it was initiated.
-  This method will simply defined the observed profit by the trader weight
-  at that time.
+  if the trader weight was 1.0 when it was initiated
+  and if there were no risk management layer on top of the trading system
+  This method will simply divide the observed profit by the deal lot size
+  at the trade entry time: in effect the lot size is a measure of the 
+  trader weight combined with the current risk management multiplier.
   */
   double getNominalProfit()
   {
-    CHECK_RET(_traderWeight>0.0,0.0,"Invalid trader weight.");
-    return _profit/_traderWeight;
+    CHECK_RET(_lotSize>0.0,0.0,"Invalid lot size.");
+    return _profit/_lotSize;
   }
   
   /*
@@ -196,13 +203,14 @@ public:
   This method we retrieve the current settings from the currency trader
   and portfolio manager.
   */
-  void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime)
+  void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime, double lotsize)
   {
     CHECK(entryPrice>0.0 && entryTime>0,"Invalid entry price and/or time");
 
     _entryPrice = entryPrice;
     _entryTime = entryTime;
     _orderType = orderType;
+    _lotSize = lotsize;
 
     // Assign the trader ID:
     setTraderID(id);

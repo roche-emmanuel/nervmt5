@@ -75,7 +75,7 @@ BEGIN_TEST_CASE("Should be able to open a deal")
 	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
 
 	datetime time = TimeLocal();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time);
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time,1.0);
 
 	REQUIRE_EQUAL(deal.getEntryPrice(),1.23456);
 	REQUIRE_EQUAL(deal.getEntryTime(),time);
@@ -97,7 +97,7 @@ BEGIN_TEST_CASE("Should be able to close a deal and update number of points")
 	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
 
 	datetime time = TimeLocal();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time);
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time,1.0);
 
 	// Now close the deal:
 	deal.close(1.23457,time+1,12.3);
@@ -121,7 +121,7 @@ BEGIN_TEST_CASE("Should not be done until it is closed")
 	REQUIRE_EQUAL(deal.isDone(),false);
 	
 	datetime time = TimeLocal();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time);
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time,1.0);
 
 	REQUIRE_EQUAL(deal.isDone(),false);
 	

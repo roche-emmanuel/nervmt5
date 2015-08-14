@@ -36,7 +36,7 @@ BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
   nvDeal* deal = new nvDeal();
 
 	datetime time = TimeCurrent();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2);
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	deal.close(1.23457,time,10.0);
 
 	// Send the deal to the CurrencyTrader:
@@ -68,8 +68,8 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
   nvDeal* deal = new nvDeal();
 
 	datetime time = TimeCurrent();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2);
-	deal.close(1.23457,time,10.0);
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+	deal.close(1.23457,time-3600*2,10.0);
 
 	// Send the deal to the CurrencyTrader:
 	ct.onDeal(deal);
@@ -77,9 +77,9 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	// So, this is the first deal sent to the trader.
 	// And there is only one trader, so its weight is always 1.0.
 	// the new utility value should be:
-	// profit = (10/2h) / w = (10/2h)*2 = 10/h
+	// profit = (10/2h) / lot = (10/2h)*2 = 10/h
 	// dd = 0
-	// u = mean_profit/(1+0) = 5.0
+	// u = mean_profit/(1+0) = 10.0
 	ASSERT_EQUAL(ct.getUtility(),10.0);
 
 	// The new weight should be:
@@ -88,7 +88,21 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 	
 	// TODO: add another deal here.
-	
+	deal = new nvDeal();
+
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+	deal.close(1.23457,time-3600,1.0);
+
+	ct.onDeal(deal);
+
+	// mean_profit = (10+1)/2
+	// dd = 0
+	// u = 5.5
+	ASSERT_EQUAL(ct.getUtility(),5.5);
+	w = MathExp(5.5)/(MathExp(0.0)+MathExp(5.5));
+	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
+	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
+
   // Reset the portfolio manager:
   nvPortfolioManager::instance().removeAllCurrencyTraders();
 END_TEST_CASE()
