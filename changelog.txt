@@ -180,3 +180,4 @@
 08/05/15-00:07:16: Adding test on currency trader utility computation.
 08/10/15-21:57:53: Added template on support and resistance computation with indicator.
 08/14/15-23:11:25: Fixed issue #2: Added support for lot size in nvDeal.
+08/14/15-23:26:11: Fixed issue #4: Added additional test in currency trader for drawdown computation.

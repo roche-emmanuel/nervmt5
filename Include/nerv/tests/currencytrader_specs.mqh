@@ -103,6 +103,23 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 
+	deal = new nvDeal();
+
+	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600,2.0);
+	deal.close(1.23457,time-1800,-4.0);
+
+	ct.onDeal(deal);
+
+	// nom_profit = -4 /2 /.5 = -4
+	// mean_profit = (10+1-4)/3 = 7/3
+	// dd = sqrt(4*4) = 4 
+	// u = 3.5/(1.0+4)
+	double u = (7.0/3.0)/(1.0+4);
+	ASSERT_EQUAL(ct.getUtility(),u);
+	w = MathExp(u)/(MathExp(0.0)+MathExp(u));
+	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
+	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
+
   // Reset the portfolio manager:
   nvPortfolioManager::instance().removeAllCurrencyTraders();
 END_TEST_CASE()
