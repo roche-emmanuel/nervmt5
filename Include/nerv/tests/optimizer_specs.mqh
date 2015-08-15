@@ -134,6 +134,116 @@ BEGIN_TEST_CASE("Should optimize properly with LBFGS test 2")
 	ASSERT_CLOSEDIFF(x[0],-0.99917305,1e-7);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should optimize properly with CG test 3")
+	// Generalized RosenBrock function optimization 
+	class MyFunc : public nvOptimizer
+	{
+	public:
+		double computeCost(double &x[], double &grad[])
+	  {
+      //
+	    // this callback calculates f(x) = 
+	    // and its derivatives df/d0 and df/dx1
+	    //
+	    int num = ArraySize( x );
+	    double val = 0;
+	    double v1, v2;
+	    for(int i=0;i<num;++i)
+	    {
+
+	    	grad[i]=0.0;
+	    	if(i<num-1)
+	    	{
+	    		v1 = (x[i]-1);
+	    		v2 = (x[i+1] - x[i]*x[i]);
+	    		val += v1*v1 + 100.0 * v2*v2;
+	    		grad[i]+=2*(x[i]-1)-400.0*x[i]*(x[i+1] - x[i]*x[i]);
+	    	}
+	    	if(i>0)
+	    	{
+	    		grad[i]+=200.0*(x[i] - x[i-1]*x[i-1]);
+	    	}
+	    }
+
+	    return val;
+	  }
+	};
+
+	MyFunc opt;
+	int dim = 30;
+
+	double x[];
+	ArrayResize( x, dim );
+	for(int i=0;i<dim;++i)
+	{
+		x[i] = -1.0;
+	}
+	opt.setStopConditions(1e-12,0.0,0.0,0);
+
+	double cost = 0.0;
+	int res = opt.optimize_cg(x,cost);
+	ASSERT_EQUAL(res,4);
+	for(int i=0;i<dim;++i)
+	{
+		ASSERT_CLOSEDIFF(x[i],1.0,1e-12);
+	}
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should optimize properly with LBFGS test 3")
+	// Generalized RosenBrock function optimization 
+	class MyFunc : public nvOptimizer
+	{
+	public:
+		double computeCost(double &x[], double &grad[])
+	  {
+      //
+	    // this callback calculates f(x) = 
+	    // and its derivatives df/d0 and df/dx1
+	    //
+	    int num = ArraySize( x );
+	    double val = 0;
+	    double v1, v2;
+	    for(int i=0;i<num;++i)
+	    {
+
+	    	grad[i]=0.0;
+	    	if(i<num-1)
+	    	{
+	    		v1 = (x[i]-1);
+	    		v2 = (x[i+1] - x[i]*x[i]);
+	    		val += v1*v1 + 100.0 * v2*v2;
+	    		grad[i]+=2*(x[i]-1)-400.0*x[i]*(x[i+1] - x[i]*x[i]);
+	    	}
+	    	if(i>0)
+	    	{
+	    		grad[i]+=200.0*(x[i] - x[i-1]*x[i-1]);
+	    	}
+	    }
+
+	    return val;
+	  }
+	};
+
+	MyFunc opt;
+	int dim = 30;
+
+	double x[];
+	ArrayResize( x, dim );
+	for(int i=0;i<dim;++i)
+	{
+		x[i] = -1.0;
+	}
+	opt.setStopConditions(1e-12,0.0,0.0,0);
+
+	double cost = 0.0;
+	int res = opt.optimize_lbfgs(x,cost);
+	ASSERT_EQUAL(res,4);
+	for(int i=0;i<dim;++i)
+	{
+		ASSERT_CLOSEDIFF(x[i],1.0,1e-12);
+	}
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

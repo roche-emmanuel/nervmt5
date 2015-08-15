@@ -155,8 +155,18 @@ public:
 
   This method will return the termination type.
   */
-  int optimize_lbfgs(double &x[], double& cost, int m=10)
+  int optimize_lbfgs(double &x[], double& cost, int m=0)
   {
+    int dim = ArraySize( x );
+    if(m==0)
+    {
+      // Use all the dimensions available:
+      m = dim;
+    }
+
+    // Ensure that m is smaller that the number of dimensions:
+    CHECK_RET(m<=dim,-10,"Invalid value of M="<<m)
+    
     CMinLBFGSStateShell state;
     CAlglib::MinLBFGSCreate(m, x, state);
 
