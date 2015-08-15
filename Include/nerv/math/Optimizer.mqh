@@ -73,6 +73,7 @@ public:
   */
   virtual double computeCost(double &x[])
   {
+    NO_IMPL();
     return 0.0; // does nothing by default.
   }
   
@@ -83,7 +84,7 @@ public:
   */
   virtual void computeGradient(double &x[], double &grad[])
   {
-    return; // does nothing by default.
+    NO_IMPL();
   }
 
   /*
@@ -127,7 +128,7 @@ public:
   Method called to set the stop condition for the minimizer.
   See: http://www.alglib.net/translator/man/manual.cpp.html#sub_minlbfgssetcond
   */
-  virtual void setStopConditions(double epsG, double epsF, double epsX, int maxIters)
+  void setStopConditions(double epsG, double epsF, double epsX, int maxIters)
   {
     _epsG = epsG;
     _epsF = epsF;
@@ -213,4 +214,60 @@ public:
     return ttype;
   }
   
+  /*
+  Function: computeNumericalGradient
+  
+  Method called to compute a gradient vector with finite differences technique.
+  Note that this method should only be called if computeCost is implemented.
+  */
+  void computeNumericalGradient(double &x[], double &grad[], double eps = 1e-6)
+  {
+    int num = ArraySize( x );
+    ArrayResize( grad, num );
+    double cost1, cost2;
+    double val;
+
+    for(int i=0;i<num;++i)
+    {
+      val = x[i];
+      x[i] = val-eps;
+      cost1 = computeCost(x);
+      x[i] = val+eps;
+      cost2 = computeCost(x);
+      x[i] = val; // restore the value.
+      grad[i] = (cost2 - cost1)/(2.0*eps);
+    }
+  }
+
+  /*
+  Function: checkGradient
+  
+  Method used to check the differences between the numerical gradients and
+  the analytic gradients at a given point.
+  */
+  double checkGradient(double &x[], double eps = 1e-6)
+  {
+    int num = ArraySize( x );
+
+    // Compute the numerical gradient at that location:
+    double ngrad[];
+    computeNumericalGradient(x,ngrad,eps);
+
+    // Compute analytic gradient:
+    double agrad[];
+    ArrayResize( agrad, num );
+    computeGradient(x,agrad);
+
+    // Retrieve the maximum error observed:
+    // We evaluate norm(ngrad-agrad)/norm(ngrad+agrad);
+    double nn = 0.0;
+    double dd = 0.0;
+    for(int i = 0;i<num;++i)
+    {
+      nn += (ngrad[i]-agrad[i])*(ngrad[i]-agrad[i]);
+      dd += (ngrad[i]+agrad[i])*(ngrad[i]+agrad[i]);
+    }
+
+    return sqrt(nn)/sqrt(dd);
+  }
 };

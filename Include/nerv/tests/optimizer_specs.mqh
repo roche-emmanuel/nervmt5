@@ -86,6 +86,22 @@ public:
   }
 };
 
+// Simple quadradic function
+class MyFunc4 : public nvOptimizer
+{
+public:
+	void computeGradient(double &x[], double &grad[])
+  {
+		grad[0] = 2*x[0] + 3*x[1];
+		grad[1] = 3*x[0];
+  }
+
+  double computeCost(double &x[])
+  {
+  	return x[0]*x[0] + 3*x[0]*x[1];
+  }
+};
+
 BEGIN_TEST_PACKAGE(optimizer_specs)
 
 BEGIN_TEST_SUITE("Optimizer class")
@@ -180,6 +196,13 @@ BEGIN_TEST_CASE("Should optimize properly with LBFGS test 3")
 	{
 		ASSERT_CLOSEDIFF(x[i],1.0,1e-12);
 	}
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to check gradients")
+  MyFunc4 opt;
+  double x[] = {4, 10};
+  double diff = opt.checkGradient(x,0.0001);
+  ASSERT_CLOSEDIFF(diff,2.1452e-12,1e-16)
 END_TEST_CASE()
 
 END_TEST_SUITE()
