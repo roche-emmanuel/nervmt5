@@ -57,13 +57,33 @@ public:
   */
   void Grad(double &x[],double &func,double &grad[],CObject &obj)
   {
-    func = compute(x, grad);
+    func = this.compute(x, grad);
 
     if (func <= _bestCost)
     {
       _bestCost = func;
       _bestX = x;
     }
+  }
+
+  /*
+  Function: computeCost
+  
+  Method called to compute the cost only at a given point
+  */
+  virtual double computeCost(double &x[])
+  {
+    return 0.0; // does nothing by default.
+  }
+  
+  /*
+  Function: computeGradient
+  
+  Method called to compute the gradient only at a given point
+  */
+  virtual void computeGradient(double &x[], double &grad[])
+  {
+    return; // does nothing by default.
   }
 
   /*
@@ -74,10 +94,11 @@ public:
   */
   virtual double compute(double &x[], double &grad[])
   {
-    // does nothing by default.
-    return 0.0;
+    // By default call the compute cost and compute gradient methods:
+    computeGradient(x,grad);
+    return computeCost(x);
   }
-
+  
   /*
   Function: getBestCost
   
@@ -106,7 +127,7 @@ public:
   Method called to set the stop condition for the minimizer.
   See: http://www.alglib.net/translator/man/manual.cpp.html#sub_minlbfgssetcond
   */
-  void setStopConditions(double epsG, double epsF, double epsX, int maxIters)
+  virtual void setStopConditions(double epsG, double epsF, double epsX, int maxIters)
   {
     _epsG = epsG;
     _epsF = epsF;
@@ -121,7 +142,7 @@ public:
 
   The method will return the termination type
   */
-  int optimize_cg(double &x[], double& cost)
+  virtual int optimize_cg(double &x[], double& cost)
   {
     CMinCGStateShell state;
     CAlglib::MinCGCreate(x, state);
@@ -131,7 +152,7 @@ public:
     CNDimensional_Rep rep;
 
     CObject objdum;
-    CAlglib::MinCGOptimize(state, THIS, rep, false, objdum);
+    CAlglib::MinCGOptimize(state, this, rep, false, objdum);
 
     CMinCGReportShell res;
     CAlglib::MinCGResults(state, x, res);
