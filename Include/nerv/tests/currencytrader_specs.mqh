@@ -99,7 +99,8 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	// dd = 0
 	// u = 5.5
 	ASSERT_EQUAL(ct.getUtility(),5.5);
-	w = MathExp(5.5)/(MathExp(0.0)+MathExp(5.5));
+	double alpha = man.getUtilityEfficiency();
+	w = MathExp(alpha*5.5)/(MathExp(0.0)+MathExp(alpha*5.5));
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 
@@ -116,7 +117,8 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	// u = 3.5/(1.0+4)
 	double u = (7.0/3.0)/(1.0+4);
 	ASSERT_EQUAL(ct.getUtility(),u);
-	w = MathExp(u)/(MathExp(0.0)+MathExp(u));
+	alpha = man.getUtilityEfficiency();
+	w = MathExp(alpha*u)/(MathExp(0.0)+MathExp(alpha*u));
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 

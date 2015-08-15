@@ -343,4 +343,24 @@ public:
     return P*deriv;
   }
   
+  /*
+  Function: getProfitValue
+  
+  Compute the hypothetical profit value for a given efficiency factor alpha
+  */
+  double getProfitValue(double alpha)
+  {
+    double P = getNominalProfit();
+    int num = ArraySize( _utilities );
+    double ui = _traderUtility;
+    double sum_e = 0.0;
+    for(int i=0;i<num;++i)
+    {
+      sum_e += exp(alpha*_utilities[i]);
+    }
+
+    double w = exp(alpha*ui)/sum_e;
+    return P*w;
+  }
+  
 };

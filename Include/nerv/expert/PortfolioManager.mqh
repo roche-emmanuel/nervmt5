@@ -1,5 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
+#include <nerv/expert/UtilityEfficiencyOptimizer.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -36,6 +37,9 @@ protected:
   // will be returned/incremented with the method getNewID()
   int _nextTraderID;
 
+  // Optimizer used to compute the best value for the utility efficiency:
+  UtilityEfficiencyOptimizer _efficiencyOptimizer;
+
 protected:
   // Following methods are protected to respect the singleton pattern
 
@@ -47,11 +51,12 @@ protected:
     // By default there should be no currency trader available:
     ArrayResize( _traders, 0 );
 
-    // Default utility efficiency factor value:
-    _utilityEfficiencyFactor = 1.0;
+    // Initiliaze state (and efficiency value):
+    reset();
 
     // Initialize the next Trader ID;
     _nextTraderID = 10000;
+
   }
 
   /*
@@ -339,6 +344,8 @@ public:
   void reset()
   {
     removeAllCurrencyTraders();
+    // Also reinitialize the current efficiency value:
+    _utilityEfficiencyFactor = 1.0;
   }
   
   /*
@@ -376,8 +383,31 @@ public:
       _traders[i].collectDeals(dealList,startTime,stopTime);
     }
 
-    // Once we have all the deals, we create a cost function from that:
-    // TODO: Need to build a generic cost function first.
+    num = ArraySize( dealList );
+    if(num==0)
+    {
+      // There is nothing to compute in that case.
+      return;
+    }
+
+    // Once we have all the deals, we use the optimizer to compute the best value
+    // of the efficiency:
+    _efficiencyOptimizer.assignDeals(dealList);
+
+    // start at the previous value of the efficiency:
+    // double x[] = { 0.0 };
+    // x[0] = _utilityEfficiencyFactor;
+
+    // Start at some presumably large value for efficiency:
+    double x[] = { 1.0 };
+    
+    double cost = 0.0;
+    _efficiencyOptimizer.optimize_lbfgs(x,cost);
+
+    logDEBUG("Updating utility efficiency to "<<x[0]<<" (cost value: "<<cost<<", num deals: "<<num<<")")
+
+    // assign the new value of the efficiency:
+    _utilityEfficiencyFactor = x[0];
   }
   
 };
