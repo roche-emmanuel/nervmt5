@@ -277,4 +277,35 @@ public:
     man.updateWeights();
   }
   
+  /*
+  Function: collectDeals
+  
+  Method called to retrieve a list of deals from this currency trader
+  given a specific time window.
+
+  Note that this method will return the number of deals collected.
+  */
+  int collectDeals(nvDeal* &arr[],datetime startTime, datetime stopTime)
+  {
+    int num = ArraySize( _previousDeals );
+    nvDeal* ptr = NULL;
+
+    int count = 0;
+
+    for(int i=0;i<num;++i)
+    {
+      ptr = _previousDeals[i];
+
+      if(startTime <= ptr.getEntryTime() && ptr.getExitTime() <= stopTime)
+      {
+        count++;
+        int size = ArraySize( arr );
+        ArrayResize( arr, size+1 );
+        arr[size] = ptr;
+      }
+    }
+
+    return count;
+  }
+  
 };

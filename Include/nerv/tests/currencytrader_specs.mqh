@@ -147,6 +147,45 @@ BEGIN_TEST_CASE("Should release the deals it contains on deletion.")
 	ASSERT(!IS_VALID_POINTER(d2));
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should support collecting deals")
+  
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+
+	datetime time = TimeCurrent();
+
+  nvDeal* d1 = new nvDeal();
+	d1.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+	d1.close(1.23457,time-3600*2,10.0);
+	ct.onDeal(d1);
+
+	nvDeal* d2 = new nvDeal();
+	d2.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+	d2.close(1.23457,time-3600,1.0);
+	ct.onDeal(d2);
+
+	nvDeal* d3 = new nvDeal();
+	d3.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600,1.0);
+	d3.close(1.23457,time-1800,1.0);
+	ct.onDeal(d3);
+
+	nvDeal* list[];
+	ASSERT_EQUAL(ct.collectDeals(list,time-3600*3,time-1000),2);
+
+	int num = ArraySize( list );
+	ASSERT_EQUAL(num,2);
+	ASSERT_EQUAL(d2,list[0]);
+	ASSERT_EQUAL(d3,list[1]);
+
+	// If we call the same method again the deals should be appended again:
+	ASSERT_EQUAL(ct.collectDeals(list,time-3600*3,time-1000),2);
+	num = ArraySize( list );
+	ASSERT_EQUAL(num,4);
+
+  man.reset();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

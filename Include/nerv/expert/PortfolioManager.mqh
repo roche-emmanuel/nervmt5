@@ -261,8 +261,9 @@ public:
     double exps[];
     ArrayResize( exps, num );
 
-    // TODO: here we should update the utility efficiency considered the
-    // previous deals and how we could have optimized our profits.
+    // before updating the currency trader weights we should compute the
+    // optimal efficiency factor here:
+    updateUtilityEfficiencyFactor();
 
     double alpha = _utilityEfficiencyFactor;
     double u;
@@ -338,6 +339,45 @@ public:
   void reset()
   {
     removeAllCurrencyTraders();
+  }
+  
+  /*
+  Function: getUtilityEfficiencyWindowSize
+  
+  Retrieve the value of the window size to be used for the computation
+  of the utility efficiency value
+  */
+  int getUtilityEfficiencyWindowSize()
+  {
+    return 5*24*3600; // 5 days for now ??
+  }
+  
+  /*
+  Function: updateUtilityEfficiencyFactor
+  
+  Method called to update the value of the utilityEfficiencyFactor based
+  on the previous performances on the utility weighting:
+  */
+  void updateUtilityEfficiencyFactor()
+  {
+    // Again here the computation is to be done on a fixed period of time:
+    int wsize = getUtilityEfficiencyWindowSize();
+
+    // Once we have a window size, we need to collect all the deals from
+    // all the currency traders, inside that window:
+    datetime stopTime = TimeCurrent();
+    datetime startTime = stopTime - wsize;
+
+    nvDeal* dealList[];
+    int num = getNumCurrencyTraders();
+    for(int i=0;i<num;++i)
+    {
+      // Collect all the deals coming from that trader:
+      _traders[i].collectDeals(dealList,startTime,stopTime);
+    }
+
+    // Once we have all the deals, we create a cost function from that:
+    // TODO: Need to build a generic cost function first.
   }
   
 };
