@@ -38,7 +38,7 @@ protected:
   int _nextTraderID;
 
   // Optimizer used to compute the best value for the utility efficiency:
-  UtilityEfficiencyOptimizer _efficiencyOptimizer;
+  nvUtilityEfficiencyOptimizer _efficiencyOptimizer;
 
 protected:
   // Following methods are protected to respect the singleton pattern

@@ -28,9 +28,6 @@ protected:
   // Utility of the trader owning this deal when it is initialized:
   double _traderUtility;
 
-  // Weight of the trader owning this deal when it is initiated:
-  double _traderWeight;
-
   // Utility efficiency when this deal is initialized:
   double _utilityEfficiency;
 
@@ -73,7 +70,6 @@ public:
     _exitTime = 0;
     _orderType = 0;
     _isDone = false;
-    _traderWeight = 0.0;
     _lotSize = 0.0;
   }
 
@@ -226,10 +222,6 @@ public:
 
     // Assign the current utility of the parent trader:
     _traderUtility = ct.getUtility();
-
-    // Also store the trader weight for convinient access:
-    _traderWeight = ct.getWeight();
-    CHECK(_traderWeight>0.0,"Invalid trader weight.");
 
     // also keep a ref on the utitity efficiency:
     _utilityEfficiency = man.getUtilityEfficiency();

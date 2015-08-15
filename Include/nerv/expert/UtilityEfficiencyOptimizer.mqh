@@ -3,13 +3,13 @@
 #include <nerv/math/Optimizer.mqh>
 #include <nerv/expert/Deal.mqh>
 
-class UtilityEfficiencyOptimizer : public nvOptimizer
+class nvUtilityEfficiencyOptimizer : public nvOptimizer
 {
 protected:
   nvDeal* _deals[];
 
 public:
-  UtilityEfficiencyOptimizer()
+  nvUtilityEfficiencyOptimizer()
   {
     setStopConditions(1e-12,0.0,0.0,0);
   }
