@@ -188,3 +188,4 @@
 08/15/15-16:03:44: Added working version of Optimizer with ConjugateGradient algorithm.
 08/15/15-16:17:48: Added support for LBFGS algorithm on nvOptimizer class.
 08/15/15-17:02:17: Fixed issue #9: Added implementation and test for generic cost function implementation.
+08/15/15-17:30:13: Renamed computeCost to compute in Optimizer class.

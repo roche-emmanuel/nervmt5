@@ -15,7 +15,7 @@ BEGIN_TEST_CASE("Should optimize properly with CG test 1")
 	class MyFunc : public nvOptimizer
 	{
 	public:
-		double computeCost(double &x[], double &grad[])
+		double compute(double &x[], double &grad[])
 	  {
       //
 	    // this callback calculates f(x0,x1) = 100*(x0+3)^4 + (x1-3)^4
@@ -44,7 +44,7 @@ BEGIN_TEST_CASE("Should optimize properly with CG test 2")
 	class MyFunc : public nvOptimizer
 	{
 	public:
-		double computeCost(double &x[], double &grad[])
+		double compute(double &x[], double &grad[])
 	  {
 	    //
 	    // this callback calculates f(x) = (1+x)^(-0.2) + (1-x)^(-0.3) + 1000*x and its gradient.
@@ -77,7 +77,7 @@ BEGIN_TEST_CASE("Should optimize properly with LBFGS test 1")
 	class MyFunc : public nvOptimizer
 	{
 	public:
-		double computeCost(double &x[], double &grad[])
+		double compute(double &x[], double &grad[])
 	  {
       //
 	    // this callback calculates f(x0,x1) = 100*(x0+3)^4 + (x1-3)^4
@@ -106,7 +106,7 @@ BEGIN_TEST_CASE("Should optimize properly with LBFGS test 2")
 	class MyFunc : public nvOptimizer
 	{
 	public:
-		double computeCost(double &x[], double &grad[])
+		double compute(double &x[], double &grad[])
 	  {
 	    //
 	    // this callback calculates f(x) = (1+x)^(-0.2) + (1-x)^(-0.3) + 1000*x and its gradient.
@@ -139,7 +139,7 @@ BEGIN_TEST_CASE("Should optimize properly with CG test 3")
 	class MyFunc : public nvOptimizer
 	{
 	public:
-		double computeCost(double &x[], double &grad[])
+		double compute(double &x[], double &grad[])
 	  {
       //
 	    // this callback calculates f(x) = 
@@ -194,7 +194,7 @@ BEGIN_TEST_CASE("Should optimize properly with LBFGS test 3")
 	class MyFunc : public nvOptimizer
 	{
 	public:
-		double computeCost(double &x[], double &grad[])
+		double compute(double &x[], double &grad[])
 	  {
       //
 	    // this callback calculates f(x) = 

@@ -57,7 +57,7 @@ public:
   */
   void Grad(double &x[],double &func,double &grad[],CObject &obj)
   {
-    func = computeCost(x, grad);
+    func = compute(x, grad);
 
     if (func <= _bestCost)
     {
@@ -67,12 +67,12 @@ public:
   }
 
   /*
-  Function: computeCost
+  Function: compute
   
   Method called to compute the actual cost from this cost function.
   This should be re-implemented by derived classes.
   */
-  virtual double computeCost(double &x[], double &grad[])
+  virtual double compute(double &x[], double &grad[])
   {
     // does nothing by default.
     return 0.0;
