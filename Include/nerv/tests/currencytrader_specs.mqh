@@ -182,7 +182,7 @@ BEGIN_TEST_CASE("Should support collecting deals")
 	ASSERT_EQUAL(ct.collectDeals(list,time-3600*3,time-1000),2);
 	num = ArraySize( list );
 	ASSERT_EQUAL(num,4);
-
+	
   man.reset();
 END_TEST_CASE()
 
