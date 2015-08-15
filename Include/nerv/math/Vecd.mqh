@@ -65,11 +65,11 @@ public:
     _reserveSize = rhs._reserveSize;
     if (_len != rhs._len) {
       _len = rhs._len;
-      CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
+      CHECK_RET(ArrayResize(_data, _len, _reserveSize) == _len,NULL, "Invalid result for ArrayResize()");
     }
     
     int count = ArrayCopy(_data, rhs._data, 0, 0);
-    CHECK(count == _len, "Invalid array copy count: " << count);
+    CHECK_RET(count == _len,NULL, "Invalid array copy count: " << count);
     return GetPointer(this);
   }
 
@@ -80,11 +80,11 @@ public:
     if(_len != ArraySize(rhs))
     {
       _len = ArraySize(rhs);
-      CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid result for ArrayResize()");
+      CHECK_RET(ArrayResize(_data, _len, _reserveSize) == _len,NULL, "Invalid result for ArrayResize()");
     }
 
     int count = ArrayCopy(_data, rhs, 0, 0);
-    CHECK(count == _len, "Invalid array copy count: " << count);
+    CHECK_RET(count == _len,NULL, "Invalid array copy count: " << count);
     return GetPointer(this);
   }
 
@@ -114,7 +114,7 @@ public:
 
   double at(const uint index) const
   {
-    CHECK(index < _len, "Out of range index: " << index)
+    CHECK_RET(index < _len,0.0,"Out of range index: " << index)
     return _data[index];
   }
 
@@ -181,7 +181,7 @@ public:
 
   nvVecd *operator+=(const nvVecd &rhs)
   {
-    CHECK(_len == rhs._len, "Mismatch of lengths: " << _len << "!=" << rhs._len);
+    CHECK_RET(_len == rhs._len,NULL, "Mismatch of lengths: " << _len << "!=" << rhs._len);
 
     for (uint i = 0; i < _len; ++i)
     {
@@ -215,7 +215,7 @@ public:
 
   nvVecd *operator-=(const nvVecd &rhs)
   {
-    CHECK(_len == rhs._len, "Mismatch of lengths: " << _len << "!=" << rhs._len);
+    CHECK_RET(_len == rhs._len,NULL, "Mismatch of lengths: " << _len << "!=" << rhs._len);
 
     for (uint i = 0; i < _len; ++i)
     {
@@ -275,7 +275,7 @@ public:
 
   nvVecd *operator/=(double val)
   {
-    CHECK(val != 0.0, "Cannot divide by zero.");
+    CHECK_RET(val != 0.0,NULL, "Cannot divide by zero.");
     for (uint i = 0; i < _len; ++i)
     {
       _data[i] /= val;
@@ -292,7 +292,7 @@ public:
 
   double operator*(const nvVecd &rhs) const
   {
-    CHECK(_len == rhs._len, "Mismatch of lengths: " << _len << "!=" << rhs._len);
+    CHECK_RET(_len == rhs._len,NULL, "Mismatch of lengths: " << _len << "!=" << rhs._len);
     double res = 0.0;
     for (uint i = 0; i < _len; ++i)
     {
@@ -304,7 +304,7 @@ public:
   double operator*(const double &rhs[]) const
   {
     int arrlen = ArraySize(rhs);
-    CHECK(_len == arrlen, "Mismatch of lengths: " << _len << "!=" << arrlen);
+    CHECK_RET(_len == arrlen,0.0, "Mismatch of lengths: " << _len << "!=" << arrlen);
     double res = 0.0;
     for (uint i = 0; i < _len; ++i)
     {
@@ -318,7 +318,7 @@ public:
     if (_dynamic)
     {
       _len++;
-      CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid resize operation.");
+      CHECK_RET(ArrayResize(_data, _len, _reserveSize) == _len,0.0, "Invalid resize operation.");
       _data[_len - 1] = val;
       return 0.0;
     }
@@ -326,7 +326,7 @@ public:
     {
       double res = _data[0];
       int count = ArrayCopy(_data, _data, 0, 1, _len - 1);
-      CHECK(count == _len - 1, "Invalid array copy count: " << count);
+      CHECK_RET(count == _len - 1,0.0, "Invalid array copy count: " << count);
       _data[_len - 1] = val;
       return res;
     }
@@ -334,27 +334,27 @@ public:
 
   double pop_back()
   {
-    CHECK(_dynamic, "Cannot pop from non dynamic vector.");
-    CHECK(_len > 0, "Cannot pop from empty vector.");
+    CHECK_RET(_dynamic,0.0, "Cannot pop from non dynamic vector.");
+    CHECK_RET(_len > 0,0.0, "Cannot pop from empty vector.");
 
     double val = _data[_len - 1];
     _len--;
-    CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid resize operation.");
+    CHECK_RET(ArrayResize(_data, _len, _reserveSize) == _len,0.0, "Invalid resize operation.");
     return val;
   }
 
   double pop_front()
   {
-    CHECK(_dynamic, "Cannot pop from non dynamic vector.");
-    CHECK(_len > 0, "Cannot pop from empty vector.");
+    CHECK_RET(_dynamic,0.0, "Cannot pop from non dynamic vector.");
+    CHECK_RET(_len > 0,0.0, "Cannot pop from empty vector.");
 
     double val = _data[0];
     // Copy the data at the back in the front:
     int count = ArrayCopy(_data, _data, 0, 1, _len - 1);
-    CHECK(count == _len - 1, "Invalid array copy count: " << count);
+    CHECK_RET(count == _len - 1,0.0, "Invalid array copy count: " << count);
 
     _len--;
-    CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid resize operation.");
+    CHECK_RET(ArrayResize(_data, _len, _reserveSize) == _len,0.0, "Invalid resize operation.");
     return val;
   }
 
@@ -363,11 +363,11 @@ public:
     if (_dynamic)
     {
       _len++;
-      CHECK(ArrayResize(_data, _len, _reserveSize) == _len, "Invalid resize operation.");
+      CHECK_RET(ArrayResize(_data, _len, _reserveSize) == _len,0.0, "Invalid resize operation.");
 
       // Move the existing elements at the back of the vector:
       int count = ArrayCopy(_data, _data, 1, 0, _len - 1);
-      CHECK(count == _len - 1, "Invalid array copy count: " << count);
+      CHECK_RET(count == _len - 1,0.0, "Invalid array copy count: " << count);
       _data[0] = val;
       return 0.0;
     }
@@ -375,7 +375,7 @@ public:
     {
       double res = _data[_len - 1];
       int count = ArrayCopy(_data, _data, 1, 0, _len - 1);
-      CHECK(count == _len - 1, "Invalid array copy count: " << count);
+      CHECK_RET(count == _len - 1,0.0, "Invalid array copy count: " << count);
       _data[0] = val;
       return res;
     }
@@ -431,13 +431,13 @@ public:
 
   double front() const
   {
-    CHECK(_len > 0, "Cannot retrieve front with length " << _len);
+    CHECK_RET(_len > 0,0.0, "Cannot retrieve front with length " << _len);
     return _data[0];
   }
 
   double back() const
   {
-    CHECK(_len > 0, "Cannot retrieve back with length " << _len);
+    CHECK_RET(_len > 0,0.0, "Cannot retrieve back with length " << _len);
     return _data[_len - 1];
   }
 
@@ -451,7 +451,7 @@ public:
 
   double min() const
   {
-    CHECK(_len > 0, "Cannot compute min with length " << _len);
+    CHECK_RET(_len > 0,0.0, "Cannot compute min with length " << _len);
     double val = _data[0];
     for (uint i = 1; i < _len; ++i)
     {
@@ -462,7 +462,7 @@ public:
 
   double max() const
   {
-    CHECK(_len > 0, "Cannot compute max with length " << _len);
+    CHECK_RET(_len > 0,0.0, "Cannot compute max with length " << _len);
     double val = _data[0];
     for (uint i = 1; i < _len; ++i)
     {
@@ -473,7 +473,7 @@ public:
 
   double mean() const
   {
-    CHECK(_len > 0, "Cannot compute mean with length " << _len);
+    CHECK_RET(_len > 0,0.0, "Cannot compute mean with length " << _len);
 
     double val = 0.0;
     for (uint i = 0; i < _len; ++i)
@@ -487,7 +487,7 @@ public:
 
   double deviation() const
   {
-    CHECK(_len >= 2, "Cannot compute deviation with length " << _len);
+    CHECK_RET(_len >= 2,0.0, "Cannot compute deviation with length " << _len);
 
     double m = mean();
     double dev = norm2();
@@ -505,8 +505,8 @@ public:
 
   double EMA(double alpha) const
   {
-    CHECK(_len > 0, "Cannot compute EMA with length " << _len);
-    CHECK(0.0 < alpha && alpha < 1.0, "Invalid value for alpha coeff: " << alpha);
+    CHECK_RET(_len > 0,0.0, "Cannot compute EMA with length " << _len);
+    CHECK_RET(0.0 < alpha && alpha < 1.0,0.0, "Invalid value for alpha coeff: " << alpha);
 
     double val = _data[0];
     for (uint i = 1; i < _len; ++i)
@@ -526,10 +526,11 @@ public:
 
   nvVecd subvec(uint index, uint len) const
   {
-    CHECK(len > 0, "Invalid length for sub vector.");
-    CHECK(index + len - 1 < _len, "Out of range access for subvector");
+    nvVecd dum;
+    CHECK_RET(len > 0,dum, "Invalid length for sub vector.");
+    CHECK_RET(index + len - 1 < _len,dum, "Out of range access for subvector");
     nvVecd res(len);
-    CHECK(ArrayCopy(res._data, _data, 0, index, len) == len, "Invalid result for Array copy");
+    CHECK_RET(ArrayCopy(res._data, _data, 0, index, len) == len,dum, "Invalid result for Array copy");
     return res;
   }
 
@@ -541,7 +542,8 @@ public:
 
   nvVecd mult(const nvVecd &rhs) const
   {
-    CHECK(_len == rhs._len, "Mismatch in lengths");
+    nvVecd dum;
+    CHECK_RET(_len == rhs._len,dum, "Mismatch in lengths");
     nvVecd res(this);
     for (uint i = 0; i < _len; ++i)
     {
@@ -632,8 +634,8 @@ public:
 
   nvVecd div(const nvVecd &rhs) const
   {
-    CHECK(_len == rhs._len, "Mismatch in lengths");
     nvVecd res(this);
+    CHECK_RET(_len == rhs._len,res, "Mismatch in lengths");
     for (uint i = 0; i < _len; ++i)
     {
       res._data[i] /= rhs._data[i];
@@ -656,7 +658,8 @@ public:
         res._data[j++] = _data[i];
       }
     }
-    CHECK(j==size,"Invalid sampling index result: size="<<size<<", j="<<j);
+    
+    CHECK_RET(j==size,res,"Invalid sampling index result: size="<<size<<", j="<<j);
     return res;
   }
 

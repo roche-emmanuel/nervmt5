@@ -183,3 +183,4 @@
 08/14/15-23:26:11: Fixed issue #4: Added additional test in currency trader for drawdown computation.
 08/14/15-23:55:51: Fixed issue #3: Ensured that nvDeal and nvCurrencyTraders are deleted properly.
 08/15/15-12:37:01: Fixed issue #10: added implementation and test for nvCurrencyTrader::collectDeals().
+08/15/15-14:21:46: Providing initial implementation of Optimizer. Fixed Checks in Vec3d and other math classes.

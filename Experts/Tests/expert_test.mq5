@@ -7,6 +7,7 @@
 #include <nerv/tests/portfoliomanager_specs.mqh>
 #include <nerv/tests/currencytrader_specs.mqh>
 #include <nerv/tests/deal_specs.mqh>
+#include <nerv/tests/optimizer_specs.mqh>
 
 BEGIN_TEST_SESSION("Expert_Results")
 
@@ -16,5 +17,6 @@ LOAD_TEST_PACKAGE(expert_specs)
 LOAD_TEST_PACKAGE(portfoliomanager_specs)
 LOAD_TEST_PACKAGE(currencytrader_specs)
 LOAD_TEST_PACKAGE(deal_specs)
+LOAD_TEST_PACKAGE(optimizer_specs)
 
 END_TEST_SESSION()

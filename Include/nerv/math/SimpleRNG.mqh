@@ -73,7 +73,7 @@ public:
   // Get normal (Gaussian) random sample with specified mean and standard deviation
   double GetNormal(double mean, double standardDeviation)
   {
-    CHECK(standardDeviation>0,"Shape must be positive. Received "<<standardDeviation);
+    CHECK_RET(standardDeviation>0,0.0,"Shape must be positive. Received "<<standardDeviation);
     return mean + standardDeviation * GetNormal();
   }
 
@@ -86,7 +86,7 @@ public:
   // Get exponential random sample with specified mean
   double GetExponential(double mean)
   {
-    CHECK(mean>0,"Mean must be positive. Received "<< mean);
+    CHECK_RET(mean>0,0.0,"Mean must be positive. Received "<< mean);
 
     return mean * GetExponential();
   }
@@ -157,7 +157,7 @@ public:
 
   double GetCauchy(double median, double scale)
   {
-    CHECK(scale>0,"Scale must be positive. Received "<< scale);
+    CHECK_RET(scale>0,0.0,"Scale must be positive. Received "<< scale);
 
     double p = GetUniform();
 
@@ -167,7 +167,7 @@ public:
 
   double GetStudentT(double degreesOfFreedom)
   {
-    CHECK(degreesOfFreedom>0,"Degrees of freedom must be positive. Received "<< degreesOfFreedom)
+    CHECK_RET(degreesOfFreedom>0,0.0,"Degrees of freedom must be positive. Received "<< degreesOfFreedom)
 
     // See Seminumerical Algorithms by Knuth
     double y1 = GetNormal();

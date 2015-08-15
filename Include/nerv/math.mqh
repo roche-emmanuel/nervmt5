@@ -44,10 +44,10 @@ nvVecd nv_read_vecd(string filename)
 {
   int handle = FileOpen(filename, FILE_READ | FILE_CSV | FILE_ANSI);
 
-  CHECK(handle!=INVALID_HANDLE,"Could not open file "<<filename<<" for reading.");
-
   // Prepare a dynamic vector:
   nvVecd result;
+
+  CHECK_RET(handle!=INVALID_HANDLE,result,"Could not open file "<<filename<<" for reading.");
 
   //--- read data from the file
   while (!FileIsEnding(handle))
@@ -86,7 +86,7 @@ double nv_push_back(double &arr[], double val)
     double res = arr[0];
     int len = ArraySize(arr);
     int count = ArrayCopy(arr, arr, 0, 1, len - 1);
-    CHECK(count == len - 1, "Invalid array copy count: " << count);
+    CHECK_RET(count == len - 1,0.0, "Invalid array copy count: " << count);
     arr[len - 1] = val;
     return res;
 }

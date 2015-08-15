@@ -490,34 +490,34 @@ int lbfgs(
 
 
   /* Allocate working space. */
-  CHECK(ArrayResize(xp, n) == n, "Cannot allocate vector");
-  CHECK(ArrayResize(g, n) == n, "Cannot allocate vector");
-  CHECK(ArrayResize(gp, n) == n, "Cannot allocate vector");
-  CHECK(ArrayResize(d, n) == n, "Cannot allocate vector");
-  CHECK(ArrayResize(w, n) == n, "Cannot allocate vector");
+  CHECK_RET(ArrayResize(xp, n) == n,ret, "Cannot allocate vector");
+  CHECK_RET(ArrayResize(g, n) == n,ret, "Cannot allocate vector");
+  CHECK_RET(ArrayResize(gp, n) == n,ret, "Cannot allocate vector");
+  CHECK_RET(ArrayResize(d, n) == n,ret, "Cannot allocate vector");
+  CHECK_RET(ArrayResize(w, n) == n,ret, "Cannot allocate vector");
 
   if (param.orthantwise_c != 0.)
   {
     /* Allocate working space for OW-LQN. */
-    CHECK(ArrayResize(pg, n) == n, "Cannot allocate vector");
+    CHECK_RET(ArrayResize(pg, n) == n,ret, "Cannot allocate vector");
   }
 
   /* Allocate limited memory storage. */
-  CHECK(ArrayResize(lm, m) == m, "Cannot allocate lm array.");
+  CHECK_RET(ArrayResize(lm, m) == m,ret, "Cannot allocate lm array.");
 
   /* Initialize the limited memory. */
   for (i = 0; i < m; ++i)
   {
     lm[i].alpha = 0;
     lm[i].ys = 0;
-    CHECK(ArrayResize(lm[i].s, n) == n, "Cannot allocate vector");
-    CHECK(ArrayResize(lm[i].y, n) == n, "Cannot allocate vector");
+    CHECK_RET(ArrayResize(lm[i].s, n) == n,ret, "Cannot allocate vector");
+    CHECK_RET(ArrayResize(lm[i].y, n) == n,ret, "Cannot allocate vector");
   }
 
   /* Allocate an array for storing previous values of the objective function. */
   if (0 < param.past)
   {
-    CHECK(ArrayResize(pf, param.past) == param.past, "Cannot allocate vector");
+    CHECK_RET(ArrayResize(pf, param.past) == param.past,ret, "Cannot allocate vector");
   }
 
   /* Evaluate the function value and its gradient. */
