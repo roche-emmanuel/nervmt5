@@ -148,4 +148,38 @@ public:
     return ttype;
   }
 
+  /*
+  Function: optimize_lbfgs
+  
+  Perform optimization using a L-BFGS technique.
+
+  This method will return the termination type.
+  */
+  int optimize_lbfgs(double &x[], double& cost, int m=10)
+  {
+    CMinLBFGSStateShell state;
+    CAlglib::MinLBFGSCreate(m, x, state);
+
+    CAlglib::MinLBFGSSetCond(state, _epsG, _epsF, _epsX, _maxIters);
+
+    CNDimensional_Rep rep;
+
+    CObject objdum;
+    CAlglib::MinLBFGSOptimize(state, THIS, rep, false, objdum);
+
+    CMinLBFGSReportShell res;
+    CAlglib::MinLBFGSResults(state, x, res);
+
+    int ttype = res.GetTerminationType();
+
+    logDEBUG("Optimization done with best cost: " << _bestCost
+      <<", iteration count: "<<res.GetIterationsCount()
+      <<", numFuncEvals: "<<res.GetNFev()
+      <<", terminationType: "<<ttype);
+
+    cost = _bestCost;
+
+    return ttype;
+  }
+  
 };
