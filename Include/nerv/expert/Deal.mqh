@@ -313,4 +313,34 @@ public:
   {
     return _exitTime;
   }
+
+  /*
+  Function: getProfitDerivative
+  
+  Retrieve the profit derivative at a given utility efficiency point
+  for this deal
+  */
+  double getProfitDerivative(double alpha)
+  {
+    double P = getNominalProfit();
+
+    // Compute the weight derivative:
+    int num = ArraySize( _utilities );
+    double ui = _traderUtility;
+    double sum_e = 0.0;
+    double sum_ue = 0.0;
+    double val;
+    double u;
+    for(int i=0;i<num;++i)
+    {
+      u = _utilities[i];
+      val = exp(alpha*u);
+      sum_e += val;
+      sum_ue += u*val;
+    }
+
+    double deriv = exp(alpha*ui)*(ui*sum_e - sum_ue)/(sum_e*sum_e);
+    return P*deriv;
+  }
+  
 };
