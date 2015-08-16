@@ -167,6 +167,16 @@ public:
   }
   
   /*
+  Function: getTraderUtility
+  
+  Retrieve the utility of the trader at the time this deal was entered.
+  */
+  double getTraderUtility()
+  {
+    return _traderUtility;
+  }
+  
+  /*
   Function: setProfit
   
   Set the profit of this deal

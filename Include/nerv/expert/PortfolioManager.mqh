@@ -1,9 +1,13 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
-#include <nerv/expert/UtilityEfficiencyOptimizer.mqh>
+#include <nerv/math.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
+
+// Number of deals taken into account for the computation of the
+// efficiency statistics:
+#define EFFICIENCY_STATS_NUM_DEALS 300
 
 // Forward declaration of the currency trader class:
 class nvCurrencyTrader;
@@ -37,8 +41,13 @@ protected:
   // will be returned/incremented with the method getNewID()
   int _nextTraderID;
 
-  // Optimizer used to compute the best value for the utility efficiency:
-  nvUtilityEfficiencyOptimizer _efficiencyOptimizer;
+  // Should also contain a vector of all the previous utility values observed each time
+  // a new deal is performed:
+  nvVecd _dealUtilities;
+
+  // Should also contain a vector of all the previous nominal profit values observed each time
+  // a new deal is performed:
+  nvVecd _dealProfits;
 
 protected:
   // Following methods are protected to respect the singleton pattern
@@ -246,6 +255,42 @@ public:
   }
 
   /*
+  Function: addProfitSample
+  
+  Method called by the currency traders to notify the PortfolioManager that a new deal was performed,
+  and thus that we have a new observation for th nominal profit and utility values.
+
+  With this new sample the portfolio manager can update its efficiency statistics,
+  and thus update the traders weights.
+  */
+  void addProfitSample(double nominalProfit, double utility)
+  {
+    _dealUtilities.push_back(utility);
+    _dealProfits.push_back(nominalProfit);
+    updateWeights();
+  }
+  
+  /*
+  Function: getUtilityMean
+  
+  Retrieve the mean of the utility values over the recent previous deals.
+  */
+  double getUtilityMean()
+  {
+    return _dealUtilities.mean();
+  }
+  
+  /*
+  Function: getUtilityDeviation
+  
+  Retrieve the deviation of the utility valeus over the recent previous deals.
+  */
+  double getUtilityDeviation()
+  {
+    return _dealUtilities.deviation();
+  }
+  
+  /*
   Function: updateWeights
   
   Method called each time the currency traders weights should
@@ -266,9 +311,21 @@ public:
     double exps[];
     ArrayResize( exps, num );
 
-    // before updating the currency trader weights we should compute the
-    // optimal efficiency factor here:
-    updateUtilityEfficiencyFactor();
+    // Retrieve the current mean of the utility values:
+    double mu = getUtilityMean();
+
+    // and also the current deviation:
+    double dev = getUtilityDeviation();
+
+    double dev2 = _dealProfits.deviation();
+    
+    // if the deviation is zero, then we don't update anything:
+    if(dev>0.0 && dev2>0.0)
+    {
+      // before updating the currency trader weights we should compute the
+      // optimal efficiency factor here:
+      updateUtilityEfficiencyFactor();
+    }
 
     double alpha = _utilityEfficiencyFactor;
     double u;
@@ -276,7 +333,7 @@ public:
     for(int i=0;i<num;++i)
     {
       u = _traders[i].getUtility();
-      exps[i] = MathExp(alpha*u);
+      exps[i] = dev>0.0 ? MathExp(alpha*(u-mu)/dev) : 1.0;
       denom += exps[i];
     }
 
@@ -344,19 +401,13 @@ public:
   void reset()
   {
     removeAllCurrencyTraders();
+
     // Also reinitialize the current efficiency value:
     _utilityEfficiencyFactor = 1.0;
-  }
-  
-  /*
-  Function: getUtilityEfficiencyWindowSize
-  
-  Retrieve the value of the window size to be used for the computation
-  of the utility efficiency value
-  */
-  int getUtilityEfficiencyWindowSize()
-  {
-    return 5*24*3600; // 5 days for now ??
+
+    // Reset the content of the dellUtilities and dealProfits vectors:
+    _dealUtilities.resize(EFFICIENCY_STATS_NUM_DEALS);
+    _dealProfits.resize(EFFICIENCY_STATS_NUM_DEALS);
   }
   
   /*
@@ -367,47 +418,21 @@ public:
   */
   void updateUtilityEfficiencyFactor()
   {
-    // Again here the computation is to be done on a fixed period of time:
-    int wsize = getUtilityEfficiencyWindowSize();
+    // To compute the efficiency factor we simple analyse the correlation between the
+    // recent deal utilities and the corresponding nominalProfits.
 
-    // Once we have a window size, we need to collect all the deals from
-    // all the currency traders, inside that window:
-    datetime stopTime = TimeCurrent();
-    datetime startTime = stopTime - wsize;
+    double corr = _dealUtilities.correlation(_dealProfits);
 
-    nvDeal* dealList[];
-    int num = getNumCurrencyTraders();
-    for(int i=0;i<num;++i)
+    // Notify if negative correlation is detected, since this would be quite abnormal:
+    if(corr<0.0)
     {
-      // Collect all the deals coming from that trader:
-      _traders[i].collectDeals(dealList,startTime,stopTime);
+      logWARN("Detected negative utility/profit correlation: "<<corr);
     }
 
-    num = ArraySize( dealList );
-    if(num==0)
-    {
-      // There is nothing to compute in that case.
-      return;
-    }
-
-    // Once we have all the deals, we use the optimizer to compute the best value
-    // of the efficiency:
-    _efficiencyOptimizer.assignDeals(dealList);
-
-    // start at the previous value of the efficiency:
-    // double x[] = { 0.0 };
-    // x[0] = _utilityEfficiencyFactor;
-
-    // Start at some presumably large value for efficiency:
-    double x[] = { 1.0 };
-    
-    double cost = 0.0;
-    _efficiencyOptimizer.optimize_lbfgs(x,cost);
-
-    logDEBUG("Updating utility efficiency to "<<x[0]<<" (cost value: "<<cost<<", num deals: "<<num<<")")
-
-    // assign the new value of the efficiency:
-    _utilityEfficiencyFactor = x[0];
+    // Then we multiply this correlation value by a fixed value to ensure that 
+    // we use the complete range of possibility for the weight differences:
+    // And that should be our new efficiency factor:
+    _utilityEfficiencyFactor = 2.0*corr;
   }
   
 };

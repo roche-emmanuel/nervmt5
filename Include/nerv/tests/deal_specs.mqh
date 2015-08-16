@@ -175,7 +175,8 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   ASSERT_EQUAL(ct.getUtility(),10.0);
 
   // The new weight should be:
-  double w = MathExp(10.0)/(MathExp(0.0)+MathExp(10));
+  // double w = MathExp(10.0)/(MathExp(0.0)+MathExp(10));
+  double w = 1.0/2.0;
   ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
   ASSERT_CLOSEDIFF(ct2.getWeight(),1.0-w,1e-8);
   

@@ -98,18 +98,18 @@ BEGIN_TEST_CASE("Should allow updating the currency traders weights")
 	// Should set its initial weight to one when there is only one currency:
 	// But note that the weight should be updated automatically in that case:
 	nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
-	REQUIRE_NOT_NULL(ct);
-	REQUIRE_EQUAL(ct.getWeight(),1.0);
+	ASSERT_NOT_NULL(ct);
+	ASSERT_EQUAL(ct.getWeight(),1.0);
 	
 	// When adding a new currency trader the weights should be updated:
 	nvCurrencyTrader* ct2 = man.addCurrencyTrader("GBPUSD");
-	REQUIRE_NOT_NULL(ct2);
-	REQUIRE_EQUAL(ct.getWeight(),0.5);
-	REQUIRE_EQUAL(ct2.getWeight(),0.5);
+	ASSERT_NOT_NULL(ct2);
+	ASSERT_EQUAL(ct.getWeight(),0.5);
+	ASSERT_EQUAL(ct2.getWeight(),0.5);
 
 	// reset the current status:
 	man.removeAllCurrencyTraders();
-	REQUIRE_EQUAL(man.getNumCurrencyTraders(),0);	
+	ASSERT_EQUAL(man.getNumCurrencyTraders(),0);	
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide new unique IDs")

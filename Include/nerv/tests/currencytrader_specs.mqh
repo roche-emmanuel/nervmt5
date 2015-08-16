@@ -48,11 +48,11 @@ BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
 	// profit = 10/2h = 5/h
 	// dd = 0
 	// u = mean_profit/(1+0) = 5.0
-	REQUIRE_EQUAL(ct.getUtility(),5.0);
-	REQUIRE_EQUAL(ct.getWeight(),1.0);
+	ASSERT_EQUAL(ct.getUtility(),5.0);
+	ASSERT_EQUAL(ct.getWeight(),1.0);
 	
   // Reset the portfolio manager:
-  nvPortfolioManager::instance().removeAllCurrencyTraders();
+  man.reset();
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should compute its utility with 2 traders")
@@ -60,7 +60,10 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 
   nvCurrencyTrader* ct0 = man.addCurrencyTrader("EURUSD");
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
-  
+
+	ASSERT(ct!=NULL);
+	ASSERT(ct0!=NULL);
+
   // initial utility should be 0.0:
   ASSERT_EQUAL(ct.getUtility(),0.0);
   	
@@ -83,11 +86,12 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	ASSERT_EQUAL(ct.getUtility(),10.0);
 
 	// The new weight should be:
-	double w = MathExp(10.0)/(MathExp(0.0)+MathExp(10));
+	// dev if utility is zero, so the weight element should always be 1.0
+	// double w = MathExp(10.0)/(MathExp(0.0)+MathExp(10));
+	double w = 1.0/2.0;
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 	
-	// TODO: add another deal here.
 	deal = new nvDeal();
 
 	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
@@ -100,7 +104,9 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	// u = 5.5
 	ASSERT_EQUAL(ct.getUtility(),5.5);
 	double alpha = man.getUtilityEfficiency();
-	w = MathExp(alpha*5.5)/(MathExp(0.0)+MathExp(alpha*5.5));
+	double m = man.getUtilityMean();
+	double dev = man.getUtilityDeviation();
+	w = MathExp(alpha*(5.5-m)/dev)/(MathExp(alpha*(0.0-m)/dev)+MathExp(alpha*(5.5-m)/dev));
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 
@@ -118,12 +124,14 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	double u = (7.0/3.0)/(1.0+4);
 	ASSERT_EQUAL(ct.getUtility(),u);
 	alpha = man.getUtilityEfficiency();
-	w = MathExp(alpha*u)/(MathExp(0.0)+MathExp(alpha*u));
+	m = man.getUtilityMean();
+	dev = man.getUtilityDeviation();
+	w = MathExp(alpha*(u-m)/dev)/(MathExp(alpha*(0.0-m)/dev)+MathExp(alpha*(u-m)/dev));
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
 
   // Reset the portfolio manager:
-  nvPortfolioManager::instance().removeAllCurrencyTraders();
+  man.reset();
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should release the deals it contains on deletion.")

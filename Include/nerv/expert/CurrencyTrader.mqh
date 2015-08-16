@@ -43,6 +43,9 @@ public:
     // Store the symbol assigned to this trader:
     _symbol = symbol;
 
+    // Initial weight value:
+    _weight = 0.0;
+    
     // Set default utility value:
     _utility = 0.0;
 
@@ -174,6 +177,9 @@ public:
       RELEASE_PTR(old);
       _previousDeals[num-1] = deal;
     }
+
+    // Notify the portfolio manager there is a new profit sample:
+    nvPortfolioManager::instance().addProfitSample(deal.getNominalProfit(),deal.getTraderUtility());
 
     // Now we should update the utility of this trader:
     updateUtility();
