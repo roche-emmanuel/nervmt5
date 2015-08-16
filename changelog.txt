@@ -196,3 +196,4 @@
 08/16/15-00:32:41: Fixed issue #1: removed _traderWeight from nvDeal class. Also added nv porefix on UtilityEfficiencyOptimizer class name.
 08/16/15-12:13:30: Added covariance and correlation computation support in nvVecd.
 08/16/15-12:55:57: Added computation of correlation for utility efficiency and fixed the unit tests accordingly.
+08/16/15-13:02:13: Fixed issue #7: Providing initial implementation for the computation of the utility efficiency value as a correlation factor.

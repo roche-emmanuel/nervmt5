@@ -267,7 +267,20 @@ public:
   {
     _dealUtilities.push_back(utility);
     _dealProfits.push_back(nominalProfit);
-    updateWeights();
+    
+    double dev = _dealUtilities.deviation();
+    double dev2 = _dealProfits.deviation();
+
+    // This is where we should update the utility efficiency factor:
+    // if the deviation is zero, then we don't update anything:
+    if(dev>0.0 && dev2>0.0)
+    {
+      // before updating the currency trader weights we should compute the
+      // optimal efficiency factor here:
+      updateUtilityEfficiencyFactor();
+    }
+
+    // updateWeights();
   }
   
   /*
@@ -316,16 +329,6 @@ public:
 
     // and also the current deviation:
     double dev = getUtilityDeviation();
-
-    double dev2 = _dealProfits.deviation();
-    
-    // if the deviation is zero, then we don't update anything:
-    if(dev>0.0 && dev2>0.0)
-    {
-      // before updating the currency trader weights we should compute the
-      // optimal efficiency factor here:
-      updateUtilityEfficiencyFactor();
-    }
 
     double alpha = _utilityEfficiencyFactor;
     double u;
