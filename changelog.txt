@@ -194,3 +194,4 @@
 08/15/15-21:33:17: Working on issue #7: Added implementation for getprofitDerivative in nvDeal class.
 08/16/15-00:07:29: Working on issue #7: Added initial implementation for UtilityEfficiencyOptimizer.
 08/16/15-00:32:41: Fixed issue #1: removed _traderWeight from nvDeal class. Also added nv porefix on UtilityEfficiencyOptimizer class name.
+08/16/15-12:13:30: Added covariance and correlation computation support in nvVecd.

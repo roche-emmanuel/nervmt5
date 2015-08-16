@@ -490,14 +490,55 @@ public:
     CHECK_RET(_len >= 2,0.0, "Cannot compute deviation with length " << _len);
 
     double m = mean();
-    double dev = norm2();
+    
+    double dev = 0.0;
+    for (uint i = 0; i < _len; ++i)
+    {
+      dev += (_data[i]-m)*(_data[i]-m);
+    }
     dev /= (_len - 1);
 
-    dev -= m * m;
     dev = MathSqrt(dev);
     return dev;
   }
 
+  /*
+  Function: covariance
+  
+  Compute the estimated covariance between 2 vectors of observations.
+  */  
+  double covariance(const nvVecd &rhs) const
+  {
+    CHECK_RET(_len == rhs._len,0.0, "Mismatch in length for covariance computation: " << _len<<"!="<<rhs._len);
+
+    double cov = 0.0;
+    double m1 = mean();
+    double m2 = rhs.mean();
+
+    for (uint i = 0; i < _len; ++i)
+    {
+      cov += (_data[i]-m1)*(rhs._data[i]-m2);
+    }
+
+    cov /= (_len - 1);
+
+    return cov;
+  }
+
+  /*
+  Function: correlation
+  
+  Compute the estimated correlation between 2 vectors of observations.
+  */
+  double correlation(const nvVecd& rhs)
+  {
+    double cov = covariance(rhs);
+    double dev1 = deviation();
+    double dev2 = rhs.deviation();
+    CHECK_RET(dev1>0.0,0.0, "Invalid deviation value for correlation computation.");
+    return cov/(dev1*dev2);
+  }
+  
   bool valid() const
   {
     return _len > 0;
