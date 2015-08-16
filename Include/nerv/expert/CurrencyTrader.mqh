@@ -107,7 +107,18 @@ public:
   void addTradingAgent(nvTradingAgent* agent)
   {
     CHECK(agent!=NULL,"Invalid trading agent.")
-    nvAppend(_agents,agent);
+    nvAppendArrayElement(_agents,agent);
+  }
+  
+  /*
+  Function: removeTradingAgent
+  
+  Method called whend we need to remove a trading agent from this trader.
+  */
+  void removeTradingAgent(nvTradingAgent* agent)
+  {
+    CHECK(agent!=NULL,"Invalid trading agent.")
+    nvRemoveArrayElement(_agents,agent);
   }
   
   /*

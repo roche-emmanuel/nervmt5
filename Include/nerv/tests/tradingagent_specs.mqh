@@ -20,6 +20,19 @@ BEGIN_TEST_CASE("Should be deleted properly by currency trader")
   ASSERT(!IS_VALID_POINTER(agent));
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be removable from currency trader")
+  nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
+
+  nvTradingAgent* agent = new nvTradingAgent();
+  ct.addTradingAgent(agent);
+
+  ct.removeTradingAgent(agent);
+  RELEASE_PTR(ct);
+
+  ASSERT(IS_VALID_POINTER(agent));
+  RELEASE_PTR(agent);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

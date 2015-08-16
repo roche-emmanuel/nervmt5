@@ -201,3 +201,4 @@
 08/16/15-20:48:26: Working on issue #14: Added initial nvTradingAgent class.
 08/16/15-20:58:45: Working on issue #14: Added nvCurrencyTrader::addTradingAgent() method.
 08/16/15-20:58:56: Working on issue #14: Added nvCurrencyTrader::addTradingAgent() method.
+08/16/15-21:06:16: Fixed issue #14: added nvCurrencyTrader::removeTradingAgent() method.
