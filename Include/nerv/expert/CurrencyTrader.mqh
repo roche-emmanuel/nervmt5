@@ -2,6 +2,8 @@
 
 #include <nerv/expert/PortfolioManager.mqh>
 #include <nerv/expert/Deal.mqh>
+#include <nerv/utils.mqh>
+#include <nerv/expert/TradingAgent.mqh>
 
 /*
 Class: nvCurrencyTrader
@@ -33,6 +35,9 @@ protected:
 
   // List of past deals executed byt this trader:
   nvDeal* _previousDeals[];
+
+  // List of trading agents:
+  nvTradingAgent* _agents[];
 
 public:
   /*
@@ -84,8 +89,27 @@ public:
       RELEASE_PTR(_previousDeals[i]);
     }
     ArrayResize( _previousDeals, 0 );
+
+    // Release all the agents contained in this trader:
+    num = ArraySize( _agents );
+    for(int i=0;i<num;++i)
+    {
+      RELEASE_PTR(_agents[i]);
+    }
+    ArrayResize( _agents, 0 );
   }
 
+  /*
+  Function: addTradingAgent
+  
+  Append an agent to the list of agent contained in this currency trader
+  */
+  void addTradingAgent(nvTradingAgent* agent)
+  {
+    CHECK(agent!=NULL,"Invalid trading agent.")
+    nvAppend(_agents,agent);
+  }
+  
   /*
   Function: getSymbol
   

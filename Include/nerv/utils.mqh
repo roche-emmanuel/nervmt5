@@ -12,3 +12,12 @@ void nvRemoveArrayItem(T &array[], int index)
   // Resize the array:
   ArrayResize( array, num-1 );
 }
+
+// Generic method to append a content to an array:
+template<typename T>
+void nvAppend(T &array[], T& val)
+{
+	int num = ArraySize( array );
+	ArrayResize( array, num+1 );
+	array[num] = val;
+}

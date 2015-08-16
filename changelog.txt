@@ -199,3 +199,5 @@
 08/16/15-13:02:13: Fixed issue #7: Providing initial implementation for the computation of the utility efficiency value as a correlation factor.
 08/16/15-14:13:27: Fixed issue #6: using deal duration for profit utility computation in currency trader.
 08/16/15-20:48:26: Working on issue #14: Added initial nvTradingAgent class.
+08/16/15-20:58:45: Working on issue #14: Added nvCurrencyTrader::addTradingAgent() method.
+08/16/15-20:58:56: Working on issue #14: Added nvCurrencyTrader::addTradingAgent() method.
