@@ -220,8 +220,11 @@ public:
         profit = ptr.getNominalProfit();
         
         // compute the elapsed time since the last trade (in hours)
-        delta = (double)(dtime - (lastTime==0 ? ptr.getEntryTime() : lastTime))/3600.0;
-        CHECK_RET(delta>0.0,0.0,"Detected invalid deal duration.");
+        // delta = (double)(dtime - (lastTime==0 ? ptr.getEntryTime() : lastTime))/3600.0;
+        // CHECK_RET(delta>0.0,0.0,"Detected invalid deal duration.");
+
+        // Compute the duration of the deal in hours:
+        delta = (double)(dtime - ptr.getEntryTime())/3600.0;
 
         // Now we compute the profit per unit of time (eg. per hour in this case):
         profit /= delta;
