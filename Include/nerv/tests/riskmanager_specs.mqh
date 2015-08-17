@@ -45,6 +45,28 @@ BEGIN_TEST_CASE("Should be able to retrieve a balanace value")
   ASSERT_EQUAL(rman.getBalanceValue("JPY"),balance*latest_price.bid);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to evaluate a lot size")
+  nvRiskManager* rman = nvPortfolioManager::instance().getRiskManager();
+	
+  double balance = rman.getBalanceValue("JPY");
+	
+	double var = balance*0.03*0.5;
+	double mylot = var/(100.0*30.0);
+
+	rman.setRiskLevel(0.03);
+	double lot = rman.evaluateLotSize("EURJPY",30.0,0.5);
+	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
+
+  balance = rman.getBalanceValue("CAD");
+	
+	var = balance*0.03*0.2;
+	mylot = var/(1.0*50.0);
+	lot = rman.evaluateLotSize("EURCAD",50.0,0.2);
+	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
+
+	nvPortfolioManager::instance().reset();  
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
