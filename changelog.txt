@@ -208,3 +208,4 @@
 08/17/15-16:35:57: Working on issue #18: Added method nvRiskManager::getBalanceValue() to get the current balance in any valid currency.
 08/17/15-17:33:15: Working on issue #18: Finalized implementation of nvRiskManager::evaluateLotSize() (but test missing). Added some utils functions.
 08/17/15-17:46:53: Fixed issue #18: Added test for nvRiskManager::evaluateLotSize().
+08/17/15-20:59:25: Fixed issue #15: Added initial implementation for DecisionComposer. Keeping reference on parent currency trader.
