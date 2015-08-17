@@ -131,7 +131,7 @@ public:
   
   Main method of this class used to evaluate the lot size that should be used for a potential trade.
   */
-  double evaluateLotSize(string symbol, int numLostPoints, double traderWeight)
+  double evaluateLotSize(string symbol, int numLostPoints, double traderWeight, double confidence)
   {
     CHECK_RET(0.0<=traderWeight && traderWeight <= 1.0,0.0,"Invalid trader weight: "<<traderWeight);
 
@@ -140,7 +140,7 @@ public:
     double balance = getBalanceValue(quoteCurrency);
 
     // Now we determine what fraction of this balance we can risk:
-    double VaR = balance * _riskLevel * traderWeight; // This is given in the quote currency.
+    double VaR = balance * _riskLevel * traderWeight * MathAbs(confidence); // This is given in the quote currency.
 
     // Now we can compute the final lot size:
     // The worst lost we will achieve in the quote currency is:

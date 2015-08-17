@@ -50,18 +50,18 @@ BEGIN_TEST_CASE("Should be able to evaluate a lot size")
 	
   double balance = rman.getBalanceValue("JPY");
 	
-	double var = balance*0.03*0.5;
+	double var = balance*0.03*0.5*0.8;
 	double mylot = var/(100.0*30.0);
 
 	rman.setRiskLevel(0.03);
-	double lot = rman.evaluateLotSize("EURJPY",30.0,0.5);
+	double lot = rman.evaluateLotSize("EURJPY",30.0,0.5,0.8);
 	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
 
   balance = rman.getBalanceValue("CAD");
 	
-	var = balance*0.03*0.2;
+	var = balance*0.03*0.2*0.6;
 	mylot = var/(1.0*50.0);
-	lot = rman.evaluateLotSize("EURCAD",50.0,0.2);
+	lot = rman.evaluateLotSize("EURCAD",50.0,0.2,0.6);
 	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
 
 	nvPortfolioManager::instance().reset();  
