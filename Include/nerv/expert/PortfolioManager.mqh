@@ -2,6 +2,7 @@
 #include <nerv/utils.mqh>
 #include <nerv/math.mqh>
 #include <nerv/expert/RiskManager.mqh>
+#include <nerv/expert/AgentFactory.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -52,6 +53,9 @@ protected:
 
   // Instance of the risk manager for this portfolio:
   nvRiskManager _riskManager;
+
+  // Instance of the Agent factory for this portfolio:
+  nvAgentFactory _agentFactory;
 
 protected:
   // Following methods are protected to respect the singleton pattern
@@ -430,6 +434,15 @@ public:
     return GetPointer(_riskManager);
   }
   
+  /*
+  Function: getAgentFactory
+  
+  Retrieve the AgentFactory compoentn in this instance
+  */
+  nvAgentFactory* getAgentFactory()
+  {
+    return GetPointer(_agentFactory);
+  }
   
   /*
   Function: updateUtilityEfficiencyFactor
