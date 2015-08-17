@@ -212,3 +212,4 @@
 08/17/15-21:20:20: Fixed issue #18: Added support for confidence in the trader request for computation of the lot size in nvRiskManager::evaluateLotSize().
 08/17/15-21:59:06: Working on issue #19: Added initial implementation for AgentFactory class.
 08/17/15-22:39:06: Working on issue #19: added support for agent type in Trading Agent class.
+08/17/15-22:44:02: Working on issue #19: Added reference on parent currency trader in Trading agent.

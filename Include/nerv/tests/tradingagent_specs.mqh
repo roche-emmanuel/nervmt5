@@ -7,13 +7,14 @@ BEGIN_TEST_PACKAGE(tradingagent_specs)
 BEGIN_TEST_SUITE("TradingAgent class")
 
 BEGIN_TEST_CASE("should be able to create a TradingAgent instance")
-	nvTradingAgent agent;
+	nvCurrencyTrader ct("EURUSD");
+  nvTradingAgent agent(GetPointer(ct));
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be deleted properly by currency trader")
   nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
 
-  nvTradingAgent* agent = new nvTradingAgent();
+  nvTradingAgent* agent = new nvTradingAgent(ct);
   ct.addTradingAgent(agent);
 
   RELEASE_PTR(ct);
@@ -23,7 +24,7 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("Should be removable from currency trader")
   nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
 
-  nvTradingAgent* agent = new nvTradingAgent();
+  nvTradingAgent* agent = new nvTradingAgent(ct);
   ct.addTradingAgent(agent);
 
   ct.removeTradingAgent(agent);
@@ -34,7 +35,8 @@ BEGIN_TEST_CASE("Should be removable from currency trader")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide default agent type")
-  nvTradingAgent* agent = new nvTradingAgent();
+  nvCurrencyTrader ct("EURUSD");
+  nvTradingAgent* agent = new nvTradingAgent(GetPointer(ct));
 
   ASSERT_EQUAL((int)agent.getAgentType(),(int)TRADE_AGENT_UNKNOWN);
   RELEASE_PTR(agent);

@@ -1,5 +1,7 @@
 #include <nerv/core.mqh>
 
+class nvCurrencyTrader;
+
 enum AgentType
 {
   TRADE_AGENT_UNKNOWN = 0,
@@ -18,14 +20,20 @@ protected:
   // Agent type:
   AgentType _agentType;
 
+  // Reference on parent trader:
+  nvCurrencyTrader* _trader;
+
 public:
   /*
     Class constructor.
   */
-  nvTradingAgent()
+  nvTradingAgent(nvCurrencyTrader* trader)
   {
+    CHECK(trader,"Invalid parent trader.");
+
     // Default value for the agent type:
     _agentType = TRADE_AGENT_UNKNOWN;
+    _trader = trader;
   }
 
   /*
