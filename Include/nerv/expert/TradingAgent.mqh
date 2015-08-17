@@ -1,5 +1,11 @@
 #include <nerv/core.mqh>
 
+enum AgentType
+{
+  TRADE_AGENT_UNKNOWN = 0,
+  TRADE_AGENT_ICHIMOKU = 1,
+};
+
 /*
 Class: nvTradingAgent
 
@@ -8,13 +14,18 @@ currency trader.
 */
 class nvTradingAgent : public nvObject
 {
+protected:
+  // Agent type:
+  AgentType _agentType;
+
 public:
   /*
     Class constructor.
   */
   nvTradingAgent()
   {
-    // No op.
+    // Default value for the agent type:
+    _agentType = TRADE_AGENT_UNKNOWN;
   }
 
   /*
@@ -40,4 +51,15 @@ public:
   {
     // No op.
   }
+
+  /*
+  Function: getAgentType
+  
+  Retrieve the agent type
+  */
+  AgentType getAgentType()
+  {
+    return _agentType;
+  }
+  
 };

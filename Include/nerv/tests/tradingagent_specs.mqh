@@ -33,6 +33,13 @@ BEGIN_TEST_CASE("Should be removable from currency trader")
   RELEASE_PTR(agent);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide default agent type")
+  nvTradingAgent* agent = new nvTradingAgent();
+
+  ASSERT_EQUAL((int)agent.getAgentType(),(int)TRADE_AGENT_UNKNOWN);
+  RELEASE_PTR(agent);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
