@@ -36,3 +36,36 @@ void nvRemoveArrayElement(T &array[], T& val)
 		}
 	}
 }
+
+// Metohd used to retrieve the profit currency from a given symbol:
+string nvGetQuoteCurrency(string symbol)
+{
+	CHECK_RET(StringLen(symbol)==6,"","Invalid symbol length.");
+	return StringSubstr(symbol,3);
+}
+
+// Metohd used to retrieve the base currency from a given symbol:
+string nvGetBaseCurrency(string symbol)
+{
+	CHECK_RET(StringLen(symbol)==6,"","Invalid symbol length.");
+	return StringSubstr(symbol,0,3);
+}
+
+// Method called to compute the value of 1 point in a symbol trading given a fixed lot size:
+// Note that the point value is given in the quote currency.
+double nvGetPointValue(string symbol, double lot = 1.0)
+{
+	// We need to check what is the contract size for this symbol:
+	double csize = SymbolInfoDouble(symbol,SYMBOL_TRADE_CONTRACT_SIZE);
+	double point = SymbolInfoDouble(symbol,SYMBOL_POINT);
+	return lot*csize*point;
+}
+
+// Method called to normalize a lot size given its symbol.
+double nvNormalizeLotSize(double lot, string symbol)
+{
+	double maxlot = SymbolInfoDouble(symbol,SYMBOL_VOLUME_MAX);
+	double step = SymbolInfoDouble(symbol,SYMBOL_VOLUME_STEP);
+	lot = MathFloor( lot/step ) * step;
+	return MathMin(maxlot,lot);
+}

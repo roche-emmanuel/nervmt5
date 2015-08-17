@@ -1,4 +1,5 @@
 #include <nerv/core.mqh>
+#include <nerv/utils.mqh>
 
 /*
 Class: nvRiskManager
@@ -130,11 +131,25 @@ public:
   
   Main method of this class used to evaluate the lot size that should be used for a potential trade.
   */
-  double evaluateLotSize(string profitCurrency, int numLostPoints, double traderWeight)
+  double evaluateLotSize(string symbol, int numLostPoints, double traderWeight)
   {
+    CHECK_RET(0.0<=traderWeight && traderWeight <= 1.0,0.0,"Invalid trader weight: "<<traderWeight);
+
     // First we need to convert the current balance value in the desired profit currency:
-    double balance = getBalanceValue(profitCurrency);
-    return balance;
+    string quoteCurrency = nvGetQuoteCurrency(symbol);
+    double balance = getBalanceValue(quoteCurrency);
+
+    // Now we determine what fraction of this balance we can risk:
+    double VaR = balance * _riskLevel * traderWeight; // This is given in the quote currency.
+
+    // Now we can compute the final lot size:
+    // The worst lost we will achieve in the quote currency is:
+    // VaR = lost = lotsize*contract_size*num_point
+    // thus we need lotsize = VaR/(contract_size*numPoints) = VaR / (point_value * numPoints)
+    double lotsize = VaR/(nvGetPointValue(symbol)*numLostPoints);
+    
+    // finally we should normalize the lot size:
+    return nvNormalizeLotSize(lotsize,symbol);
   }
   
 };
