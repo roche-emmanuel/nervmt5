@@ -1,6 +1,7 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/math.mqh>
+#include <nerv/expert/RiskManager.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -48,6 +49,9 @@ protected:
   // Should also contain a vector of all the previous nominal profit values observed each time
   // a new deal is performed:
   nvVecd _dealProfits;
+
+  // Instance of the risk manager for this portfolio:
+  nvRiskManager _riskManager;
 
 protected:
   // Following methods are protected to respect the singleton pattern
@@ -412,6 +416,17 @@ public:
     _dealUtilities.resize(EFFICIENCY_STATS_NUM_DEALS);
     _dealProfits.resize(EFFICIENCY_STATS_NUM_DEALS);
   }
+
+  /*
+  Function: getRiskManager
+  
+  Retrieve the RiskManager component in this instance
+  */
+  nvRiskManager* getRiskManager()
+  {
+    return GetPointer(_riskManager);
+  }
+  
   
   /*
   Function: updateUtilityEfficiencyFactor
@@ -436,6 +451,5 @@ public:
     // we use the complete range of possibility for the weight differences:
     // And that should be our new efficiency factor:
     _utilityEfficiencyFactor = 2.0*corr;
-  }
-  
+  }  
 };

@@ -159,6 +159,12 @@ BEGIN_TEST_CASE("Should have a method reset to remove everything")
 	ASSERT(!IS_VALID_POINTER(ct2));
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide a risk manager instance")
+	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvRiskManager* rman = man.getRiskManager();
+	ASSERT_NOT_NULL(rman);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
