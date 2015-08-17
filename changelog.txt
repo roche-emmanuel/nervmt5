@@ -213,3 +213,4 @@
 08/17/15-21:59:06: Working on issue #19: Added initial implementation for AgentFactory class.
 08/17/15-22:39:06: Working on issue #19: added support for agent type in Trading Agent class.
 08/17/15-22:44:02: Working on issue #19: Added reference on parent currency trader in Trading agent.
+08/17/15-23:03:34: Working on issue #19: Added default methods getEntryDecision() and getExitDecision() in nvTradingAgent class.

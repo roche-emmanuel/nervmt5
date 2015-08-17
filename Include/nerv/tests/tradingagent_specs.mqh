@@ -42,6 +42,21 @@ BEGIN_TEST_CASE("Should provide default agent type")
   RELEASE_PTR(agent);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should throw if default decision methods are called")
+  nvCurrencyTrader ct("EURUSD");
+  nvTradingAgent agent(GetPointer(ct));
+
+  datetime time = TimeCurrent();
+  BEGIN_ASSERT_ERROR("No implementation")
+    agent.getEntryDecision(time);
+  END_ASSERT_ERROR();
+
+  BEGIN_ASSERT_ERROR("No implementation")
+    agent.getExitDecision(time);
+  END_ASSERT_ERROR();
+  
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

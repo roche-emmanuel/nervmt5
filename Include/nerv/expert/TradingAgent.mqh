@@ -70,4 +70,30 @@ public:
     return _agentType;
   }
   
+  /*
+  Function: getEntryDecision
+  
+  Method called to retrieve the entry decision that this agent would take on its own.
+  This method should be reimplemented by derived classes that can provide entry decision.
+  */
+  virtual double getEntryDecision(datetime time)
+  {
+    // TODO: Provide implementation
+    THROW("No implementation");
+    return 0.0;
+  }
+  
+  /*
+  Function: getExitDecision
+  
+  Method called to retrieve the exit decision that this agent would take on its own.
+  This method should be reimplemented by derived classes that can provide exit decision.  
+  */
+  virtual double getExitDecision(datetime time)
+  {
+    // TODO: Provide implementation
+    THROW("No implementation");
+    return 0.0;
+  }  
+
 };
