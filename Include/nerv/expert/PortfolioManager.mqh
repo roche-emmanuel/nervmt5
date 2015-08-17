@@ -415,6 +415,9 @@ public:
     // Reset the content of the dellUtilities and dealProfits vectors:
     _dealUtilities.resize(EFFICIENCY_STATS_NUM_DEALS);
     _dealProfits.resize(EFFICIENCY_STATS_NUM_DEALS);
+
+    // Reset the state for the risk manager:
+    _riskManager.setRiskLevel(0.02); // by default 2% of risk.
   }
 
   /*

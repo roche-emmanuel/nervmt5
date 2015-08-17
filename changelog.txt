@@ -204,3 +204,4 @@
 08/16/15-21:06:16: Fixed issue #14: added nvCurrencyTrader::removeTradingAgent() method.
 08/17/15-14:09:26: Working on issue #16: Added initial skeleton for the nvRiskManager class. Added minimal test.
 08/17/15-14:14:58: Fixed issue #16: Added method PorfolioManager:getRiskManager().
+08/17/15-16:02:24: Working on issue #18: Added support for risk level in risk manager class.
