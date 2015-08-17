@@ -202,3 +202,4 @@
 08/16/15-20:58:45: Working on issue #14: Added nvCurrencyTrader::addTradingAgent() method.
 08/16/15-20:58:56: Working on issue #14: Added nvCurrencyTrader::addTradingAgent() method.
 08/16/15-21:06:16: Fixed issue #14: added nvCurrencyTrader::removeTradingAgent() method.
+08/17/15-14:09:26: Working on issue #16: Added initial skeleton for the nvRiskManager class. Added minimal test.

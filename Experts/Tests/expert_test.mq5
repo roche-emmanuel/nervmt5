@@ -11,6 +11,7 @@
 #include <nerv/tests/utilityefficiencyoptimizer_specs.mqh>
 #include <nerv/tests/math_specs.mqh>
 #include <nerv/tests/tradingagent_specs.mqh>
+#include <nerv/tests/riskmanager_specs.mqh>
 
 BEGIN_TEST_SESSION("Expert_Results")
 
@@ -24,5 +25,6 @@ LOAD_TEST_PACKAGE(optimizer_specs)
 LOAD_TEST_PACKAGE(utilityefficiencyoptimizer_specs)
 LOAD_TEST_PACKAGE(math_specs)
 LOAD_TEST_PACKAGE(tradingagent_specs)
+LOAD_TEST_PACKAGE(riskmanager_specs)
 
 END_TEST_SESSION()
