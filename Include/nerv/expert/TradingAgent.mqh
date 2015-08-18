@@ -23,8 +23,15 @@ protected:
   // Reference on parent trader:
   nvCurrencyTrader* _trader;
 
+  // Keep a reference on the random generator to use:
+  SimpleRNG* _rng;
+
   // The period used inside this agent:
   ENUM_TIMEFRAMES _period;
+
+  // Number of lag period that should be applied on this agent when computing its decision
+  // given in number of periods.
+  int _lag;
 
 public:
   /*
@@ -34,9 +41,12 @@ public:
   {
     CHECK(trader,"Invalid parent trader.");
 
+    _rng = nvPortfolioManager::instance().getRandomGenerator();
+
     // Default value for the agent type:
     _agentType = TRADE_AGENT_UNKNOWN;
     _trader = trader;
+    _lag = 0;
     randomizePeriod();
   }
 
@@ -85,12 +95,44 @@ public:
   }
   
   /*
+  Function: getLag
+  
+  Retrieve the current lag value for this agent
+  */
+  int getLag()
+  {
+    return _lag;
+  }
+  
+  /*
   Function: getEntryDecision
   
   Method called to retrieve the entry decision that this agent would take on its own.
-  This method should be reimplemented by derived classes that can provide entry decision.
   */
   virtual double getEntryDecision(datetime time)
+  {
+    // return the computed value taking the lag into account:
+    return computeEntryDecision(time - _lag * nvGetPeriodDuration(_period));
+  }
+
+  /*
+  Function: getExitDecision
+  
+  Method called to retrieve the exit decision that this agent would take on its own. 
+  */
+  double getExitDecision(datetime time)
+  {
+    // return the computed value taking the lag into account:
+    return computeExitDecision(time - _lag * nvGetPeriodDuration(_period));
+  }  
+
+  /*
+  Function: computeEntryDecision
+  
+  Method called to compute the entry decision taking into account the lag of this agent.
+  This method should be reimplemented by derived classes that can provide entry decision.
+  */
+  virtual double computeEntryDecision(datetime time)
   {
     // TODO: Provide implementation
     THROW("No implementation");
@@ -98,18 +140,18 @@ public:
   }
   
   /*
-  Function: getExitDecision
+  Function: computeExitDecision
   
-  Method called to retrieve the exit decision that this agent would take on its own.
-  This method should be reimplemented by derived classes that can provide exit decision.  
+  Method called to compute the exit decision taking into account the lag of this agent.
+  This method should be reimplemented by derived classes that can provide exit decision. 
   */
-  virtual double getExitDecision(datetime time)
+  virtual double computeExitDecision(datetime time)
   {
     // TODO: Provide implementation
     THROW("No implementation");
     return 0.0;
-  }  
-
+  }
+  
   /*
   Function: randomizePeriod
   
@@ -120,7 +162,20 @@ public:
     // We just need to generate a int in the provided range:
     int mini = (int)minPeriod;
     int maxi = (int)maxPeriod;
-    _period = (ENUM_TIMEFRAMES)nvPortfolioManager::instance().getRandomGenerator().GetInt(mini,maxi);
+    _period = (ENUM_TIMEFRAMES)_rng.GetInt(mini,maxi);
+  }
+  
+  /*
+  Function: randomizeLag
+  
+  Method called to randomize te value of the lag for this agent.
+  Note that the lag will be computed as a iid N(0,(maxLag/3)^2) clamped
+  to the range [0,maxLag]
+  */
+  void randomizeLag(int maxLag)
+  {
+    double val = _rng.GetNormal(0.0,maxLag/3.0);
+    _lag = (int)MathFloor(nvClamp(val,0.0,(double)maxLag)+0.5);
   }
   
   /*

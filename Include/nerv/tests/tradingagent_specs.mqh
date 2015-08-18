@@ -46,6 +46,12 @@ BEGIN_TEST_CASE("Should throw if default decision methods are called")
   nvCurrencyTrader ct("EURUSD");
   nvTradingAgent agent(GetPointer(ct));
 
+  ENUM_TIMEFRAMES period = agent.getPeriod();
+
+  // Check that the period is value:
+  ASSERT_GE((int)period,(int)PERIOD_M1);
+  ASSERT_LE((int)period,(int)PERIOD_D1);
+
   datetime time = TimeCurrent();
   BEGIN_ASSERT_ERROR("No implementation")
     agent.getEntryDecision(time);

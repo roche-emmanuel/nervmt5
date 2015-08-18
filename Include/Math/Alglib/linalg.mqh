@@ -9130,7 +9130,7 @@ static void CEigenVDetect::InternalTREVC(CMatrixDouble &t,const int n,const int 
       return;
      }
 //--- check
-   if((!allv && !over) &!somev)
+   if((!allv && !over) && !somev)
      {
       info=-4;
       return;

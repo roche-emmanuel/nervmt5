@@ -100,3 +100,14 @@ int nvGetPeriodDuration(ENUM_TIMEFRAMES period)
   THROW("Unsupported period value " << EnumToString(period));
   return 0;
 }
+
+// Method used to clamp a value between a min and max value:
+template<typename T>
+T nvClamp(T val, T mini, T maxi)
+{
+	if(val < mini)
+		return mini;
+	if(val > maxi)
+		return maxi;
+	return val;
+}
