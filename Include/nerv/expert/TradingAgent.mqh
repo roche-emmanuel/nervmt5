@@ -75,6 +75,16 @@ public:
   }
   
   /*
+  Function: getPeriod
+  
+  Retrieve the period used by this trader.
+  */
+  ENUM_TIMEFRAMES getPeriod()
+  {
+    return _period;
+  }
+  
+  /*
   Function: getEntryDecision
   
   Method called to retrieve the entry decision that this agent would take on its own.
@@ -107,7 +117,10 @@ public:
   */
   void randomizePeriod(ENUM_TIMEFRAMES minPeriod = PERIOD_M1, ENUM_TIMEFRAMES maxPeriod = PERIOD_D1)
   {
-    // TODO: provide implementation.
+    // We just need to generate a int in the provided range:
+    int mini = (int)minPeriod;
+    int maxi = (int)maxPeriod;
+    _period = (ENUM_TIMEFRAMES)nvPortfolioManager::instance().getRandomGenerator().GetInt(mini,maxi);
   }
   
   /*

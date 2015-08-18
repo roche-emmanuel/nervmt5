@@ -26,6 +26,15 @@ BEGIN_TEST_CASE("Should be able to generate random integers")
   ASSERT_EQUAL(mini,0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should throw an error on invalid integer range")
+  SimpleRNG rnd;
+  rnd.SetSeedFromSystemTime();
+
+  BEGIN_ASSERT_ERROR("Invalid period order: ")
+    rnd.GetInt(10,8);
+  END_ASSERT_ERROR();
+END_TEST_CASE()
+
 
 END_TEST_SUITE()
 

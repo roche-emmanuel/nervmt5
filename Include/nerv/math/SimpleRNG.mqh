@@ -62,6 +62,7 @@ public:
   // Retrieve an int in a given interval (inclusise)
   int GetInt(int mini, int maxi)
   {
+    CHECK_RET(mini<=maxi,mini,"Invalid period order: "<<mini<<">"<<maxi);
     double u = GetUniform();
     double val = mini + u*(maxi - mini);
     return (int)MathFloor( val+0.5 );
