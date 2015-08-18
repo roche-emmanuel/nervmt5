@@ -15,6 +15,7 @@
 #include <nerv/tests/decisioncomposer_specs.mqh>
 #include <nerv/tests/agentfactory_specs.mqh>
 #include <nerv/tests/simplerng_specs.mqh>
+#include <nerv/tests/bootstrapper_specs.mqh>
 
 BEGIN_TEST_SESSION("Expert_Results")
 
@@ -28,6 +29,7 @@ LOAD_TEST_PACKAGE(optimizer_specs)
 LOAD_TEST_PACKAGE(utilityefficiencyoptimizer_specs)
 LOAD_TEST_PACKAGE(math_specs)
 LOAD_TEST_PACKAGE(simplerng_specs)
+LOAD_TEST_PACKAGE(bootstrapper_specs)
 LOAD_TEST_PACKAGE(tradingagent_specs)
 LOAD_TEST_PACKAGE(riskmanager_specs)
 LOAD_TEST_PACKAGE(decisioncomposer_specs)

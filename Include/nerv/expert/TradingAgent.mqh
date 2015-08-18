@@ -185,7 +185,7 @@ public:
   */
   virtual void randomize()
   {
-    randomizeLag();
+    randomizeLag(AGENT_MAX_LAG);
     randomizePeriod();
   }
   

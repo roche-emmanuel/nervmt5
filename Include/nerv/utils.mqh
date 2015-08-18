@@ -175,3 +175,43 @@ int nvGetPeriodIndex(ENUM_TIMEFRAMES period)
   THROW("Unsupported period value " << EnumToString(period));
   return 0;
 }
+
+// Compute the mean of a sample array
+double nvGetMeanEstimate(double &x[])
+{
+  int num = ArraySize( x );
+  CHECK_RET(num>0,0.0,"Invalid sample size.");
+
+  double mean = 0.0;
+  for(int i=0;i<num;++i)
+  {
+    mean += x[i];
+  }
+
+  mean /= num;
+  return mean;
+}
+
+// Compute the estimated standard deviation of a sample array
+// when its mean is provided:
+double nvGetStdDevEstimate(double &x[], double mean)
+{
+  int num = ArraySize( x );
+  CHECK_RET(num>1,0.0,"Invalid sample size.");
+
+  double sig = 0.0;
+  for(int i=0;i<num;++i)
+  {
+    sig += (x[i] - mean)*(x[i] - mean);
+  }
+
+  sig /= (num-1);
+
+  return MathSqrt(sig);
+}
+
+// Compute the estimated standard deviation of a sample array:
+double nvGetStdDevEstimate(double &x[])
+{
+  return nvGetStdDevEstimate(x,nvGetMeanEstimate(x));
+}
