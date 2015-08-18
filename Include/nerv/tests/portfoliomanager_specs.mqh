@@ -165,6 +165,12 @@ BEGIN_TEST_CASE("Should provide a risk manager instance")
 	ASSERT_NOT_NULL(rman);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide a random generator")
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+  SimpleRNG* rnd = man.getRandomGenerator();
+  ASSERT_NOT_NULL(rnd);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

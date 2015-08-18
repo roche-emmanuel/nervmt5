@@ -57,6 +57,9 @@ protected:
   // Instance of the Agent factory for this portfolio:
   nvAgentFactory _agentFactory;
 
+  // Random generator for this portfolio:
+  SimpleRNG _randomGenerator;
+
 protected:
   // Following methods are protected to respect the singleton pattern
 
@@ -422,6 +425,9 @@ public:
 
     // Reset the state for the risk manager:
     _riskManager.setRiskLevel(0.02); // by default 2% of risk.
+
+    // On reset we should also reset the random generated seeds:
+    _randomGenerator.SetSeedFromSystemTime();
   }
 
   /*
@@ -442,6 +448,16 @@ public:
   nvAgentFactory* getAgentFactory()
   {
     return GetPointer(_agentFactory);
+  }
+  
+  /*
+  Function: getRandomGenerator
+  
+  Retrieve the random generator associated with this portfolio manager
+  */
+  SimpleRNG* getRandomGenerator()
+  {
+    return GetPointer(_randomGenerator);
   }
   
   /*
