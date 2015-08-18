@@ -11,6 +11,9 @@
 // efficiency statistics:
 #define EFFICIENCY_STATS_NUM_DEALS 300
 
+// Max lag that should be acheivable by default on Trading agent with random generation:
+#define AGENT_MAX_LAG 6
+
 // Forward declaration of the currency trader class:
 class nvCurrencyTrader;
 

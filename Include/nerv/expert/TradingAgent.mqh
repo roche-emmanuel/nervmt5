@@ -46,7 +46,7 @@ public:
     // Default value for the agent type:
     _agentType = TRADE_AGENT_UNKNOWN;
     _trader = trader;
-    _lag = 0;
+    randomizeLag(AGENT_MAX_LAG);
     randomizePeriod();
   }
 
@@ -160,9 +160,9 @@ public:
   void randomizePeriod(ENUM_TIMEFRAMES minPeriod = PERIOD_M1, ENUM_TIMEFRAMES maxPeriod = PERIOD_D1)
   {
     // We just need to generate a int in the provided range:
-    int mini = (int)minPeriod;
-    int maxi = (int)maxPeriod;
-    _period = (ENUM_TIMEFRAMES)_rng.GetInt(mini,maxi);
+    int mini = nvGetPeriodIndex(minPeriod);
+    int maxi = nvGetPeriodIndex(maxPeriod);
+    _period = nvGetPeriodByIndex(_rng.GetInt(mini,maxi));
   }
   
   /*

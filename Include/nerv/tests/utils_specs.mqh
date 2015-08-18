@@ -60,6 +60,24 @@ BEGIN_TEST_CASE("Should provide proper period duration")
   BEGIN_ASSERT_ERROR("Unsupported period value PERIOD_MN1")
     nvGetPeriodDuration(PERIOD_MN1);
   END_ASSERT_ERROR();
+
+  // Should still work if we concert the value to/from int:
+  int val = (int)PERIOD_H4;
+  // logDEBUG("Period converted to int: "<<val);
+
+  ENUM_TIMEFRAMES p2 = (ENUM_TIMEFRAMES)val;
+  // logDEBUG("Period converted back to TimeFrame: "<<EnumToString(p2));
+  ASSERT_EQUAL(nvGetPeriodDuration(p2),3600 * 4);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should support retriving period by index")
+  int num = 21;
+  for(int i=0;i<num;++i)
+  {
+    ENUM_TIMEFRAMES p = nvGetPeriodByIndex(i);
+    int j = nvGetPeriodIndex(p);
+    ASSERT_EQUAL(i,j);
+  }
 END_TEST_CASE()
 
 END_TEST_SUITE()

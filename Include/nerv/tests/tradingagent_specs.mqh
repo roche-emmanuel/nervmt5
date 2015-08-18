@@ -51,7 +51,8 @@ BEGIN_TEST_CASE("Should throw if default decision methods are called")
   // Check that the period is value:
   ASSERT_GE((int)period,(int)PERIOD_M1);
   ASSERT_LE((int)period,(int)PERIOD_D1);
-
+  // logDEBUG("Period is: "<<EnumToString(period));
+  
   datetime time = TimeCurrent();
   BEGIN_ASSERT_ERROR("No implementation")
     agent.getEntryDecision(time);
