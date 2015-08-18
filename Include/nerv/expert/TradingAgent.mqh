@@ -185,6 +185,7 @@ public:
   */
   virtual void randomize()
   {
+    randomizeLag();
     randomizePeriod();
   }
   
