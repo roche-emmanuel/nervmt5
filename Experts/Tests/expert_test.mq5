@@ -16,6 +16,7 @@
 #include <nerv/tests/agentfactory_specs.mqh>
 #include <nerv/tests/simplerng_specs.mqh>
 #include <nerv/tests/bootstrapper_specs.mqh>
+#include <nerv/tests/decisioncomposerfactory_specs.mqh>
 
 BEGIN_TEST_SESSION("Expert_Results")
 
@@ -34,5 +35,6 @@ LOAD_TEST_PACKAGE(tradingagent_specs)
 LOAD_TEST_PACKAGE(riskmanager_specs)
 LOAD_TEST_PACKAGE(decisioncomposer_specs)
 LOAD_TEST_PACKAGE(agentfactory_specs)
+LOAD_TEST_PACKAGE(decisioncomposerfactory_specs)
 
 END_TEST_SESSION()

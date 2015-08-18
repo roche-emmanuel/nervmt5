@@ -224,3 +224,4 @@
 08/18/15-14:58:30: Fixed issue #17: Added initial implementation for nvBootstrapper class. Performing test with SE confidence interval on normal distribution for bootstrap computations.
 08/18/15-16:25:33: Working on issue #21: Added 2 lists of agents in currency trader. Added getCapabilities() method in TradingAgent.
 08/18/15-16:41:41: Working on issue #21 : Added nvCurrencyTrader:hasOpenPosition() method to check if we are currently in market or not.
+08/18/15-20:19:00: Working on issue #21 : Added support for Decision Composer factory.

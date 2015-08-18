@@ -1,9 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/math.mqh>
-#include <nerv/expert/RiskManager.mqh>
-#include <nerv/expert/AgentFactory.mqh>
-#include <nerv/expert/VirtualMarket.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -15,8 +12,12 @@
 // Max lag that should be acheivable by default on Trading agent with random generation:
 #define AGENT_MAX_LAG 6
 
-// Forward declaration of the currency trader class:
-class nvCurrencyTrader;
+
+#include <nerv/expert/RiskManager.mqh>
+#include <nerv/expert/AgentFactory.mqh>
+#include <nerv/expert/VirtualMarket.mqh>
+#include <nerv/expert/CurrencyTrader.mqh>
+#include <nerv/expert/DecisionComposerFactory.mqh>
 
 enum nv_misc_enum {
   INVALID_TRADER_ID = -1
@@ -66,6 +67,12 @@ protected:
 
   // Virtual market instance used in the portfolio:
   nvVirtualMarket _virtualMarket;
+
+  // DecisionComposerFactory isntance for this portfolio:
+  nvDecisionComposerFactory _decisionComposerFactory;
+
+  // current server time:
+  datetime _currentTime;
 
 protected:
   // Following methods are protected to respect the singleton pattern
@@ -423,6 +430,9 @@ public:
   {
     removeAllCurrencyTraders();
 
+    // Reset current time:
+    _currentTime = 0; // This should be overriden anyway.
+
     // Also reinitialize the current efficiency value:
     _utilityEfficiencyFactor = 1.0;
 
@@ -458,6 +468,16 @@ public:
   }
   
   /*
+  Function: getDecisionComposerFactory
+  
+  Retrieve the DecisionComposerFactory in this instance
+  */
+  nvDecisionComposerFactory* getDecisionComposerFactory()
+  {
+    return GetPointer(_decisionComposerFactory);
+  }
+  
+  /*
   Function: getRandomGenerator
   
   Retrieve the random generator associated with this portfolio manager
@@ -476,6 +496,30 @@ public:
   {
     return GetPointer(_virtualMarket);
   }
+  
+  /*
+  Function: getCurrentTime
+  
+  Retrieve the current time of the trading system. This should be used
+  instead of the provided MT5 server time to ensure that the portfolio manager
+  controls the time of execution.
+  */
+  datetime getCurrentTime()
+  {
+    return _currentTime;
+  }
+
+  /*
+  Function: setCurrentTime
+  
+  Method called to set the current time for the portfolio manager.
+  Should only be called on a very high level.
+  */
+  void setCurrentTime(datetime ctime)
+  {
+    _currentTime = ctime;
+  }
+  
   
   /*
   Function: updateUtilityEfficiencyFactor

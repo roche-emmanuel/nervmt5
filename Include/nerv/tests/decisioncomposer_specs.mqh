@@ -10,7 +10,8 @@ BEGIN_TEST_CASE("should be able to create a DecisionComposer instance")
 	nvPortfolioManager* man = nvPortfolioManager::instance();
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
 
-  nvDecisionComposer comp(ct);
+  nvDecisionComposer comp;
+  comp.setCurrencyTrader(ct);
 
   man.reset();
 END_TEST_CASE()

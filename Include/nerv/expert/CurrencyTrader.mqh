@@ -4,6 +4,8 @@
 #include <nerv/expert/Deal.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/expert/TradingAgent.mqh>
+#include <nerv/expert/DecisionComposer.mqh>
+#include <nerv/expert/DecisionComposerFactory.mqh>
 
 /*
 Class: nvCurrencyTrader
@@ -39,8 +41,20 @@ protected:
   // List of entry trading agents:
   nvTradingAgent* _entryAgents[];
   
+  // decisions associated to the entry agents:
+  double _entryDecisions[];
+
   // List of exit trading agents:
   nvTradingAgent* _exitAgents[];
+
+  // decisions associated to the exit agents:
+  double _exitDecisions[];
+
+  // Entry decision composer:
+  nvDecisionComposer* _entryDecisionComposer;
+
+  // Exit decision composer:
+  nvDecisionComposer* _exitDecisionComposer;
 
 public:
   /*
@@ -62,6 +76,15 @@ public:
 
     // Initialize the previous deals array:
     ArrayResize( _previousDeals, 0 );
+
+    // Build the decision composers here:
+    nvDecisionComposerFactory* factory = nvPortfolioManager::instance().getDecisionComposerFactory();
+    
+    _entryDecisionComposer = factory.createEntryComposer(THIS);
+    CHECK(_entryDecisionComposer!=NULL,"Cannot create entry decision composer.");
+
+    _exitDecisionComposer = factory.createExitComposer(THIS);
+    CHECK(_exitDecisionComposer!=NULL,"Cannot create exit decision composer.");
   }
 
   /*
@@ -91,6 +114,10 @@ public:
     // Release all the agents contained in this trader:
     nvReleaseObjects(_entryAgents);
     nvReleaseObjects(_exitAgents);
+
+    // Release the decision composers:
+    RELEASE_PTR(_entryDecisionComposer);
+    RELEASE_PTR(_exitDecisionComposer);
   }
 
   /*
@@ -106,12 +133,14 @@ public:
     {
       CHECK(agent.getCapabilities() & TRADE_AGENT_ENTRY,"Invalid trading agent caps.");
       nvAppendArrayElement(_entryAgents,agent);
+      ArrayResize( _entryDecisions, ArraySize( _entryAgents ) );
       return;
     }
     if(caps==TRADE_AGENT_EXIT)
     {
       CHECK(agent.getCapabilities() & TRADE_AGENT_EXIT,"Invalid trading agent caps.");
       nvAppendArrayElement(_exitAgents,agent);
+      ArrayResize( _exitDecisions, ArraySize( _exitAgents ) );
       return;
     }
     
@@ -140,6 +169,8 @@ public:
     CHECK(agent!=NULL,"Invalid trading agent.")
     nvRemoveArrayElement(_entryAgents,agent);
     nvRemoveArrayElement(_exitAgents,agent);
+    ArrayResize( _entryDecisions, ArraySize( _entryAgents ) );
+    ArrayResize( _exitDecisions, ArraySize( _exitAgents ) );
   }
   
   /*
@@ -201,6 +232,46 @@ public:
   */
   void update()
   {
+    // Retrieve the current time from the PortfolioManager:
+    nvPortfolioManager* man = nvPortfolioManager::instance();
+    datetime ctime = man.getCurrentTime();
+
+    // Now check if we are inside a position or not:
+    if(hasOpenPosition())
+    {
+      // We are inside the market, so we check if we should exit from it:
+      int num = ArraySize( _exitAgents );
+      for(int i=0;i<num;++i)
+      {
+        _exitDecisions[i] = _exitAgents[i].getExitDecision(ctime);
+      }
+
+      // submit the agents point of views to the exit decision composer:
+      double decision = _exitDecisionComposer.evaluate(_exitDecisions);
+
+      // TODO: Handle the decision here.
+    }
+    else {
+      // We are outside of the market, so we should check if we should enter it:
+      int num = ArraySize( _entryAgents );
+      for(int i=0;i<num;++i)
+      {
+        _entryDecisions[i] = _entryAgents[i].getEntryDecision(ctime);
+      }
+
+      // submit the agents point of views to the entry decision composer:
+      double decision = _entryDecisionComposer.evaluate(_entryDecisions);
+
+      if(decision>0.0)
+      {
+        // TODO: here we should enter a LONG position.
+      }
+      if(decision<0.0)
+      {
+        // TODO: here we should enter a SHORT position.
+      }
+    }
+
     logDEBUG(TimeLocal()<<": Updating CurrencyTrader.")
   }
 
