@@ -54,6 +54,14 @@ BEGIN_TEST_CASE("Should normalize lot size properly")
   ASSERT_EQUAL(nvNormalizeLotSize(1.3488,"EURJPY"),1.34);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide proper period duration")
+  ASSERT_EQUAL(nvGetPeriodDuration(PERIOD_H4),3600 * 4);
+
+  BEGIN_ASSERT_ERROR("Unsupported period value PERIOD_MN1")
+    nvGetPeriodDuration(PERIOD_MN1);
+  END_ASSERT_ERROR();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
