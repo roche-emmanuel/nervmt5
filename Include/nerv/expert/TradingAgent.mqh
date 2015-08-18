@@ -8,6 +8,12 @@ enum AgentType
   TRADE_AGENT_ICHIMOKU = 1,
 };
 
+enum AgentCapabilities
+{
+  TRADE_AGENT_ENTRY = 1,
+  TRADE_AGENT_EXIT = 2,
+};
+
 /*
 Class: nvTradingAgent
 
@@ -20,6 +26,9 @@ protected:
   // Agent type:
   AgentType _agentType;
 
+  // Agent mode:
+  AgentCapabilities _agentCapabilities;
+
   // Reference on parent trader:
   nvCurrencyTrader* _trader;
 
@@ -28,6 +37,7 @@ protected:
 
   // The period used inside this agent:
   ENUM_TIMEFRAMES _period;
+
 
   // Number of lag period that should be applied on this agent when computing its decision
   // given in number of periods.
@@ -45,6 +55,7 @@ public:
 
     // Default value for the agent type:
     _agentType = TRADE_AGENT_UNKNOWN;
+    _agentCapabilities = (AgentCapabilities)0; // No support by default.
     _trader = trader;
     randomizeLag(AGENT_MAX_LAG);
     randomizePeriod();
@@ -74,6 +85,16 @@ public:
     // No op.
   }
 
+  /*
+  Function: getCapabilities
+  
+  Retrieve the capabilities of this agent.
+  */
+  AgentCapabilities getCapabilities()
+  {
+    return _agentCapabilities;
+  }
+  
   /*
   Function: getAgentType
   

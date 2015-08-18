@@ -15,18 +15,30 @@ BEGIN_TEST_CASE("Should be deleted properly by currency trader")
   nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
 
   nvTradingAgent* agent = new nvTradingAgent(ct);
-  ct.addTradingAgent(agent);
+  
+  // Should throw an error because this agent has no entry support:
+  BEGIN_ASSERT_ERROR("Invalid trading agent caps.")
+  ct.addTradingAgent(agent, TRADE_AGENT_ENTRY);
+  END_ASSERT_ERROR();
 
   RELEASE_PTR(ct);
-  ASSERT(!IS_VALID_POINTER(agent));
+  
+  // TODO: add the test with a valid agent here.
+  RELEASE_PTR(agent);
+  // ASSERT(!IS_VALID_POINTER(agent));
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be removable from currency trader")
   nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
 
   nvTradingAgent* agent = new nvTradingAgent(ct);
-  ct.addTradingAgent(agent);
+  
+  BEGIN_ASSERT_ERROR("Invalid trading agent caps.")
+  ct.addTradingAgent(agent, TRADE_AGENT_ENTRY);
+  END_ASSERT_ERROR();
 
+  // TODO: add the test with a valid agent here.
+  
   ct.removeTradingAgent(agent);
   RELEASE_PTR(ct);
 

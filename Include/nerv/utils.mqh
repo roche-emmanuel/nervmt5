@@ -215,3 +215,15 @@ double nvGetStdDevEstimate(double &x[])
 {
   return nvGetStdDevEstimate(x,nvGetMeanEstimate(x));
 }
+
+// Method called to release a list of objects:
+template<typename T>
+void nvReleaseObjects(T &array[])
+{
+  int num = ArraySize( array );
+  for(int i=0;i<num;++i)
+  {
+    RELEASE_PTR(array[i]);
+  }
+  ArrayResize( array, 0 );
+}

@@ -36,8 +36,11 @@ protected:
   // List of past deals executed byt this trader:
   nvDeal* _previousDeals[];
 
-  // List of trading agents:
-  nvTradingAgent* _agents[];
+  // List of entry trading agents:
+  nvTradingAgent* _entryAgents[];
+  
+  // List of exit trading agents:
+  nvTradingAgent* _exitAgents[];
 
 public:
   /*
@@ -83,31 +86,37 @@ public:
   ~nvCurrencyTrader()
   {
     // On deletion we should release all the deals contained in this trader:
-    int num = ArraySize( _previousDeals );
-    for(int i=0;i<num;++i)
-    {
-      RELEASE_PTR(_previousDeals[i]);
-    }
-    ArrayResize( _previousDeals, 0 );
+    nvReleaseObjects(_previousDeals);
 
     // Release all the agents contained in this trader:
-    num = ArraySize( _agents );
-    for(int i=0;i<num;++i)
-    {
-      RELEASE_PTR(_agents[i]);
-    }
-    ArrayResize( _agents, 0 );
+    nvReleaseObjects(_entryAgents);
+    nvReleaseObjects(_exitAgents);
   }
 
   /*
   Function: addTradingAgent
   
   Append an agent to the list of agent contained in this currency trader
+  Can be either an entry agent or an exit agent.
   */
-  void addTradingAgent(nvTradingAgent* agent)
+  void addTradingAgent(nvTradingAgent* agent, AgentCapabilities caps)
   {
     CHECK(agent!=NULL,"Invalid trading agent.")
-    nvAppendArrayElement(_agents,agent);
+    if(caps==TRADE_AGENT_ENTRY)
+    {
+      CHECK(agent.getCapabilities() & TRADE_AGENT_ENTRY,"Invalid trading agent caps.");
+      nvAppendArrayElement(_entryAgents,agent);
+      return;
+    }
+    if(caps==TRADE_AGENT_EXIT)
+    {
+      CHECK(agent.getCapabilities() & TRADE_AGENT_EXIT,"Invalid trading agent caps.");
+      nvAppendArrayElement(_exitAgents,agent);
+      return;
+    }
+    
+    THROW("Unsupported agent caps: "<<(int)caps)
+    
   }
   
   /*
@@ -118,7 +127,8 @@ public:
   void removeTradingAgent(nvTradingAgent* agent)
   {
     CHECK(agent!=NULL,"Invalid trading agent.")
-    nvRemoveArrayElement(_agents,agent);
+    nvRemoveArrayElement(_entryAgents,agent);
+    nvRemoveArrayElement(_exitAgents,agent);
   }
   
   /*
