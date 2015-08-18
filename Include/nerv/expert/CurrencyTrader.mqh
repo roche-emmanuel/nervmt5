@@ -116,7 +116,18 @@ public:
     }
     
     THROW("Unsupported agent caps: "<<(int)caps)
-    
+  }
+  
+  /*
+  Function: hasOpenPosition
+  
+  Method used to check if this currency trader currently has an open position on the market.
+  */
+  bool hasOpenPosition()
+  {
+    // We need to check if we have an open position on both the real market and the virtual market.
+    nvVirtualMarket* vmarket = nvPortfolioManager::instance().getVirtualMarket();
+    return PositionSelect(_symbol) || vmarket.hasOpenPosition(_symbol);
   }
   
   /*

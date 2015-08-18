@@ -196,6 +196,13 @@ BEGIN_TEST_CASE("Should support collecting deals")
   man.reset();
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should not have an open position by default.")
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  ASSERT_EQUAL(ct.hasOpenPosition(),false);
+  man.reset();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

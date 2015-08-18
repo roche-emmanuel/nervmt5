@@ -3,6 +3,7 @@
 #include <nerv/math.mqh>
 #include <nerv/expert/RiskManager.mqh>
 #include <nerv/expert/AgentFactory.mqh>
+#include <nerv/expert/VirtualMarket.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -62,6 +63,9 @@ protected:
 
   // Random generator for this portfolio:
   SimpleRNG _randomGenerator;
+
+  // Virtual market instance used in the portfolio:
+  nvVirtualMarket _virtualMarket;
 
 protected:
   // Following methods are protected to respect the singleton pattern
@@ -461,6 +465,16 @@ public:
   SimpleRNG* getRandomGenerator()
   {
     return GetPointer(_randomGenerator);
+  }
+  
+  /*
+  Function: getVirtualMarket
+  
+  Method used to retrieve the instance of the virtual market in this portfolio
+  */
+  nvVirtualMarket* getVirtualMarket()
+  {
+    return GetPointer(_virtualMarket);
   }
   
   /*
