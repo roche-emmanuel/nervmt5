@@ -59,6 +59,14 @@ public:
     return (u + 1.0) * 2.328306435454494e-10;
   }
 
+  // Retrieve an int in a given interval (inclusise)
+  int GetInt(int mini, int maxi)
+  {
+    double u = GetUniform();
+    double val = mini + u*(maxi - mini);
+    return (int)MathFloor( val+0.5 );
+  }
+
   // Get normal (Gaussian) random sample with mean 0 and standard deviation 1
   double GetNormal()
   {

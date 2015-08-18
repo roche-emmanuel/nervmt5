@@ -23,6 +23,9 @@ protected:
   // Reference on parent trader:
   nvCurrencyTrader* _trader;
 
+  // The period used inside this agent:
+  ENUM_TIMEFRAMES _period;
+
 public:
   /*
     Class constructor.
@@ -34,6 +37,7 @@ public:
     // Default value for the agent type:
     _agentType = TRADE_AGENT_UNKNOWN;
     _trader = trader;
+    randomizePeriod();
   }
 
   /*
@@ -95,5 +99,37 @@ public:
     THROW("No implementation");
     return 0.0;
   }  
+
+  /*
+  Function: randomizePeriod
+  
+  Method called to randomize the period value for this agent
+  */
+  void randomizePeriod(ENUM_TIMEFRAMES minPeriod = PERIOD_M1, ENUM_TIMEFRAMES maxPeriod = PERIOD_D1)
+  {
+    // TODO: provide implementation.
+  }
+  
+  /*
+  Function: randomize
+  
+  Method called to randomize the values of the parameters for this agent.
+  */
+  virtual void randomize()
+  {
+    randomizePeriod();
+  }
+  
+  /*
+  Function: clone
+  
+  Method called to clone this agent
+  */
+  virtual nvTradingAgent* clone()
+  {
+    // We should not be able to clone this base class by default:
+    return NULL;
+  }
+  
 
 };
