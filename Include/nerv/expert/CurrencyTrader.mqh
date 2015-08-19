@@ -558,7 +558,7 @@ public:
         // CHECK_RET(delta>0.0,0.0,"Detected invalid deal duration.");
 
         // Compute the duration of the deal in hours:
-        delta = (double)(dtime - ptr.getEntryTime())/3600.0;
+        delta = MathMax((double)(dtime - ptr.getEntryTime()),1.0)/3600.0;
 
         // Now we compute the profit per unit of time (eg. per hour in this case):
         profit /= delta;

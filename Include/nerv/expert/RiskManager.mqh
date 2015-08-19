@@ -26,7 +26,7 @@ public:
     _riskLevel = 0.0;
 
     // Initialize the balance currency since this will not change:
-    _accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
+    _accountCurrency = nvGetAccountCurrency();
   }
 
   /*
@@ -94,34 +94,9 @@ public:
     nvPortfolioManager* man = nvPortfolioManager::instance();
 
     double balance = AccountInfoDouble(ACCOUNT_BALANCE);
-    if(currencyName!=_accountCurrency)
-    {
-      // If the requested currency is not the account currency then we have to do the convertion:
-      string symbol1 = _accountCurrency+currencyName;
-      string symbol2 = currencyName+_accountCurrency;
-
-      if(man.isSymbolValid(symbol1))
-      {
-        // Then we retrieve the current symbol1 value:
-        MqlTick latest_price;
-        CHECK_RET(SymbolInfoTick(symbol1,latest_price),0.0,"Cannot retrieve latest price.");
-
-        // To convert into the desired currency we have to multiply the value in that case:
-        balance *= latest_price.bid; // bid is smaller than ask, so we get the smallest value of the balance here.
-      }
-      else if(man.isSymbolValid(symbol2))
-      {
-        // Then we retrieve the current symbol2 value:
-        MqlTick latest_price;
-        CHECK_RET(SymbolInfoTick(symbol2,latest_price),0.0,"Cannot retrieve latest price.");
-
-        // To convert into the desired currency we have to multiply the value in that case:
-        balance /= latest_price.ask; // ask is bigger than bid, so we get the smallest value of the balance here.
-      }
-      else {
-        CHECK_RET(false,0.0,"Unsupported currency name: "<<currencyName)
-      }
-    }
+    
+    // convert from account currency to the given currency:
+    balance = nvConvertPrice(balance,_accountCurrency,currencyName);
 
     return balance;
   }

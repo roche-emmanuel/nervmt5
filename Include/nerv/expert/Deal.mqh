@@ -127,8 +127,10 @@ public:
   void setTraderID(int id)
   {
     // Here we should ensure that the corresponding trader exists:
-    CHECK(nvPortfolioManager::instance().getCurrencyTraderByID(id)!=NULL,"Invalid trader ID");
+    nvCurrencyTrader* ct = nvPortfolioManager::instance().getCurrencyTraderByID(id);
+    CHECK(ct!=NULL,"Invalid trader ID");
     _traderID = id;
+    _symbol = ct.getSymbol();
   }
 
   /*
@@ -305,6 +307,8 @@ public:
     _entryTime = entryTime;
     _orderType = orderType;
     _lotSize = lotsize;
+
+    open();
   }
   
   /*
@@ -341,10 +345,10 @@ public:
     _exitPrice = exitPrice;
     _exitTime = exitTime;
 
-    // assign the profit value:
-    _profit = profit;
-
     close();
+
+    // override the profit value:
+    _profit = profit;
   }
   
   /*
@@ -358,13 +362,20 @@ public:
     CHECK(_entryTime>0 && _entryPrice>0.0,"Cannot close not opened deal.");
 
     // Ensure that the timestamps are correct:
-    CHECK(_entryTime<_exitTime,"Invalid entry/exit times");
+    CHECK(_entryTime<=_exitTime,"Invalid entry/exit times: "<<_entryTime<<">"<<_exitTime);
 
     // At this point we can also compute the profit in number of points:
     _numPoints = _orderType==ORDER_TYPE_BUY ? _exitPrice - _entryPrice : _entryPrice - _exitPrice;
 
     // Mark this deal as done:
-    _isDone = true;    
+    _isDone = true;  
+
+    // We can also compute our profit value here:
+    // First we compute the profit in the quote currency:
+    double profit = nvGetPointValue(_symbol,_lotSize)*_numPoints;
+    profit = nvConvertPrice(profit, nvGetQuoteCurrency(_symbol), nvGetAccountCurrency());
+
+    setProfit(profit);  
   }
   
   /*

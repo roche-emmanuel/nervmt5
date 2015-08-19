@@ -57,11 +57,11 @@ protected:
 
   // Should also contain a vector of all the previous utility values observed each time
   // a new deal is performed:
-  nvVecd _dealUtilities;
+  double _dealUtilities[];
 
   // Should also contain a vector of all the previous nominal profit values observed each time
   // a new deal is performed:
-  nvVecd _dealProfits;
+  double _dealProfits[];
 
   // Instance of the risk manager for this portfolio:
   nvRiskManager _riskManager;
@@ -134,26 +134,6 @@ public:
     static nvPortfolioManager singleton;
     return GetPointer(singleton);
   }
-
-  /*
-  Function: isSymbolValid
-  
-  Method used to check if a given symbol is valid.
-  This will be used when a request to create a new CurrencyTrader is made.
-  */
-  bool isSymbolValid(string symbol)
-  {
-    int num = SymbolsTotal(false);
-    for(int i=0;i<num;++i)
-    {
-      if(symbol==SymbolName(i,false))
-      {
-        return true;
-      }
-    }
-
-    return false;
-  }
   
   /*
   Function: getCurrencyTrader
@@ -212,7 +192,7 @@ public:
     }
 
     // Check if the given symbol is valid:
-    CHECK_RET(isSymbolValid(symbol),NULL,"Invalid symbol.")
+    CHECK_RET(nvIsSymbolValid(symbol),NULL,"Invalid symbol.")
     
     // Create a new trader:
     nvCurrencyTrader* trader = new nvCurrencyTrader(symbol);
@@ -300,11 +280,18 @@ public:
   */
   void addProfitSample(double nominalProfit, double utility)
   {
-    _dealUtilities.push_back(utility);
-    _dealProfits.push_back(nominalProfit);
+    nvAppendArrayElement(_dealUtilities,utility,EFFICIENCY_STATS_NUM_DEALS);
+
+    nvAppendArrayElement(_dealProfits,nominalProfit,EFFICIENCY_STATS_NUM_DEALS);
     
-    double dev = _dealUtilities.deviation();
-    double dev2 = _dealProfits.deviation();
+    if(ArraySize(_dealUtilities)<2)
+    {
+      // Cannot update anything.
+      return;
+    }
+    
+    double dev = nvGetStdDevEstimate(_dealUtilities);
+    double dev2 = nvGetStdDevEstimate(_dealProfits);
 
     // This is where we should update the utility efficiency factor:
     // if the deviation is zero, then we don't update anything:
@@ -325,7 +312,7 @@ public:
   */
   double getUtilityMean()
   {
-    return _dealUtilities.mean();
+    return nvIsEmpty(_dealUtilities) ? 0.0 : nvGetMeanEstimate(_dealUtilities);
   }
   
   /*
@@ -335,7 +322,7 @@ public:
   */
   double getUtilityDeviation()
   {
-    return _dealUtilities.deviation();
+    return ArraySize(_dealUtilities)<2 ? 0.0 : nvGetStdDevEstimate(_dealUtilities);
   }
   
   /*
@@ -441,14 +428,14 @@ public:
     removeAllCurrencyTraders();
 
     // Reset current time:
-    _currentTime = 0; // This should be overriden anyway.
+    _currentTime = TimeCurrent(); // This should be overriden anyway.
 
     // Also reinitialize the current efficiency value:
     _utilityEfficiencyFactor = 1.0;
 
     // Reset the content of the dellUtilities and dealProfits vectors:
-    _dealUtilities.resize(EFFICIENCY_STATS_NUM_DEALS);
-    _dealProfits.resize(EFFICIENCY_STATS_NUM_DEALS);
+    ArrayResize(_dealUtilities, 0);
+    ArrayResize(_dealProfits, 0);
 
     // Reset the state for the risk manager:
     _riskManager.setRiskLevel(0.02); // by default 2% of risk.
@@ -545,7 +532,7 @@ public:
     // To compute the efficiency factor we simple analyse the correlation between the
     // recent deal utilities and the corresponding nominalProfits.
 
-    double corr = _dealUtilities.correlation(_dealProfits);
+    double corr = nvGetCorrelationEstimate(_dealUtilities,_dealProfits);
 
     // Notify if negative correlation is detected, since this would be quite abnormal:
     if(corr<0.0)

@@ -228,3 +228,4 @@
 08/19/15-12:14:09: Working on issue #22: Implementing real and virtual markets support. Not tested yet.
 08/19/15-14:52:19: Working on issue #22: Adding concrete implementation for openPosition() and closePosition() in nvMarket.
 08/19/15-18:00:41: Working on issue #22: Added reimplementation for doOpenPosition() on both real and virtual markets.
+08/19/15-19:51:23: Working on issue #22: Can now execute unit tests with exception (but still a few assert errors left.

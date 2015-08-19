@@ -14,12 +14,41 @@ void nvRemoveArrayItem(T &array[], int index)
 }
 
 // Generic method to append a content to an array:
+// Take an optional max size argument, will prevent the array from
+// getting bigger that the specified size in that case.
 template<typename T>
-void nvAppendArrayElement(T &array[], T& val)
+void nvAppendArrayElement(T &array[], T& val, int maxsize = -1)
 {
 	int num = ArraySize( array );
-	ArrayResize( array, num+1 );
-	array[num] = val;
+	if(maxsize < 0 || num <maxsize)
+  {
+    ArrayResize( array, num+1 );
+    array[num] = val;
+  }
+  else
+  {
+    // T old = array[0];
+    CHECK(ArrayCopy( array, array, 0, 1, num-1 )==num-1,"Invalid result for array copy operation");
+    array[num-1] = val;
+  }
+}
+
+template<typename T>
+void nvAppendArrayObject(T &array[], T& val, int maxsize = -1)
+{
+  int num = ArraySize( array );
+  if(maxsize < 0 || num <maxsize)
+  {
+    ArrayResize( array, num+1 );
+    array[num] = val;
+  }
+  else
+  {
+    T old = array[0];
+    CHECK(ArrayCopy( array, array, 0, 1, num-1 )==num-1,"Invalid result for array copy operation");
+    array[num-1] = val;
+    RELEASE_PTR(old)
+  }
 }
 
 // Generic method to remove an element from an array
@@ -228,6 +257,37 @@ double nvGetStdDevEstimate(double &x[])
   return nvGetStdDevEstimate(x,nvGetMeanEstimate(x));
 }
 
+// Compute the covariance between 2 samples array:
+double nvGetCovarianceEstimate(double &x[], double &y[])
+{
+  int num = ArraySize( x );
+  int num2 = ArraySize( y );
+  CHECK_RET(num == num2,0.0, "Mismatch in length for covariance computation: " << num<<"!="<<num2);
+
+  double cov = 0.0;
+  double m1 = nvGetMeanEstimate(x);
+  double m2 = nvGetMeanEstimate(y);
+
+  for (int i = 0; i < num; ++i)
+  {
+    cov += (x[i]-m1)*(y[i]-m2);
+  }
+
+  cov /= (num - 1.0);
+
+  return cov;
+}
+
+// Compute the correlation between 2 samples array:
+double nvGetCorrelationEstimate(double &x[], double &y[])
+{
+  double cov = nvGetCovarianceEstimate(x,y);
+  double dev1 = nvGetStdDevEstimate(x);
+  double dev2 = nvGetStdDevEstimate(y);
+  CHECK_RET(dev1>0.0 && dev2>0.0,0.0, "Invalid deviation value for correlation computation.");
+  return cov/(dev1*dev2);
+}
+
 // Method called to release a list of objects:
 template<typename T>
 void nvReleaseObjects(T &array[])
@@ -238,4 +298,66 @@ void nvReleaseObjects(T &array[])
     RELEASE_PTR(array[i]);
   }
   ArrayResize( array, 0 );
+}
+
+// Method used to check if an array is emtpy:
+template<typename T>
+bool nvIsEmpty(T &array[])
+{
+  return ArraySize( array ) == 0;
+}
+
+// Retrieve the account currency:
+string nvGetAccountCurrency()
+{
+  return AccountInfoString(ACCOUNT_CURRENCY);
+}
+
+// Check if a given symbol is valid:
+bool nvIsSymbolValid(string symbol)
+{
+  int num = SymbolsTotal(false);
+  for(int i=0;i<num;++i)
+  {
+    if(symbol==SymbolName(i,false))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// convert price from one currency to another:
+double nvConvertPrice(double price, string srcCurrency, string destCurrency)
+{
+  if(srcCurrency==destCurrency)
+    return price;
+
+  // If the currencies are not the same, we have to do the convertion:
+  string symbol1 = srcCurrency+destCurrency;
+  string symbol2 = destCurrency+srcCurrency;
+
+  if(nvIsSymbolValid(symbol1))
+  {
+    // Then we retrieve the current symbol1 value:
+    MqlTick latest_price;
+    CHECK_RET(SymbolInfoTick(symbol1,latest_price),0.0,"Cannot retrieve latest price.");
+
+    // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
+    // And thus ise the bid price:
+    return  price * latest_price.bid;
+  }
+  else if(nvIsSymbolValid(symbol2))
+  {
+    // Then we retrieve the current symbol2 value:
+    MqlTick latest_price;
+    CHECK_RET(SymbolInfoTick(symbol2,latest_price),0.0,"Cannot retrieve latest price.");
+
+    // we want to buy the "base" currency here so we have to divide by the ask price in that case:
+    return price /= latest_price.ask; // ask is bigger than bid, so we get the smallest value out of it.
+  }
+  
+  THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
+  return 0.0;
 }

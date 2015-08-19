@@ -106,6 +106,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	double alpha = man.getUtilityEfficiency();
 	double m = man.getUtilityMean();
 	double dev = man.getUtilityDeviation();
+	dev = dev==0.0 ? 1.0 : dev;
 	w = MathExp(alpha*(5.5-m)/dev)/(MathExp(alpha*(0.0-m)/dev)+MathExp(alpha*(5.5-m)/dev));
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);
@@ -126,6 +127,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	alpha = man.getUtilityEfficiency();
 	m = man.getUtilityMean();
 	dev = man.getUtilityDeviation();
+	dev = dev==0.0 ? 1.0 : dev;
 	w = MathExp(alpha*(u-m)/dev)/(MathExp(alpha*(0.0-m)/dev)+MathExp(alpha*(u-m)/dev));
 	ASSERT_CLOSEDIFF(ct.getWeight(),w,1e-8);
 	ASSERT_CLOSEDIFF(ct0.getWeight(),1.0-w,1e-8);

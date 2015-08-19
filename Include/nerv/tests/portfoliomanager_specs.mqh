@@ -11,12 +11,6 @@ BEGIN_TEST_CASE("should be able to retrieve the portfolio manager instance")
 	REQUIRE_VALID_PTR(man);
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("Should be able to check if a symbol is valid")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
-  REQUIRE_EQUAL(man.isSymbolValid("XXXYYY"),false);
-  REQUIRE_EQUAL(man.isSymbolValid("EURUSD"),true);
-END_TEST_CASE()
-
 BEGIN_TEST_CASE("should be able to get a currency trader by symbol")
 	nvPortfolioManager* man = nvPortfolioManager::instance();
 	nvCurrencyTrader* ct = man.getCurrencyTrader("EURUSD");

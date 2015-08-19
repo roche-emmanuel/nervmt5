@@ -80,6 +80,12 @@ BEGIN_TEST_CASE("Should support retriving period by index")
   }
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to check if a symbol is valid")
+  REQUIRE_EQUAL(nvIsSymbolValid("XXXYYY"),false);
+  REQUIRE_EQUAL(nvIsSymbolValid("EURUSD"),true);
+END_TEST_CASE()
+
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

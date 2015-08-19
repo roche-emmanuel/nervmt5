@@ -117,9 +117,6 @@ public:
     MqlTick last_tick;
     CHECK_RET(SymbolInfoTick(deal.getSymbol(),last_tick),false,"Cannot retrieve the latest tick");
 
-
-    deal.setEntryTime(last_tick.time);
-
     double price = last_tick.bid;
 
     double point = nvGetPointSize(deal.getSymbol());
@@ -133,9 +130,43 @@ public:
       deal.setStopLossPrice(price+sl*point);
     }
 
+    deal.setEntryTime(last_tick.time);
     deal.setEntryPrice(price);
+
+    deal.open();
 
     // Place the order on the market:
     return sendDealOrder(deal);
   }
+
+  /*
+  Function: doClosePosition
+  
+  Method called to actually close a position on a given symbol on that market.
+  Must be reimplemented by derived classes.
+  */
+  virtual void doClosePosition(nvDeal* deal)
+  {
+    // We simply retrieve the last tick on this symbol, the real market 
+    // cannot operate on the history !
+    MqlTick last_tick;
+    CHECK(SymbolInfoTick(deal.getSymbol(),last_tick),"Cannot retrieve the latest tick");
+
+    double price = last_tick.ask;
+
+    double point = nvGetPointSize(deal.getSymbol());
+
+    if(deal.getOrderType()==ORDER_TYPE_SELL)
+    {
+      price = last_tick.bid;      
+    }
+
+    deal.setExitTime(last_tick.time);
+    deal.setExitPrice(price);
+
+    deal.close();
+    
+    // Place the order on the market:
+    sendDealOrder(deal,true); // closing = true
+  }  
 };
