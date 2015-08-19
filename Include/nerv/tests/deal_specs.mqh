@@ -78,8 +78,9 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("Should be able to open a deal")
   nvDeal deal;
 
-  nvPortfolioManager::instance().addCurrencyTrader("EURUSD");
-  nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
+  nvPortfolioManager man;
+  man.addCurrencyTrader("EURUSD");
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
 
   datetime time = TimeLocal();
   deal.open(ct,ORDER_TYPE_BUY,1.23456,time,1.0);
@@ -94,14 +95,15 @@ BEGIN_TEST_CASE("Should be able to open a deal")
   ASSERT_EQUAL(list[1],0.0);
   
   // Reset the content:
-  nvPortfolioManager::instance().reset();	
+  man.reset();	
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to close a deal and update number of points")
   nvDeal deal;
 
-  nvPortfolioManager::instance().addCurrencyTrader("EURUSD");
-	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
+  nvPortfolioManager man;
+  man.addCurrencyTrader("EURUSD");
+	nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
 
 	datetime time = TimeLocal();
 	deal.open(ct,ORDER_TYPE_BUY,1.23456,time,1.0);
@@ -116,14 +118,15 @@ BEGIN_TEST_CASE("Should be able to close a deal and update number of points")
 	ASSERT_EQUAL(NormalizeDouble(deal.getNumPoints(),5),0.00001);
 	
   // Reset the content:
-  nvPortfolioManager::instance().reset();	
+  man.reset();	
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should not be done until it is closed")
   nvDeal deal;
 
-  nvPortfolioManager::instance().addCurrencyTrader("EURUSD");
-	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
+  nvPortfolioManager man;
+  man.addCurrencyTrader("EURUSD");
+	nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
 
 	ASSERT_EQUAL(deal.isDone(),false);
 	
@@ -138,7 +141,7 @@ BEGIN_TEST_CASE("Should not be done until it is closed")
 	ASSERT_EQUAL(deal.isDone(),true);
 	
   // Reset the content:
-  nvPortfolioManager::instance().reset();	  
+  man.reset();	  
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should throw an error if trying to close an non opened deal")
@@ -150,7 +153,7 @@ BEGIN_TEST_CASE("Should throw an error if trying to close an non opened deal")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should support computing the weight derivative")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
 
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
   nvCurrencyTrader* ct2 = man.addCurrencyTrader("EURUSD");

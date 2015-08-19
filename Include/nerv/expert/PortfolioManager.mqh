@@ -97,7 +97,7 @@ public:
     _realMarket.setManager(THIS);
     _virtualMarket.setManager(THIS);
     _decisionComposerFactory.setManager(THIS);
-    
+
   }
 
   /*
@@ -121,7 +121,7 @@ public:
   */
   ~nvPortfolioManager()
   {
-    // No op.
+    reset();
   }
 
   // Retrieve the instance of this class:

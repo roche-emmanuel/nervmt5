@@ -97,6 +97,7 @@ public:
 
     if(result)
     {
+      result.setManager(getManager());
       result.setCurrencyTrader(ct);
     }
     else 
@@ -140,6 +141,7 @@ public:
 
     if(result)
     {
+      result.setManager(getManager());
       result.setCurrencyTrader(ct);
     }
     else 

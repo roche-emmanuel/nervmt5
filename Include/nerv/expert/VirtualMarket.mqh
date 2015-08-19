@@ -51,7 +51,7 @@ public:
   virtual bool doOpenPosition(nvDeal* deal, double sl = 0.0)
   {
     // Retrieve the current open price:
-    nvPortfolioManager* man = nvPortfolioManager::instance();
+    nvPortfolioManager* man = getManager();
     datetime entryTime = man.getCurrentTime();
 
     // Also retrieve the price we had at that time:
@@ -91,7 +91,7 @@ public:
   virtual void doClosePosition(nvDeal* deal)
   {
     // Retrieve the current open price:
-    nvPortfolioManager* man = nvPortfolioManager::instance();
+    nvPortfolioManager* man = getManager();
     datetime exitTime = man.getCurrentTime();
 
     // Also retrieve the price we had at that time:

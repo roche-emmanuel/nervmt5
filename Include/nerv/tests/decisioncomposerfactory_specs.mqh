@@ -11,12 +11,13 @@ BEGIN_TEST_CASE("should be able to create a DecisionComposerFactory instance")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide the current count of entry decision composer")
-  nvDecisionComposerFactory factory;
+  nvPortfolioManager man;
+  nvDecisionComposerFactory* factory = man.getDecisionComposerFactory();
 
   int num = factory.getEntryTypeCount();
   ASSERT_EQUAL(num,1);
   
-  nvPortfolioManager man;
+  
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
   
   for(int i=0;i<num;++i)
@@ -29,12 +30,12 @@ BEGIN_TEST_CASE("Should provide the current count of entry decision composer")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide the current count of exit decision composer")
-  nvDecisionComposerFactory factory;
+  nvPortfolioManager man;
+  nvDecisionComposerFactory* factory = man.getDecisionComposerFactory();
 
   int num = factory.getExitTypeCount();
   ASSERT_EQUAL(num,1);
   
-  nvPortfolioManager man;
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
   
   for(int i=0;i<num;++i)

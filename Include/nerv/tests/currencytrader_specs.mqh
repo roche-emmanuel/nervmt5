@@ -34,7 +34,7 @@ BEGIN_TEST_CASE("Should increment the unique ID properly")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
 
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
   
@@ -65,7 +65,7 @@ BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should compute its utility with 2 traders")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
 
   nvCurrencyTrader* ct0 = man.addCurrencyTrader("EURUSD");
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
@@ -146,7 +146,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should release the deals it contains on deletion.")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
 
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
 
@@ -170,7 +170,7 @@ END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should support collecting deals")
   
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
 
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
 
@@ -208,14 +208,14 @@ BEGIN_TEST_CASE("Should support collecting deals")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should not have an open position by default.")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
   ASSERT_EQUAL(ct.hasOpenPosition(),false);
   man.reset();
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to close a position")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
   ct.setMarketType(MARKET_TYPE_VIRTUAL);
   ct.openPosition(0.5);

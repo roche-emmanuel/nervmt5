@@ -127,7 +127,7 @@ public:
     nvRemoveArrayElement(_currentDeals,deal);
 
     // We should notify a deal to the currency trader corresponding to that symbol:
-    nvCurrencyTrader* ct = nvPortfolioManager::instance().getCurrencyTrader(symbol);
+    nvCurrencyTrader* ct = getManager().getCurrencyTrader(symbol);
     CHECK(ct,"Invalid currency trader for symbol "<<symbol);
     ct.onDeal(deal); // Now the currency trader will take ownership of that deal.
   }

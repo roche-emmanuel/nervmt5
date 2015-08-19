@@ -81,7 +81,7 @@ public:
   
   Main method called to evaluate the bootstrap on the provided sample observations.
   */
-  double evaluate(double &x[], int Bsize = 999)
+  double evaluate(double &x[], int Bsize = 999, SimpleRNG* rng = NULL)
   {
     _sorted = false;
     _B = Bsize;
@@ -94,7 +94,11 @@ public:
     ArrayResize( shuttled, _size );
 
     // use the portfolioManager for shuttling:
-    SimpleRNG* rng = nvPortfolioManager::instance().getRandomGenerator();
+    SimpleRNG defrng;
+    if(rng==NULL)
+    {
+      rng = GetPointer(defrng);
+    }
 
     // perform evaluation for each bootstrap sample:
     for(int i=0;i<_B;++i)

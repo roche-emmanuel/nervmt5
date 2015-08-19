@@ -1,12 +1,13 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/CurrencyTrader.mqh>
+#include <nerv/expert/PortfolioElement.mqh>
 
 /*
 Class: nvDecisionComposer
 
 Base class used to encapsulate a decision composition process.
 */
-class nvDecisionComposer : public nvObject
+class nvDecisionComposer : public nvPortfolioElement
 {
 protected:
   // Reference on the parent current trader:
@@ -90,7 +91,7 @@ public:
   */
   virtual double evaluate(double &inputs[])
   {
-    SimpleRNG* rng = nvPortfolioManager::instance().getRandomGenerator();
+    SimpleRNG* rng = getManager().getRandomGenerator();
 
     double val = (rng.GetUniform()-0.5)*2.0;
     _signal = _signal + _adapt * (val - _signal);

@@ -51,7 +51,7 @@ public:
   {
     CHECK(trader,"Invalid parent trader.");
 
-    _rng = nvPortfolioManager::instance().getRandomGenerator();
+    _rng = trader.getManager().getRandomGenerator();
 
     // Default value for the agent type:
     _agentType = TRADE_AGENT_UNKNOWN;

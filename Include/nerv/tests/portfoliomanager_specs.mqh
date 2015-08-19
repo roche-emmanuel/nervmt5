@@ -7,12 +7,12 @@ BEGIN_TEST_PACKAGE(portfoliomanager_specs)
 BEGIN_TEST_SUITE("PortfolioManager class")
 
 BEGIN_TEST_CASE("should be able to retrieve the portfolio manager instance")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
 	REQUIRE_VALID_PTR(man);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("should be able to get a currency trader by symbol")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
 	nvCurrencyTrader* ct = man.getCurrencyTrader("EURUSD");
 	// There should be no currency trader with that symbol yet:
 	REQUIRE_NULL_PTR(ct);
@@ -45,7 +45,7 @@ BEGIN_TEST_CASE("should be able to get a currency trader by symbol")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should support handling multiple currencies")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
 	man.addCurrencyTrader("EURUSD");
 	man.addCurrencyTrader("GBPUSD");
 	man.addCurrencyTrader("EURGBP");
@@ -86,7 +86,7 @@ END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should allow updating the currency traders weights")
   // Should have no effect when contains no currency trader:
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
 	man.updateWeights();
 
 	// Should set its initial weight to one when there is only one currency:
@@ -107,7 +107,7 @@ BEGIN_TEST_CASE("Should allow updating the currency traders weights")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide new unique IDs")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
   int id1 = man.getNewID();
   int id2 = man.getNewID();
   REQUIRE_EQUAL(id1+1,id2);
@@ -115,7 +115,7 @@ BEGIN_TEST_CASE("Should provide new unique IDs")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to retrieve a currency trader by ID")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
 	nvCurrencyTrader* ct1 = man.addCurrencyTrader("EURUSD");
 	REQUIRE_NOT_NULL(ct1);
 	nvCurrencyTrader* ct2 = man.addCurrencyTrader("GBPUSD");
@@ -141,7 +141,7 @@ BEGIN_TEST_CASE("Should be able to retrieve a currency trader by ID")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should have a method reset to remove everything")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
 	nvCurrencyTrader* ct1 = man.addCurrencyTrader("EURUSD");
 	REQUIRE_NOT_NULL(ct1);
 	nvCurrencyTrader* ct2 = man.addCurrencyTrader("GBPUSD");
@@ -154,13 +154,13 @@ BEGIN_TEST_CASE("Should have a method reset to remove everything")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide a risk manager instance")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
 	nvRiskManager* rman = man.getRiskManager();
 	ASSERT_NOT_NULL(rman);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide a random generator")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
   SimpleRNG* rnd = man.getRandomGenerator();
   ASSERT_NOT_NULL(rnd);
 END_TEST_CASE()

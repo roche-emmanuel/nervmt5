@@ -11,7 +11,7 @@ BEGIN_TEST_CASE("should be able to create a RealMarket instance")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide info on open position status")
-  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvPortfolioManager man;
   nvMarket* market = man.getMarket(MARKET_TYPE_REAL);
 
   ASSERT_EQUAL((int)market.getMarketType(),(int)MARKET_TYPE_REAL);

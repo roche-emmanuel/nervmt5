@@ -7,7 +7,7 @@ BEGIN_TEST_PACKAGE(decisioncomposer_specs)
 BEGIN_TEST_SUITE("DecisionComposer class")
 
 BEGIN_TEST_CASE("should be able to create a DecisionComposer instance")
-	nvPortfolioManager* man = nvPortfolioManager::instance();
+	nvPortfolioManager man;
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
 
   nvDecisionComposer comp;
