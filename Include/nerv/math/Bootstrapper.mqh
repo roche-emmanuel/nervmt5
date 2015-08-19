@@ -23,6 +23,9 @@ protected:
   // Boot standard error on the compute statistic:
   double _bootStandardError;
 
+  // Falg to indicated if the boot samples are already sorted or not:
+  bool _sorted;
+
 public:
   /*
     Class constructor.
@@ -31,6 +34,7 @@ public:
   {
     _size = 0;
     _B = 0;
+    _sorted = false;
     _bootEstimate = 0.0;
     _bootStandardError = 0.0;
   }
@@ -79,6 +83,7 @@ public:
   */
   double evaluate(double &x[], int Bsize = 999)
   {
+    _sorted = false;
     _B = Bsize;
     _size = ArraySize( x );
     CHECK_RET(_size>2,0.0,"Not enough elements in bootstrap evaluation.");
@@ -130,6 +135,71 @@ public:
   double getStandardError()
   {
     return _bootStandardError;
+  }
+  
+  /*
+  Function: getBootSamples
+  
+  Retrieve the values of the samples computed by the bootstrap algorithm
+  */
+  void getBootSamples(double &values[])
+  {
+    int num = ArraySize( _bootValues );
+    ArrayResize( values, num );
+    ArrayCopy( values, _bootValues);
+  }
+  
+  /*
+  Function: sortBootSamples
+  
+  Method called to sort the bootstrap samples (if not done yet)
+  */
+  void sortBootSamples()
+  {
+    if(_sorted)
+      return; // nothing to do.
+
+    ArraySort( _bootValues );
+    _sorted = true;
+  }
+  
+  /*
+  Function: getMaxValue
+  
+  Retrieve the max value of the confidence interval with a given 
+  confidence level, using the quantile evaluation.
+  */
+  double getMaxValue(double confidence)
+  {
+    CHECK_RET(0<=confidence && confidence<=1.0,0.0,"Invalid confidence value: "<<confidence);
+
+    // The confidence level is centered on the mean value, so we need to add a "little something"
+    double level = confidence + (1.0 - confidence)*0.5;
+
+    int index = (int)MathFloor(_B*level + 0.5);
+
+    sortBootSamples();
+    return _bootValues[index];
+  }
+  
+  /*
+  Function: getMinValue
+  
+  Retrieve the min value of the confidence interval with a given 
+  confidence level, using the quantile evaluation.  
+  */
+  double getMinValue(double confidence)
+  {
+    CHECK_RET(0<=confidence && confidence<=1.0,0.0,"Invalid confidence value: "<<confidence);
+
+    // The confidence level is centered on the mean value, so we need to only take into account
+    // what is "left" on the left side:
+    double level = (1.0 - confidence)*0.5;
+
+    int index = (int)MathFloor(_B*level + 0.5);
+
+    sortBootSamples();
+    return _bootValues[index];    
   }
   
 };

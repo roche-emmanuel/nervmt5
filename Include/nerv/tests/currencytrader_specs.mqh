@@ -203,6 +203,24 @@ BEGIN_TEST_CASE("Should not have an open position by default.")
   man.reset();
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to close a position")
+  nvPortfolioManager* man = nvPortfolioManager::instance();
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  ct.setMarketType(MARKET_TYPE_VIRTUAL);
+  ct.openPosition(0.5);
+  ASSERT_EQUAL(ct.hasOpenPosition(),true);
+  int count = ct.getDealCount();
+  ASSERT_EQUAL(count,0);
+  
+  ct.closePosition();
+  ASSERT_EQUAL(ct.hasOpenPosition(),false);
+
+	// Should have received one additional deal:
+  ASSERT_EQUAL(ct.getDealCount(),count+1);
+  
+  man.reset();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

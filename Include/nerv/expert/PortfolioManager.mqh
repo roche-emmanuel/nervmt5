@@ -12,10 +12,17 @@
 // Max lag that should be acheivable by default on Trading agent with random generation:
 #define AGENT_MAX_LAG 6
 
+// Minimal number of samples used to built a statistic:
+#define TRADER_MIN_NUM_SAMPLES 50
+
+// Default value for the currency trader lost points statistic,
+// used until we have enough samples:
+#define TRADER_DEFAULT_LOST_POINTS 50
 
 #include <nerv/expert/RiskManager.mqh>
 #include <nerv/expert/AgentFactory.mqh>
 #include <nerv/expert/VirtualMarket.mqh>
+#include <nerv/expert/RealMarket.mqh>
 #include <nerv/expert/CurrencyTrader.mqh>
 #include <nerv/expert/DecisionComposerFactory.mqh>
 
@@ -67,6 +74,9 @@ protected:
 
   // Virtual market instance used in the portfolio:
   nvVirtualMarket _virtualMarket;
+
+  // Real market instance used in the portfolio:
+  nvRealMarket _realMarket;
 
   // DecisionComposerFactory isntance for this portfolio:
   nvDecisionComposerFactory _decisionComposerFactory;
@@ -488,13 +498,16 @@ public:
   }
   
   /*
-  Function: getVirtualMarket
+  Function: getMarket
   
-  Method used to retrieve the instance of the virtual market in this portfolio
+  Method used to retrieve the instance of the virtual or the real market in this portfolio
   */
-  nvVirtualMarket* getVirtualMarket()
+  nvMarket* getMarket(MarketType mtype)
   {
-    return GetPointer(_virtualMarket);
+    if(mtype==MARKET_TYPE_REAL)
+      return GetPointer(_realMarket);
+    else 
+      return GetPointer(_virtualMarket);
   }
   
   /*

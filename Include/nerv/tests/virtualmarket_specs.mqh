@@ -12,12 +12,23 @@ END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide info on open position status")
   nvPortfolioManager* man = nvPortfolioManager::instance();
-  nvVirtualMarket* vmark = man.getVirtualMarket();
+  nvMarket* market = man.getMarket(MARKET_TYPE_VIRTUAL);
+
+  ASSERT_EQUAL((int)market.getMarketType(),(int)MARKET_TYPE_VIRTUAL);
 
   // No open position by default:
-  ASSERT_EQUAL(vmark.hasOpenPosition("EURUSD"),false)
+  ASSERT_EQUAL(market.hasOpenPosition("EURUSD"),false)
   man.reset();
 
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should allow retrieving position type")
+  // For the moment this will just throw an error:
+  nvVirtualMarket market;
+  BEGIN_ASSERT_ERROR("No implementation1")
+    market.getPositionType("EURUSD");
+  END_ASSERT_ERROR();
+  
 END_TEST_CASE()
 
 END_TEST_SUITE()

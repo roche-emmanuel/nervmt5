@@ -6,6 +6,7 @@
 #include <nerv/expert/TradingAgent.mqh>
 #include <nerv/expert/DecisionComposer.mqh>
 #include <nerv/expert/DecisionComposerFactory.mqh>
+#include <nerv/expert/Market.mqh>
 
 /*
 Class: nvCurrencyTrader
@@ -56,6 +57,12 @@ protected:
   // Exit decision composer:
   nvDecisionComposer* _exitDecisionComposer;
 
+  // Current market type for this trader:
+  MarketType _marketType;
+
+  // Number of deals received by this currency trader:
+  int _dealCount;
+
 public:
   /*
     Class constructor.
@@ -73,6 +80,13 @@ public:
 
     // Retrieve a new unique ID for this trader from the PortfolioManager:
     _id = nvPortfolioManager::instance().getNewID();
+
+    // Initialize the deal count:
+    _dealCount = 0;
+
+    // By default we are on the real market:
+    _marketType = MARKET_TYPE_UNKNOWN;
+    setMarketType(MARKET_TYPE_REAL);
 
     // Initialize the previous deals array:
     ArrayResize( _previousDeals, 0 );
@@ -121,6 +135,52 @@ public:
   }
 
   /*
+  Function: getDealCount
+  
+  Retrieve the number of deals received by this currency trader
+  */
+  int getDealCount()
+  {
+    return _dealCount;
+  }
+  
+  /*
+  Function: getMarketType
+  
+  Retrieve the current market type for this object.
+  */
+  MarketType getMarketType()
+  {
+    return _marketType;
+  }
+  
+  /*
+  Function: setMarketType
+  
+  Assign the current market type for this object.
+  */
+  void setMarketType(MarketType mode)
+  {
+    CHECK(mode!=MARKET_TYPE_UNKNOWN,"Cannot assign unknown trader mode.");
+
+    if(mode == _marketType)
+    {
+      // nothing to change in that case:
+      return;
+    }
+
+    // First we must ensure that we have no open position left
+    // on either the real or the virtual market
+    nvMarket* market = nvPortfolioManager::instance().getMarket(MARKET_TYPE_REAL);
+    market.closePosition(_symbol);
+    market = nvPortfolioManager::instance().getMarket(MARKET_TYPE_VIRTUAL);
+    market.closePosition(_symbol);
+
+    // Assign the new mode:
+    _marketType = mode;
+  }
+  
+  /*
   Function: addTradingAgent
   
   Append an agent to the list of agent contained in this currency trader
@@ -148,15 +208,35 @@ public:
   }
   
   /*
+  Function: getMarket
+  
+  Retrieve the market on which this currency trader is working currently:
+  */
+  nvMarket* getMarket()
+  {
+    // We return our current market depending on our current trader mode:
+    return nvPortfolioManager::instance().getMarket(_marketType);
+  }
+  
+  /*
+  Function: getPositionType
+  
+  Retrieve the current position type of this trader
+  */
+  PositionType getPositionType()
+  {
+    nvMarket* market = getMarket();
+    return market.getPositionType(_symbol);  
+  }
+
+  /*
   Function: hasOpenPosition
   
   Method used to check if this currency trader currently has an open position on the market.
   */
   bool hasOpenPosition()
   {
-    // We need to check if we have an open position on both the real market and the virtual market.
-    nvVirtualMarket* vmarket = nvPortfolioManager::instance().getVirtualMarket();
-    return PositionSelect(_symbol) || vmarket.hasOpenPosition(_symbol);
+    return getPositionType()!=POS_NONE;    
   }
   
   /*
@@ -249,7 +329,16 @@ public:
       // submit the agents point of views to the exit decision composer:
       double decision = _exitDecisionComposer.evaluate(_exitDecisions);
 
-      // TODO: Handle the decision here.
+      if(getPositionType()==POS_LONG && decision<0.0)
+      {
+        // We should close the position.
+        closePosition();
+      }
+      if(getPositionType()==POS_SHORT && decision>0.0)
+      {
+        // We should close the position.
+        closePosition();
+      }
     }
     else {
       // We are outside of the market, so we should check if we should enter it:
@@ -262,9 +351,12 @@ public:
       // submit the agents point of views to the entry decision composer:
       double decision = _entryDecisionComposer.evaluate(_entryDecisions);
 
+      openPosition(decision);
+
       if(decision>0.0)
       {
         // TODO: here we should enter a LONG position.
+
       }
       if(decision<0.0)
       {
@@ -275,6 +367,121 @@ public:
     logDEBUG(TimeLocal()<<": Updating CurrencyTrader.")
   }
 
+  /*
+  Function: computeEstimatedMaxLost
+  
+  This method is used to compute the estimated max lost that can be observed in the recent
+  deal history. It will be used to determine what value should be used as a stop loss for
+  the following deals.
+  */
+  double computeEstimatedMaxLost(double confidenceLevel)
+  {
+    // First we have to retrieve all the negative profits from the deal history:
+    double negPoints[];
+    int num = ArraySize( _previousDeals );
+    double points;
+    for(int i=0;i<num;++i)
+    {
+      points = -_previousDeals[i].getNumPoints();
+      if(points>0.0)
+      {
+        nvAppendArrayElement(negPoints,points);
+      }
+    }
+
+    num = ArraySize( negPoints );
+    logDEBUG("Computing estimated max lost with "<<num<<" samples.");
+
+    // if we don't have enough samples then we just return an initialization value:
+    if(num<TRADER_MIN_NUM_SAMPLES)
+    {
+      return TRADER_DEFAULT_LOST_POINTS;
+    }
+
+    // We assume we have enough values to build a bootstrap statistic:
+
+    // We start with computing the mean:
+    nvMeanBootstrap meanBoot;
+    meanBoot.evaluate(negPoints);
+
+    // We do not simply retrieve the mean, but instead we retrieve the highest value of the confidence interval 
+    // given by the confidence level argument.
+
+    double max_mean = meanBoot.getMaxValue(confidenceLevel);
+
+    // Then we do the same for the standard error computation:
+    nvStdDevBootstrap devBoot;
+    devBoot.evaluate(negPoints);
+
+    // And we retrieve the max value of the desired confidence interval:
+    double max_dev = devBoot.getMaxValue(confidenceLevel);
+
+    // And from that we can determine what would be our maximum number of lost points
+    // (assuming a normal distribution, and forcing a confidence level of 95% for this
+    // last step)
+    // TODO: we should add support for computing the quantiles of the normal distribution
+    // So that we should still use the provided confidence level argument for this last step.
+    double max_lost = max_mean + 2*max_dev;
+    logDEBUG("Computed estimated max lost value of "<<max_lost<<" with confidence level "<< confidenceLevel);
+
+    return max_lost;
+  }
+  
+  /*
+  Function: computeLotSize
+  
+  Method used to compute the lot size that should be used for the next trader that
+  we want to open. It will use the risk manager to perform the actual computation:
+  */
+  double computeLotSize(double lostPoints, double confidence)
+  {
+    nvRiskManager* rman = nvPortfolioManager::instance().getRiskManager();
+    return rman.evaluateLotSize(_symbol, lostPoints, _weight, confidence);
+  }
+  
+  /*
+  Function: openPosition
+  
+  Method called to open a position with this trader given a confidence value
+  */
+  void openPosition(double confidence)
+  {
+    if(confidence==0.0)
+    {
+      // nothing to do in that case.
+      return;
+    }
+
+    // Get the current estimation of the number of points that could be lost with a given
+    // confidence level.
+    // TODO: retrieve the desired confidence level from the risk manager itself ?
+    double lostPoints = computeEstimatedMaxLost(0.95);
+
+    // Estimate the lot size that we should used for this trade:
+    double lotSize = computeLotSize(lostPoints,MathAbs(confidence));
+    
+    if(lotSize==0.0)
+    {
+      // nothing to open:
+      return;
+    }
+
+    // Retrieve the current market:
+    nvMarket* market = getMarket();
+    market.openPosition(_symbol, confidence>0.0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, lotSize, lostPoints );
+  }
+  
+  /*
+  Function: closePosition
+  
+  Method called to close the current position on this symbol if any.
+  */
+  void closePosition()
+  {
+    nvMarket* market = getMarket();
+    market.closePosition(_symbol);
+  }
+  
   /*
   Function: onDeal
   

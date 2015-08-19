@@ -131,7 +131,7 @@ public:
   
   Main method of this class used to evaluate the lot size that should be used for a potential trade.
   */
-  double evaluateLotSize(string symbol, int numLostPoints, double traderWeight, double confidence)
+  double evaluateLotSize(string symbol, double numLostPoints, double traderWeight, double confidence)
   {
     CHECK_RET(0.0<=traderWeight && traderWeight <= 1.0,0.0,"Invalid trader weight: "<<traderWeight);
 

@@ -60,7 +60,47 @@ BEGIN_TEST_CASE("Should be able to evaluate the mean of a distribution")
   ASSERT(bsd+2*bsd_se >= dev);
   logDEBUG("Bootstram stddev value: "<<bsd<<", SE: "<<bsd_se);
 END_TEST_CASE()
-	
+
+BEGIN_TEST_CASE("Should be able to provide min/max confidence values")
+  SimpleRNG rng;
+
+  rng.SetSeedFromSystemTime();
+
+  int size = 300;
+  double mean = 1.23456;
+  double dev = 1.65432;
+
+  double x[];
+  ArrayResize( x, size );
+  for(int i=0;i<size;++i)
+  {
+    x[i] = rng.GetNormal(mean,dev);
+  }
+
+  // Now use a bootstrap to compute the mean:
+  nvMeanBootstrap meanBoot;
+  double bmean = meanBoot.evaluate(x);
+  double bdev = meanBoot.getStandardError();
+
+  // use the bootstrap statistics to determine the max value of the
+  // 95% confidence interval:
+  double mean_max = meanBoot.getMaxValue(0.95);
+
+  double bsamples[];
+  meanBoot.getBootSamples(bsamples);
+  ArraySort( bsamples );
+
+  // The max value should be achieved when we reach 97.5% of the samples, 
+  // so when we select the 97.5% of _B
+  int index = (int)MathFloor(999*0.975 + 0.5);
+  ASSERT_EQUAL(mean_max,bsamples[index]);
+
+  // Same for the min value:
+  double mean_min = meanBoot.getMinValue(0.95);
+  index = (int)MathFloor(999*0.025 + 0.5);
+  ASSERT_EQUAL(mean_min,bsamples[index]);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
