@@ -1,5 +1,6 @@
 #include <nerv/core.mqh>
 
+#include <nerv/expert/PortfolioElement.mqh>
 #include <nerv/expert/PortfolioManager.mqh>
 #include <nerv/expert/Deal.mqh>
 #include <nerv/utils.mqh>
@@ -13,7 +14,7 @@ Class: nvCurrencyTrader
 
 This class represents a trader that will operate on a fixed currency.
 */
-class nvCurrencyTrader : public nvObject
+class nvCurrencyTrader : public nvPortfolioElement
 {
 protected:
   string _symbol;
@@ -496,7 +497,7 @@ public:
 
     // Increment the deal count:
     _dealCount++;
-    
+
     // We add this new deal to the previous deals list:
     int num = ArraySize( _previousDeals );
     if(num<TRADER_MAX_NUM_DEALS)
