@@ -61,6 +61,18 @@ double nvGetPointValue(string symbol, double lot = 1.0)
 	return lot*csize*point;
 }
 
+// Retrieve the point size for a given symbol:
+double nvGetPointSize(string symbol)
+{
+  return SymbolInfoDouble(symbol,SYMBOL_POINT);
+}
+
+// Retrieve the number of digits to use for a symbol:
+int nvGetNumDigits(string symbol)
+{
+  return (int)SymbolInfoInteger(symbol,SYMBOL_DIGITS);
+}
+
 // Method called to normalize a lot size given its symbol.
 double nvNormalizeLotSize(double lot, string symbol)
 {

@@ -87,11 +87,12 @@ public:
     // Create a new deal for this trade opening:
     nvDeal* deal = new nvDeal();
     deal.setSymbol(symbol);
-    deal.setPositionType(otype==ORDER_TYPE_BUY ? POSITION_TYPE_BUY : POSITION_TYPE_SELL);
     deal.setMarketType(_marketType);
+    deal.setOrderType(otype);
+    deal.setLotSize(lot);
 
     // Perform the actual opening of the position:
-    if(doOpenPosition(deal))
+    if(doOpenPosition(deal,sl))
     {
       // The deal is opened properly, we keep a reference on it:
       nvAppendArrayElement(_currentDeals,deal);
@@ -147,7 +148,7 @@ public:
   Method called to actually open a position on a given symbol on that market.
   Must be reimplemented by derived classes.
   */
-  virtual bool doOpenPosition(nvDeal* deal)
+  virtual bool doOpenPosition(nvDeal* deal, double sl = 0.0)
   {
     THROW("No implementation");
     return false;
@@ -181,7 +182,7 @@ public:
     nvDeal* deal = getCurrentDeal(symbol);
     if(deal)
     {
-      return deal.getPositionType()==POSITION_TYPE_BUY ? POS_LONG : POS_SHORT;
+      return deal.getOrderType()==ORDER_TYPE_BUY ? POS_LONG : POS_SHORT;
     }
 
     return POS_NONE;

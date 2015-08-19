@@ -56,11 +56,11 @@ protected:
   // Symbol of this deal:
   string _symbol;
 
-  // Position type of this deal:
-  ENUM_POSITION_TYPE _positionType;
-
   // Market type for this deal:
   MarketType _marketType;
+
+  // Stop loss price
+  double _stopLossPrice;
 
 public:
   /*
@@ -82,7 +82,7 @@ public:
     _isDone = false;
     _lotSize = 0.0;
     _marketType = MARKET_TYPE_UNKNOWN;
-    _positionType = 0;
+    _stopLossPrice = 0.0;
   }
 
   /*
@@ -185,23 +185,23 @@ public:
   }
   
   /*
-  Function: setPositionType
-  
-  Assign a position type for this deal:
-  */
-  void setPositionType(ENUM_POSITION_TYPE ptype)
-  {
-    _positionType = ptype;
-  }
-  
-  /*
-  Function: getPositionType
+  Function: getOrderType
   
   Retrieve the position type of this deal
   */
-  ENUM_POSITION_TYPE getPositionType()
+  ENUM_ORDER_TYPE getOrderType()
   {
-    return _positionType;
+    return _orderType;
+  }
+  
+  /*
+  Function: setOrderType
+  
+  Set the order type for this deal
+  */
+  void setOrderType(ENUM_ORDER_TYPE otype)
+  {
+    _orderType = otype;
   }
   
   /*
@@ -286,33 +286,49 @@ public:
   */
   void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime, double lotsize)
   {
+    setTraderID(id);
+    open(orderType,entryPrice,entryTime,lotsize);
+  }
+  
+  /*
+  Function: open
+  
+  Method called when this deal should be opened.
+  This method we retrieve the current settings from the currency trader
+  and portfolio manager.
+  */
+  void open(ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime, double lotsize)
+  {
     CHECK(entryPrice>0.0 && entryTime>0,"Invalid entry price and/or time");
-
+    
     _entryPrice = entryPrice;
     _entryTime = entryTime;
     _orderType = orderType;
     _lotSize = lotsize;
-
-    // Assign the trader ID:
-    setTraderID(id);
-
+  }
+  
+  /*
+  Function: open
+  
+  Method called to record the data on the trade opening point
+  */
+  void open()
+  {
     // We assume that the trader ID is available here:
     CHECK(_traderID!=INVALID_TRADER_ID,"Invalid trader ID in open.");
 
     nvPortfolioManager* man = nvPortfolioManager::instance();
 
-    // Retrieve the corresponding trader:
-    nvCurrencyTrader* ct = man.getCurrencyTraderByID(_traderID);
-    CHECK(ct,"Invalid currency trader.");
-
     // Assign the current utility of the parent trader:
+    nvCurrencyTrader* ct = man.getCurrencyTraderByID(_traderID);
+    CHECK(ct!=NULL,"Invalid currency trader.");
     _traderUtility = ct.getUtility();
 
     // also keep a ref on the utitity efficiency:
     _utilityEfficiency = man.getUtilityEfficiency();
 
     // Also keep a list of all current utilities:
-    man.getUtilities(_utilities);
+    man.getUtilities(_utilities);    
   }
   
   /*
@@ -322,11 +338,24 @@ public:
   */
   void close(double exitPrice, datetime exitTime, double profit)
   {
-    // Ensure that the deal was opened first:
-    CHECK(_entryTime>0 && _entryPrice>0.0,"Cannot close not opened deal.");
-
     _exitPrice = exitPrice;
     _exitTime = exitTime;
+
+    // assign the profit value:
+    _profit = profit;
+
+    close();
+  }
+  
+  /*
+  Function: close
+  
+  Method called to finalize a deal when it is completed.
+  */
+  void close()
+  {
+    // Ensure that the deal was opened first:
+    CHECK(_entryTime>0 && _entryPrice>0.0,"Cannot close not opened deal.");
 
     // Ensure that the timestamps are correct:
     CHECK(_entryTime<_exitTime,"Invalid entry/exit times");
@@ -334,11 +363,8 @@ public:
     // At this point we can also compute the profit in number of points:
     _numPoints = _orderType==ORDER_TYPE_BUY ? _exitPrice - _entryPrice : _entryPrice - _exitPrice;
 
-    // assign the profit value:
-    _profit = profit;
-
     // Mark this deal as done:
-    _isDone = true;
+    _isDone = true;    
   }
   
   /*
@@ -362,6 +388,16 @@ public:
   }
   
   /*
+  Function: setEntryPrice
+  
+  Assign the entry price of this deal
+  */
+  void setEntryPrice(double price)
+  {
+    _entryPrice = price;
+  }
+  
+  /*
   Function: getEntryTime
   
   Retrieve the entry time of that deal
@@ -369,6 +405,16 @@ public:
   datetime getEntryTime()
   {
     return _entryTime;
+  }
+  
+  /*
+  Function: setEntryTime
+  
+  Assign the entry time for this deal
+  */
+  void setEntryTime(datetime time)
+  {
+    _entryTime = time;
   }
   
   /*
@@ -382,6 +428,16 @@ public:
   }
   
   /*
+  Function: setExitPrice
+  
+  Assign the exit price for this deal
+  */
+  void setExitPrice(double price)
+  {
+    _exitPrice = price;
+  }
+  
+  /*
   Function: getExitTime
   
   Retrieve the exit time of this deal
@@ -391,6 +447,56 @@ public:
     return _exitTime;
   }
 
+  /*
+  Function: setExitTime
+  
+  Assign the exit time for this deal
+  */
+  void setExitTime(datetime time)
+  {
+    _exitTime = time;
+  }
+  
+  /*
+  Function: getLotSize
+  
+  Retrieve the lot size used for this deal
+  */
+  double getLotSize()
+  {
+    return _lotSize;
+  }
+  
+  /*
+  Function: setLotSize
+  
+  Assign the lot size used for this deal
+  */
+  void setLotSize(double size)
+  {
+    _lotSize = size;
+  }
+  
+  /*
+  Function: getStopLossPrice
+  
+  Retrieve the stop loss price (if any)
+  */
+  double getStopLossPrice()
+  {
+    return _stopLossPrice;
+  }
+  
+  /*
+  Function: setStopLossPrice
+  
+  Assign the stop loss price
+  */
+  void setStopLossPrice(double price)
+  {
+    _stopLossPrice = price;
+  }
+  
   /*
   Function: getProfitDerivative
   
