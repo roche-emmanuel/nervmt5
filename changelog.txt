@@ -235,3 +235,4 @@
 08/20/15-00:15:38: Working on issue #25: progressively removing references on nvPortfolioManger.
 08/20/15-00:26:07: Working on issue #25: progressively removing references on nvPortfolioManger. All tests passed.
 08/20/15-00:45:35: Working on issue #25: removed all references to nvPortfolioManager::instance().
+08/20/15-00:47:28: Fixed issue #25: removed nvPortfolioManager::instance() completely.

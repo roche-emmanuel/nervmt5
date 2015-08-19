@@ -123,13 +123,6 @@ public:
   {
     reset();
   }
-
-  // Retrieve the instance of this class:
-  static nvPortfolioManager *instance()
-  {
-    static nvPortfolioManager singleton;
-    return GetPointer(singleton);
-  }
   
   /*
   Function: getCurrencyTrader
