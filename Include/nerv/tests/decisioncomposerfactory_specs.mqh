@@ -16,10 +16,12 @@ BEGIN_TEST_CASE("Should provide the current count of entry decision composer")
   int num = factory.getEntryTypeCount();
   ASSERT_EQUAL(num,1);
   
-  nvCurrencyTrader ct("EURUSD");
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  
   for(int i=0;i<num;++i)
   {
-    nvDecisionComposer* comp = factory.createEntryComposer(GetPointer(ct),i);
+    nvDecisionComposer* comp = factory.createEntryComposer(ct,i);
     ASSERT_NOT_NULL(comp);
     RELEASE_PTR(comp);
   }
@@ -32,10 +34,12 @@ BEGIN_TEST_CASE("Should provide the current count of exit decision composer")
   int num = factory.getExitTypeCount();
   ASSERT_EQUAL(num,1);
   
-  nvCurrencyTrader ct("EURUSD");
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  
   for(int i=0;i<num;++i)
   {
-    nvDecisionComposer* comp = factory.createExitComposer(GetPointer(ct),i);
+    nvDecisionComposer* comp = factory.createExitComposer(ct,i);
     ASSERT_NOT_NULL(comp);
     RELEASE_PTR(comp);
   }

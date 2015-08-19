@@ -84,9 +84,7 @@ protected:
   // current server time:
   datetime _currentTime;
 
-protected:
-  // Following methods are protected to respect the singleton pattern
-
+public:
   /*
     Class constructor.
   */
@@ -127,7 +125,6 @@ protected:
     // No op.
   }
 
-public:
   // Retrieve the instance of this class:
   static nvPortfolioManager *instance()
   {
@@ -195,7 +192,10 @@ public:
     CHECK_RET(nvIsSymbolValid(symbol),NULL,"Invalid symbol.")
     
     // Create a new trader:
-    nvCurrencyTrader* trader = new nvCurrencyTrader(symbol);
+    nvCurrencyTrader* trader = new nvCurrencyTrader();
+    trader.setSymbol(symbol);
+    trader.setManager(THIS);
+    
     int num = ArraySize( _traders );
     ArrayResize( _traders, num+1 );
     _traders[num] = trader;

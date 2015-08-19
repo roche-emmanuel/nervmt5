@@ -67,6 +67,29 @@ public:
     CHECK(_manager==NULL,"Manager already assigned.");
     CHECK(manager!=NULL,"Invalid portfolio manager");
     _manager = manager;
+
+    initialize();
+  }
+  
+  /*
+  Function: setManager
+  
+  Assign the portfolio manager by reference
+  */
+  void setManager(nvPortfolioManager& manager)
+  {
+    setManager(GetPointer(manager));
+  }
+  
+  /*
+  Function: initialize
+  
+  Method called jsut after the manager for this object is assigned.
+  Does nothing by default. SHould by reimplemented in derived classes.
+  */
+  virtual void initialize()
+  {
+    // NO op.
   }
   
 };

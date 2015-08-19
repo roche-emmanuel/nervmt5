@@ -3,6 +3,8 @@
 #include <nerv/expert/PortfolioManager.mqh>
 #include <nerv/expert/Market.mqh>
 
+class nvCurrencyTrader;
+
 /*
 Class: nvDeal
 
@@ -14,8 +16,8 @@ trader, etc...
 class nvDeal : public nvObject
 {
 protected:
-  // ID of the trader owning this deal:
-  int _traderID;
+  // Currency trader holding this deal
+  nvCurrencyTrader* _trader;
 
   // Number of points of profit received in this deal:
   double _numPoints;
@@ -68,7 +70,7 @@ public:
   */
   nvDeal()
   {
-    _traderID = INVALID_TRADER_ID; // invalid default value.
+    _trader = NULL;
     _numPoints = 0.0; // No profit by default.
     _profit = 0.0;
     ArrayResize( _utilities, 0 ); // No utilities by default.
@@ -83,6 +85,7 @@ public:
     _lotSize = 0.0;
     _marketType = MARKET_TYPE_UNKNOWN;
     _stopLossPrice = 0.0;
+    _symbol = "";
   }
 
   /*
@@ -110,27 +113,28 @@ public:
   }
 
   /*
-  Function: getTraderID
+  Function: getCurrencyTrader
   
-  Retrieve the ID of the trader owning this deal
+  Retrieve currency trader owning this deal
   */
-  int getTraderID()
+  nvCurrencyTrader* getCurrencyTrader()
   {
-    return _traderID;
+    CHECK_RET(_trader,NULL,"Invalid currency trader.")
+    return _trader;
   }
   
   /*
-  Function: setTraderID
+  Function: setCurrencyTrader
   
   Assign the ID of the trader owning this deal
   */
-  void setTraderID(int id)
+  void setCurrencyTrader(nvCurrencyTrader* trader)
   {
-    // Here we should ensure that the corresponding trader exists:
-    nvCurrencyTrader* ct = nvPortfolioManager::instance().getCurrencyTraderByID(id);
-    CHECK(ct!=NULL,"Invalid trader ID");
-    _traderID = id;
-    _symbol = ct.getSymbol();
+    CHECK(_trader==NULL,"Currency trader already assigned.")
+    CHECK(trader!=NULL,"Invalid currency trader.")
+
+    _trader = trader;
+    _symbol = trader.getSymbol();
   }
 
   /*
@@ -164,25 +168,13 @@ public:
   }
   
   /*
-  Function: setSymbol
-  
-  Assign a symbol to this deal
-  */
-  void setSymbol(string symbol)
-  {
-    _symbol = symbol;
-    nvCurrencyTrader* ct = nvPortfolioManager::instance().getCurrencyTrader(symbol);
-    CHECK(ct,"Invalid currency trader");
-    setTraderID(ct.getID());
-  }
-  
-  /*
   Function: getSymbol
   
   Retrieve the symbol of that deal
   */
   string getSymbol()
   {
+    CHECK_RET(_symbol!="","","Invalid symbol")
     return _symbol;
   }
   
@@ -286,9 +278,9 @@ public:
   This method we retrieve the current settings from the currency trader
   and portfolio manager.
   */
-  void open(int id, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime, double lotsize)
+  void open(nvCurrencyTrader* trader, ENUM_ORDER_TYPE orderType, double entryPrice, datetime entryTime, double lotsize)
   {
-    setTraderID(id);
+    setCurrencyTrader(trader);
     open(orderType,entryPrice,entryTime,lotsize);
   }
   
@@ -318,21 +310,17 @@ public:
   */
   void open()
   {
-    // We assume that the trader ID is available here:
-    CHECK(_traderID!=INVALID_TRADER_ID,"Invalid trader ID in open.");
-
-    nvPortfolioManager* man = nvPortfolioManager::instance();
+    // We assume that the trader is available here:
+    CHECK(_trader!=NULL,"Invalid currency trader");
 
     // Assign the current utility of the parent trader:
-    nvCurrencyTrader* ct = man.getCurrencyTraderByID(_traderID);
-    CHECK(ct!=NULL,"Invalid currency trader.");
-    _traderUtility = ct.getUtility();
+    _traderUtility = _trader.getUtility();
 
     // also keep a ref on the utitity efficiency:
-    _utilityEfficiency = man.getUtilityEfficiency();
+    _utilityEfficiency = _trader.getManager().getUtilityEfficiency();
 
     // Also keep a list of all current utilities:
-    man.getUtilities(_utilities);    
+    _trader.getManager().getUtilities(_utilities);    
   }
   
   /*

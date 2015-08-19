@@ -7,21 +7,30 @@ BEGIN_TEST_PACKAGE(currencytrader_specs)
 BEGIN_TEST_SUITE("CurrencyTrader class")
 
 BEGIN_TEST_CASE("should be able to create a CurrencyTrader instance")
-	nvCurrencyTrader ct("EURUSD");
-	REQUIRE_EQUAL(ct.getSymbol(),"EURUSD");
+	nvCurrencyTrader ct;
+	ct.setSymbol("EURUSD");
+	ASSERT_EQUAL(ct.getSymbol(),"EURUSD");
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide access to its utility value")
-  nvCurrencyTrader ct("EURUSD");
+  nvCurrencyTrader ct;
+  ct.setSymbol("EURUSD");
   // By default the utility value should be 0.0:
-  REQUIRE_EQUAL(ct.getUtility(),0.0);
+  ASSERT_EQUAL(ct.getUtility(),0.0);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should increment the unique ID properly")
-  nvCurrencyTrader ct("EURUSD");
-  nvCurrencyTrader ct2("EURJPY");
+  nvPortfolioManager man;
+  nvCurrencyTrader ct;
+  ct.setSymbol("EURUSD");
+  ct.setManager(man);
+  nvCurrencyTrader ct2;
+  ct2.setSymbol("EURJPY");
+  ct2.setManager(man);
   
-  REQUIRE_EQUAL(ct2.getID(),ct.getID()+1);
+  ASSERT_EQUAL(ct.getID(),10000);
+
+  ASSERT_EQUAL(ct2.getID(),ct.getID()+1);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
@@ -30,13 +39,13 @@ BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
   nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
   
   // initial utility should be 0.0:
-  REQUIRE_EQUAL(ct.getUtility(),0.0);
+  ASSERT_EQUAL(ct.getUtility(),0.0);
   	
   // Now we generate a new deal:
   nvDeal* deal = new nvDeal();
 
 	datetime time = TimeCurrent();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	deal.close(1.23457,time,10.0);
 
 	// Send the deal to the CurrencyTrader:
@@ -71,7 +80,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
   nvDeal* deal = new nvDeal();
 
 	datetime time = TimeCurrent();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
 	deal.close(1.23457,time-3600*2,10.0);
 
 	// Send the deal to the CurrencyTrader:
@@ -94,7 +103,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	
 	deal = new nvDeal();
 
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	deal.close(1.23457,time-3600,1.0);
 
 	ct.onDeal(deal);
@@ -113,7 +122,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 
 	deal = new nvDeal();
 
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600,2.0);
+	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600,2.0);
 	deal.close(1.23457,time-1800,-4.0);
 
 	ct.onDeal(deal);
@@ -144,12 +153,12 @@ BEGIN_TEST_CASE("Should release the deals it contains on deletion.")
 	datetime time = TimeCurrent();
 
   nvDeal* d1 = new nvDeal();
-	d1.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+	d1.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
 	d1.close(1.23457,time-3600*2,10.0);
 	ct.onDeal(d1);
 
 	nvDeal* d2 = new nvDeal();
-	d2.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+	d2.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	d2.close(1.23457,time-3600,1.0);
 	ct.onDeal(d2);
 
@@ -168,17 +177,17 @@ BEGIN_TEST_CASE("Should support collecting deals")
 	datetime time = TimeCurrent();
 
   nvDeal* d1 = new nvDeal();
-	d1.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+	d1.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
 	d1.close(1.23457,time-3600*2,10.0);
 	ct.onDeal(d1);
 
 	nvDeal* d2 = new nvDeal();
-	d2.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+	d2.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	d2.close(1.23457,time-3600,1.0);
 	ct.onDeal(d2);
 
 	nvDeal* d3 = new nvDeal();
-	d3.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600,1.0);
+	d3.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600,1.0);
 	d3.close(1.23457,time-1800,1.0);
 	ct.onDeal(d3);
 

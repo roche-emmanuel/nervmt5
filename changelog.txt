@@ -232,3 +232,4 @@
 08/19/15-20:02:55: Fixed issue #22: no error left in unit tests.
 - Also ensuring that the deal count is incremented when nvCurrencyTrader::onDeal() is called.
 08/19/15-23:15:39: Working on issue #25: Added initial implementation for nvPortfolioElement class.
+08/20/15-00:15:38: Working on issue #25: progressively removing references on nvPortfolioManger.

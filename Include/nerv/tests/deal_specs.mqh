@@ -15,27 +15,31 @@ BEGIN_TEST_CASE("Should provide trader ID")
   nvDeal deal;
 
   // By default TRADER ID should be invalid:
-  ASSERT_EQUAL(deal.getTraderID(),(int)INVALID_TRADER_ID);
+  ASSERT(deal.getCurrencyTrader()==NULL);
   
   // Should throw an error if we use an invalid ID:
 	BEGIN_ASSERT_ERROR("Invalid trader ID")
-	  deal.setTraderID(1);
+	  deal.setCurrencyTrader(NULL);
 	END_ASSERT_ERROR();
-
+   
+   nvPortfolioManager man;
+   
   // Should also throw an error if the ID is valid, but the currency trader is not 
   // registered:
 	BEGIN_ASSERT_ERROR("Invalid trader ID")
-	  nvCurrencyTrader ct("EURPJY");
-	  deal.setTraderID(ct.getID());
+	  nvCurrencyTrader ct;
+	  ct.setSymbol("EURPJY");
+	  ct.setManager(man);
+	  deal.setCurrencyTrader(GetPointer(ct));
 	END_ASSERT_ERROR();
 
 	// Should not throw if the currency trader is properly registered:
-	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
-	deal.setTraderID(ct.getID());
-  ASSERT_EQUAL(deal.getTraderID(),ct.getID());
+	nvCurrencyTrader* ct = man.addCurrencyTrader("EURJPY");
+	deal.setCurrencyTrader(ct);
+  ASSERT_EQUAL(deal.getCurrencyTrader().getID(),ct.getID());
 
   // Reset the content:
-  nvPortfolioManager::instance().reset();
+  man.reset();
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should also provide a number of points of profit")
@@ -76,7 +80,7 @@ BEGIN_TEST_CASE("Should be able to open a deal")
   nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
 
   datetime time = TimeLocal();
-  deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time,1.0);
+  deal.open(ct,ORDER_TYPE_BUY,1.23456,time,1.0);
 
   ASSERT_EQUAL(deal.getEntryPrice(),1.23456);
   ASSERT_EQUAL(deal.getEntryTime(),time);
@@ -98,7 +102,7 @@ BEGIN_TEST_CASE("Should be able to close a deal and update number of points")
 	nvCurrencyTrader* ct = nvPortfolioManager::instance().addCurrencyTrader("EURJPY");
 
 	datetime time = TimeLocal();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time,1.0);
+	deal.open(ct,ORDER_TYPE_BUY,1.23456,time,1.0);
 
 	// Now close the deal:
 	deal.close(1.23457,time+1,12.3);
@@ -122,7 +126,7 @@ BEGIN_TEST_CASE("Should not be done until it is closed")
 	ASSERT_EQUAL(deal.isDone(),false);
 	
 	datetime time = TimeLocal();
-	deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,time,1.0);
+	deal.open(ct,ORDER_TYPE_BUY,1.23456,time,1.0);
 
 	ASSERT_EQUAL(deal.isDone(),false);
 	
@@ -156,7 +160,7 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   nvDeal* deal = new nvDeal();
 
   datetime time = TimeCurrent();
-  deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+  deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
   deal.close(1.23457,time-3600*2,10.0);
 
   // Send the deal to the CurrencyTrader:
@@ -182,7 +186,7 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   
   deal = new nvDeal();
 
-  deal.open(ct.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+  deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
   deal.close(1.23457,time-3600,1.0);
 
   ct.onDeal(deal);
@@ -203,14 +207,14 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   ASSERT_EQUAL(ct.getUtility(),5.5);
   
   deal = new nvDeal();
-  deal.open(ct2.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
+  deal.open(ct2,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
   deal.close(1.23457,time-3600*2,8.0);
   ct2.onDeal(deal);
 
   ASSERT_EQUAL(ct2.getUtility(),8.0);
 
   deal = new nvDeal();
-  deal.open(ct2.getID(),ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+  deal.open(ct2,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
   deal.close(1.23457,time-3600,1.0);
   ct2.onDeal(deal);
 

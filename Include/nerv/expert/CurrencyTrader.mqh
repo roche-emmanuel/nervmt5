@@ -68,10 +68,9 @@ public:
   /*
     Class constructor.
   */
-  nvCurrencyTrader(string symbol)
+  nvCurrencyTrader()
   {
-    // Store the symbol assigned to this trader:
-    _symbol = symbol;
+    _symbol = "";
 
     // Initial weight value:
     _weight = 0.0;
@@ -79,29 +78,54 @@ public:
     // Set default utility value:
     _utility = 0.0;
 
-    // Retrieve a new unique ID for this trader from the PortfolioManager:
-    _id = nvPortfolioManager::instance().getNewID();
-
     // Initialize the deal count:
     _dealCount = 0;
-
+    
     // By default we are on the real market:
     _marketType = MARKET_TYPE_UNKNOWN;
-    setMarketType(MARKET_TYPE_REAL);
+
+    // No ID by default.
+    _id = 0;
 
     // Initialize the previous deals array:
     ArrayResize( _previousDeals, 0 );
+  }
+
+  /*
+  Function: setSymbol
+  
+  Assign the symbol of this currency trader. Can only be called once.
+  */
+  void setSymbol(string symbol)
+  {
+    CHECK(_symbol=="","Symbol already assigned.")
+    CHECK(nvIsSymbolValid(symbol),"Invalid symbol detected: "<<symbol);
+    _symbol = symbol;
+  }
+  
+  /*
+  Function: initialize
+  
+  Method call to initialize the content of this currency trader
+  */
+  virtual void initialize()
+  {
+    // Retrieve a new unique ID for this trader from the PortfolioManager:
+    _id = getManager().getNewID();
+
+    // Setup the market type:
+    setMarketType(MARKET_TYPE_REAL);
 
     // Build the decision composers here:
-    nvDecisionComposerFactory* factory = nvPortfolioManager::instance().getDecisionComposerFactory();
+    nvDecisionComposerFactory* factory = getManager().getDecisionComposerFactory();
     
     _entryDecisionComposer = factory.createEntryComposer(THIS);
     CHECK(_entryDecisionComposer!=NULL,"Cannot create entry decision composer.");
 
     _exitDecisionComposer = factory.createExitComposer(THIS);
-    CHECK(_exitDecisionComposer!=NULL,"Cannot create exit decision composer.");
+    CHECK(_exitDecisionComposer!=NULL,"Cannot create exit decision composer.");    
   }
-
+  
   /*
     Copy constructor
   */
@@ -172,9 +196,9 @@ public:
 
     // First we must ensure that we have no open position left
     // on either the real or the virtual market
-    nvMarket* market = nvPortfolioManager::instance().getMarket(MARKET_TYPE_REAL);
+    nvMarket* market = getManager().getMarket(MARKET_TYPE_REAL);
     market.closePosition(_symbol);
-    market = nvPortfolioManager::instance().getMarket(MARKET_TYPE_VIRTUAL);
+    market = getManager().getMarket(MARKET_TYPE_VIRTUAL);
     market.closePosition(_symbol);
 
     // Assign the new mode:
@@ -216,7 +240,7 @@ public:
   nvMarket* getMarket()
   {
     // We return our current market depending on our current trader mode:
-    return nvPortfolioManager::instance().getMarket(_marketType);
+    return getManager().getMarket(_marketType);
   }
   
   /*
@@ -314,7 +338,7 @@ public:
   void update()
   {
     // Retrieve the current time from the PortfolioManager:
-    nvPortfolioManager* man = nvPortfolioManager::instance();
+    nvPortfolioManager* man = getManager();
     datetime ctime = man.getCurrentTime();
 
     // Now check if we are inside a position or not:
@@ -436,7 +460,7 @@ public:
   */
   double computeLotSize(double lostPoints, double confidence)
   {
-    nvRiskManager* rman = nvPortfolioManager::instance().getRiskManager();
+    nvRiskManager* rman = getManager().getRiskManager();
     return rman.evaluateLotSize(_symbol, lostPoints, _weight, confidence);
   }
   
@@ -492,7 +516,7 @@ public:
   {
     // Ensure this deal is valid:
     CHECK(deal!=NULL,"Invalid deal pointer.");
-    CHECK(deal.getTraderID()==_id,"Invalid deal trader ID: "<<deal.getTraderID());
+    CHECK(deal.getCurrencyTrader()==THIS,"Invalid deal trader "<<deal.getCurrencyTrader().getID());
     CHECK(deal.isDone(),"Received not done deal");
 
     // Increment the deal count:
@@ -517,7 +541,7 @@ public:
     }
 
     // Notify the portfolio manager there is a new profit sample:
-    nvPortfolioManager::instance().addProfitSample(deal.getNominalProfit(),deal.getTraderUtility());
+    getManager().addProfitSample(deal.getNominalProfit(),deal.getTraderUtility());
 
     // Now we should update the utility of this trader:
     updateUtility();
@@ -603,7 +627,7 @@ public:
   */
   void updateUtility()
   {
-    nvPortfolioManager* man = nvPortfolioManager::instance();
+    nvPortfolioManager* man = getManager();
 
     // We should consider only a fixed period of time in the past to perform the utility computation
     // this duration is retrieved from the portfolio manager itself,

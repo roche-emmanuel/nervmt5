@@ -79,7 +79,7 @@ public:
     mrequest.tp = NormalizeDouble(tp,digits);         // take profit
     mrequest.symbol = symbol;                         // currency pair
     mrequest.volume = NormalizeDouble(lot,2);         // number of lots to trade
-    mrequest.magic = deal.getTraderID();              // Order Magic Number
+    mrequest.magic = deal.getCurrencyTrader().getID();// Order Magic Number
     mrequest.type = deal.getOrderType();              // Buy Order
     mrequest.type_filling = ORDER_FILLING_FOK;        // Order execution type
     mrequest.deviation=10;                            // Deviation from current price

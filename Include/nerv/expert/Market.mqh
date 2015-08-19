@@ -1,4 +1,5 @@
 #include <nerv/core.mqh>
+#include <nerv/expert/PortfolioElement.mqh>
 
 class nvDeal;
 
@@ -21,7 +22,7 @@ Class: nvMarket
 
 Base class used to represent a market on which currency trader can open/close positions
 */
-class nvMarket : public nvObject
+class nvMarket : public nvPortfolioElement
 {
 protected:
   // The type of this market
@@ -86,7 +87,7 @@ public:
 
     // Create a new deal for this trade opening:
     nvDeal* deal = new nvDeal();
-    deal.setSymbol(symbol);
+    deal.setCurrencyTrader(getManager().getCurrencyTrader(symbol));
     deal.setMarketType(_marketType);
     deal.setOrderType(otype);
     deal.setLotSize(lot);

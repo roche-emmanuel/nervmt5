@@ -7,12 +7,16 @@ BEGIN_TEST_PACKAGE(tradingagent_specs)
 BEGIN_TEST_SUITE("TradingAgent class")
 
 BEGIN_TEST_CASE("should be able to create a TradingAgent instance")
-	nvCurrencyTrader ct("EURUSD");
+	nvPortfolioManager man;
+	nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+	
   nvTradingAgent agent(GetPointer(ct));
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be deleted properly by currency trader")
-  nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
+	nvPortfolioManager man;
+
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
 
   nvTradingAgent* agent = new nvTradingAgent(ct);
   
@@ -21,7 +25,7 @@ BEGIN_TEST_CASE("Should be deleted properly by currency trader")
   ct.addTradingAgent(agent, TRADE_AGENT_ENTRY);
   END_ASSERT_ERROR();
 
-  RELEASE_PTR(ct);
+  man.reset();
   
   // TODO: add the test with a valid agent here.
   RELEASE_PTR(agent);
@@ -29,7 +33,8 @@ BEGIN_TEST_CASE("Should be deleted properly by currency trader")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be removable from currency trader")
-  nvCurrencyTrader* ct = new nvCurrencyTrader("EURUSD");
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
 
   nvTradingAgent* agent = new nvTradingAgent(ct);
   
@@ -40,23 +45,25 @@ BEGIN_TEST_CASE("Should be removable from currency trader")
   // TODO: add the test with a valid agent here.
   
   ct.removeTradingAgent(agent);
-  RELEASE_PTR(ct);
+  man.reset();
 
   ASSERT(IS_VALID_POINTER(agent));
   RELEASE_PTR(agent);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should provide default agent type")
-  nvCurrencyTrader ct("EURUSD");
-  nvTradingAgent* agent = new nvTradingAgent(GetPointer(ct));
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  nvTradingAgent* agent = new nvTradingAgent(ct);
 
   ASSERT_EQUAL((int)agent.getAgentType(),(int)TRADE_AGENT_UNKNOWN);
   RELEASE_PTR(agent);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should throw if default decision methods are called")
-  nvCurrencyTrader ct("EURUSD");
-  nvTradingAgent agent(GetPointer(ct));
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  nvTradingAgent agent(ct);
 
   ENUM_TIMEFRAMES period = agent.getPeriod();
 
