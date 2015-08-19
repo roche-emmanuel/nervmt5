@@ -1,12 +1,13 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/DecisionComposer.mqh>
+#include <nerv/expert/PortfolioElement.mqh>
 
 /*
 Class: nvDecisionComposerFactory
 
 Factory class used to generated DecisionComposer instances.
 */
-class nvDecisionComposerFactory : public nvObject
+class nvDecisionComposerFactory : public nvPortfolioElement
 {
 public:
   /*
@@ -79,7 +80,7 @@ public:
     // If the index is -1 then we should select a decision composer randomly from the list of possibilities:
     if(index<0)
     {
-      SimpleRNG* rng = nvPortfolioManager::instance().getRandomGenerator();
+      SimpleRNG* rng = getManager().getRandomGenerator();
       index = rng.GetInt(0,count-1);
     }
 
@@ -123,7 +124,7 @@ public:
     // If the index is -1 then we should select a decision composer randomly from the list of possibilities:
     if(index<0)
     {
-      SimpleRNG* rng = nvPortfolioManager::instance().getRandomGenerator();
+      SimpleRNG* rng = getManager().getRandomGenerator();
       index = rng.GetInt(0,count-1);
     }
 

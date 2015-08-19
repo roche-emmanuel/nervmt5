@@ -90,15 +90,14 @@ public:
   */
   nvPortfolioManager()
   {
-    // By default there should be no currency trader available:
-    ArrayResize( _traders, 0 );
-
     // Initiliaze state (and efficiency value):
     reset();
 
-    // Initialize the next Trader ID;
-    _nextTraderID = 10000;
-
+    // Assign this manager:
+    _realMarket.setManager(THIS);
+    _virtualMarket.setManager(THIS);
+    _decisionComposerFactory.setManager(THIS);
+    
   }
 
   /*
@@ -426,6 +425,10 @@ public:
   void reset()
   {
     removeAllCurrencyTraders();
+
+    // Initialize the next Trader ID;
+    _nextTraderID = 10000;
+
 
     // Reset current time:
     _currentTime = TimeCurrent(); // This should be overriden anyway.

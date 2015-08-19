@@ -1,5 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
+#include <nerv/expert/PortfolioElement.mqh>
 
 /*
 Class: nvRiskManager
@@ -7,7 +8,7 @@ Class: nvRiskManager
 Component used to control the risk in the traders performed by all currency traders.
 There is one copy of this element in the PortfolioManager
 */
-class nvRiskManager : public nvObject
+class nvRiskManager : public nvPortfolioElement
 {
 protected:
   // Level of risk that we can accept for a given trade:
@@ -91,8 +92,6 @@ public:
   */
   double getBalanceValue(string currencyName)
   {
-    nvPortfolioManager* man = nvPortfolioManager::instance();
-
     double balance = AccountInfoDouble(ACCOUNT_BALANCE);
     
     // convert from account currency to the given currency:
