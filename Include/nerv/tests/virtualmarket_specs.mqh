@@ -25,10 +25,7 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("Should allow retrieving position type")
   // For the moment this will just throw an error:
   nvVirtualMarket market;
-  BEGIN_ASSERT_ERROR("No implementation1")
-    market.getPositionType("EURUSD");
-  END_ASSERT_ERROR();
-  
+  ASSERT_EQUAL((int)market.getPositionType("EURUSD"),(int)POS_NONE);
 END_TEST_CASE()
 
 END_TEST_SUITE()

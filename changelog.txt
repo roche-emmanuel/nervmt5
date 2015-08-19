@@ -229,3 +229,5 @@
 08/19/15-14:52:19: Working on issue #22: Adding concrete implementation for openPosition() and closePosition() in nvMarket.
 08/19/15-18:00:41: Working on issue #22: Added reimplementation for doOpenPosition() on both real and virtual markets.
 08/19/15-19:51:23: Working on issue #22: Can now execute unit tests with exception (but still a few assert errors left.
+08/19/15-20:02:55: Fixed issue #22: no error left in unit tests.
+- Also ensuring that the deal count is incremented when nvCurrencyTrader::onDeal() is called.

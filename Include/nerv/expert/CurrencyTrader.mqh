@@ -494,6 +494,9 @@ public:
     CHECK(deal.getTraderID()==_id,"Invalid deal trader ID: "<<deal.getTraderID());
     CHECK(deal.isDone(),"Received not done deal");
 
+    // Increment the deal count:
+    _dealCount++;
+    
     // We add this new deal to the previous deals list:
     int num = ArraySize( _previousDeals );
     if(num<TRADER_MAX_NUM_DEALS)
