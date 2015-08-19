@@ -1,6 +1,7 @@
 #include <nerv/core.mqh>
 
 #include <nerv/expert/PortfolioManager.mqh>
+#include <nerv/expert/Market.mqh>
 
 /*
 Class: nvDeal
@@ -52,6 +53,15 @@ protected:
   // Lot size for this deal:
   double _lotSize;
 
+  // Symbol of this deal:
+  string _symbol;
+
+  // Position type of this deal:
+  ENUM_POSITION_TYPE _positionType;
+
+  // Market type for this deal:
+  MarketType _marketType;
+
 public:
   /*
     Class constructor.
@@ -71,6 +81,8 @@ public:
     _orderType = 0;
     _isDone = false;
     _lotSize = 0.0;
+    _marketType = MARKET_TYPE_UNKNOWN;
+    _positionType = 0;
   }
 
   /*
@@ -147,6 +159,69 @@ public:
   double getProfit()
   {
     return _profit;
+  }
+  
+  /*
+  Function: setSymbol
+  
+  Assign a symbol to this deal
+  */
+  void setSymbol(string symbol)
+  {
+    _symbol = symbol;
+    nvCurrencyTrader* ct = nvPortfolioManager::instance().getCurrencyTrader(symbol);
+    CHECK(ct,"Invalid currency trader");
+    setTraderID(ct.getID());
+  }
+  
+  /*
+  Function: getSymbol
+  
+  Retrieve the symbol of that deal
+  */
+  string getSymbol()
+  {
+    return _symbol;
+  }
+  
+  /*
+  Function: setPositionType
+  
+  Assign a position type for this deal:
+  */
+  void setPositionType(ENUM_POSITION_TYPE ptype)
+  {
+    _positionType = ptype;
+  }
+  
+  /*
+  Function: getPositionType
+  
+  Retrieve the position type of this deal
+  */
+  ENUM_POSITION_TYPE getPositionType()
+  {
+    return _positionType;
+  }
+  
+  /*
+  Function: setMarketType
+  
+  Assign the market type for this deal
+  */
+  void setMarketType(MarketType mtype)
+  {
+    _marketType = mtype;
+  }
+  
+  /*
+  Function: getMarketType
+  
+  Retrieve the market type for that deal
+  */
+  MarketType getMarketType()
+  {
+    return _marketType;
   }
   
   /*
