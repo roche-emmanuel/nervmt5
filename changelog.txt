@@ -239,3 +239,4 @@
 08/20/15-11:06:46: Working on issue #27: Adding initial test to check the deal times. Now need to check the deal prices.
 But we need the fix for issue #29 first.
 08/20/15-11:47:04: Working on issue #29: added implementation and test for nvPriceManager::getBidPrice().
+08/20/15-11:55:23: Working on issue #29: added implementation and test for nvPriceManager::getAskPrice().
