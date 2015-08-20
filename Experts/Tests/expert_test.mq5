@@ -19,6 +19,7 @@
 #include <nerv/tests/decisioncomposerfactory_specs.mqh>
 #include <nerv/tests/virtualmarket_specs.mqh>
 #include <nerv/tests/realmarket_specs.mqh>
+#include <nerv/tests/pricemanager_specs.mqh>
 
 BEGIN_TEST_SESSION("Expert_Results")
 
@@ -40,5 +41,6 @@ LOAD_TEST_PACKAGE(agentfactory_specs)
 LOAD_TEST_PACKAGE(decisioncomposerfactory_specs)
 LOAD_TEST_PACKAGE(virtualmarket_specs)
 LOAD_TEST_PACKAGE(realmarket_specs)
+LOAD_TEST_PACKAGE(pricemanager_specs)
 
 END_TEST_SESSION()

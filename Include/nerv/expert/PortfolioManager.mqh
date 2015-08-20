@@ -25,10 +25,7 @@
 #include <nerv/expert/RealMarket.mqh>
 #include <nerv/expert/CurrencyTrader.mqh>
 #include <nerv/expert/DecisionComposerFactory.mqh>
-
-enum nv_misc_enum {
-  INVALID_TRADER_ID = -1
-};
+#include <nerv/expert/PriceManager.mqh>
 
 /*
 Class: nvPortfolioManager
@@ -84,6 +81,9 @@ protected:
   // current server time:
   datetime _currentTime;
 
+  // Price manager for this portfolio:
+  nvPriceManager _priceManager;
+
 public:
   /*
     Class constructor.
@@ -98,6 +98,7 @@ public:
     _virtualMarket.setManager(THIS);
     _decisionComposerFactory.setManager(THIS);
     _riskManager.setManager(THIS);
+    _priceManager.setManager(THIS);
   }
 
   /*
@@ -448,6 +449,16 @@ public:
   nvRiskManager* getRiskManager()
   {
     return GetPointer(_riskManager);
+  }
+  
+  /*
+  Function: getPriceManager
+  
+  Retrieve the price manager instance.
+  */
+  nvPriceManager* getPriceManager()
+  {
+    return GetPointer(_priceManager);
   }
   
   /*
