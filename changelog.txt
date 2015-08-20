@@ -241,3 +241,4 @@ But we need the fix for issue #29 first.
 08/20/15-11:47:04: Working on issue #29: added implementation and test for nvPriceManager::getBidPrice().
 08/20/15-11:55:23: Working on issue #29: added implementation and test for nvPriceManager::getAskPrice().
 08/20/15-11:59:29: Working on issue #29: added test for current time price retrieval in nvPriceManager.
+08/20/15-12:28:11: Working on issue #29: Added implementation and test for nvPriceManager::convertPrice().
