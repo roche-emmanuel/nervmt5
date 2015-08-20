@@ -170,6 +170,28 @@ public:
   }
   
   /*
+  Function: getPreviousDealCount
+  
+  Retrieve the number of recent deals, eg. the size of the _previousDeals array
+  */
+  int getPreviousDealCount()
+  {
+    return ArraySize( _previousDeals );
+  }
+  
+  /*
+  Function: getPreviousDeal
+  
+  Retrieve the recent deal by index using a time series retrieval system
+  */
+  nvDeal* getPreviousDeal(int index)
+  {
+    int num = ArraySize( _previousDeals );
+    CHECK_RET(num>0 && index<num,NULL,"Invalid index to retrieve recent deal: "<<index);
+    return _previousDeals[num-1-index];
+  }
+  
+  /*
   Function: getMarketType
   
   Retrieve the current market type for this object.

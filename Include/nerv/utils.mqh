@@ -328,6 +328,7 @@ bool nvIsSymbolValid(string symbol)
   return false;
 }
 
+
 // convert price from one currency to another:
 double nvConvertPrice(double price, string srcCurrency, string destCurrency)
 {

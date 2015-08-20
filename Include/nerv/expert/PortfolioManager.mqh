@@ -97,7 +97,7 @@ public:
     _realMarket.setManager(THIS);
     _virtualMarket.setManager(THIS);
     _decisionComposerFactory.setManager(THIS);
-
+    _riskManager.setManager(THIS);
   }
 
   /*

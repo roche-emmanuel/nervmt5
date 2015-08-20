@@ -232,6 +232,32 @@ BEGIN_TEST_CASE("Should be able to close a position")
   man.reset();
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should contain the proper deal informations")
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  ct.setMarketType(MARKET_TYPE_VIRTUAL);
+
+  // set the current portfolio time:
+  datetime time = TimeLocal();
+  man.setCurrentTime(time-60);
+	  
+  ct.openPosition(0.5);
+  man.setCurrentTime(time);
+  ct.closePosition();
+
+  // There should be on deal performed:
+  ASSERT_EQUAL(ct.getDealCount(),1);
+
+  ASSERT_EQUAL(ct.getPreviousDealCount(),1);
+
+  // Retrieve the previous deal:
+  // Note that this method will behave as a time series retriever
+  nvDeal* deal = ct.getPreviousDeal(0);
+
+  ASSERT_EQUAL(deal.getEntryTime(),time-60);
+  ASSERT_EQUAL(deal.getExitTime(),time);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
