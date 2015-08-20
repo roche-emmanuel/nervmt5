@@ -123,26 +123,7 @@ public:
   Must be reimplemented by derived classes.
   */
   virtual void doClosePosition(nvDeal* deal)
-  {
-    // We simply retrieve the last tick on this symbol, the real market 
-    // cannot operate on the history !
-    MqlTick last_tick;
-    CHECK(SymbolInfoTick(deal.getSymbol(),last_tick),"Cannot retrieve the latest tick");
-
-    double price = last_tick.ask;
-
-    double point = nvGetPointSize(deal.getSymbol());
-
-    if(deal.getOrderType()==ORDER_TYPE_SELL)
-    {
-      price = last_tick.bid;      
-    }
-
-    deal.setExitTime(last_tick.time);
-    deal.setExitPrice(price);
-
-    deal.close();
-    
+  { 
     // Place the order on the market:
     sendDealOrder(deal,true); // closing = true
   }  

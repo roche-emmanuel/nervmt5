@@ -62,28 +62,6 @@ public:
   */
   virtual void doClosePosition(nvDeal* deal)
   {
-    // Retrieve the current open price:
-    nvPortfolioManager* man = getManager();
-    datetime exitTime = man.getCurrentTime();
-
-    // Also retrieve the price we had at that time:
-    // Note that this might not be the latest time available on the real server!
-    MqlRates rates[];
-    CHECK(CopyRates(deal.getSymbol(),PERIOD_M1,exitTime,1,rates)==1,"Cannot copy the rates at time: "<<exitTime);
-
-    double price = rates[0].close;
-    // TODO: should add some random tick generation system here.
-
-    double point = nvGetPointSize(deal.getSymbol());
-
-    if(deal.getOrderType()==ORDER_TYPE_SELL)
-    {
-      price += rates[0].spread*point;      
-    }
-
-    deal.setExitTime(exitTime);
-    deal.setExitPrice(price);
-
-    deal.close(); // Needed to update the value of numPoints and profit.
+    // No op.
   }  
 };

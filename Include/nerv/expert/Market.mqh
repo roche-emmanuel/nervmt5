@@ -139,6 +139,25 @@ public:
       // There is nothing to close.
       return;
     }
+    
+    nvPriceManager* pman = getManager().getPriceManager();
+    
+    double price = 0.0;
+    double point = nvGetPointSize(deal.getSymbol());
+
+    if(deal.getOrderType()==ORDER_TYPE_SELL)
+    {
+      price = pman.getAskPrice(deal.getSymbol());
+    }
+    else 
+    {
+      price = pman.getBidPrice(deal.getSymbol());
+    }
+
+    deal.setExitTime(getManager().getCurrentTime());
+    deal.setExitPrice(price);
+
+    deal.close(); // Needed to update the value of numPoints and profit.
 
     // Perform the actual close operation if needed.
     doClosePosition(deal);
