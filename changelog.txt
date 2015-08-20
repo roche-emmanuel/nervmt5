@@ -247,3 +247,4 @@ But we need the fix for issue #29 first.
 08/20/15-12:50:43: Fixed issue #29: unified nvMarket::doClosePosition() method for both real and virtual market.
 08/20/15-14:19:25: Fixed issue #27: Added some tests for analysis of the deals with random execution.
 08/20/15-16:12:06: Fixed issue #28: Added sanity check for behavior of CopyRates.
+08/20/15-16:15:11: Working on issue #28: added some additional checks on CopyRates behavior.

@@ -206,9 +206,16 @@ BEGIN_TEST_CASE("Should retrieve rates as expected")
     ASSERT_LT(time,rates[0].time+60);
 
     int offset = rng.GetInt(0,59);
-    datetime btime = rates[0].time;
-    ASSERT_EQUAL(CopyRates(symbol,PERIOD_M1,btime+offset,1,rates),1);
-    ASSERT_EQUAL(btime,rates[0].time);
+    
+    MqlRates newrates[];
+    ASSERT_EQUAL(CopyRates(symbol,PERIOD_M1,rates[0].time+offset,1,newrates),1);
+    
+    ASSERT_EQUAL(newrates[0].time,rates[0].time);
+    ASSERT_EQUAL(newrates[0].open,rates[0].open);
+    ASSERT_EQUAL(newrates[0].high,rates[0].high);
+    ASSERT_EQUAL(newrates[0].low,rates[0].low);
+    ASSERT_EQUAL(newrates[0].close,rates[0].close);
+    ASSERT_EQUAL(newrates[0].spread,rates[0].spread);
   }
 END_TEST_CASE()
 
