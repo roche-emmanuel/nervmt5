@@ -15,6 +15,9 @@
 // Minimal number of samples used to built a statistic:
 #define TRADER_MIN_NUM_SAMPLES 50
 
+// Minimal deviation to consider for the utility statistics:
+#define TRADER_MIN_UTILITY_DEVIATION 0.00001
+
 // Default value for the currency trader lost points statistic,
 // used until we have enough samples:
 #define TRADER_DEFAULT_LOST_POINTS 50
@@ -351,7 +354,7 @@ public:
     for(int i=0;i<num;++i)
     {
       u = _traders[i].getUtility();
-      exps[i] = dev>0.0 ? MathExp(alpha*(u-mu)/dev) : 1.0;
+      exps[i] = dev>0.0 ? MathExp(alpha*(u-mu)/MathMax(dev,TRADER_MIN_UTILITY_DEVIATION)) : 1.0;
       denom += exps[i];
     }
 

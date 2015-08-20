@@ -232,9 +232,10 @@ BEGIN_TEST_CASE("Should be able to close a position")
   man.reset();
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("Should contain the proper deal informations")
+BEGIN_TEST_CASE("Should contain the proper buy deal informations")
   nvPortfolioManager man;
-  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  string symbol = "GBPJPY";
+  nvCurrencyTrader* ct = man.addCurrencyTrader(symbol);
   ct.setMarketType(MARKET_TYPE_VIRTUAL);
 
   // set the current portfolio time:
@@ -256,6 +257,180 @@ BEGIN_TEST_CASE("Should contain the proper deal informations")
 
   ASSERT_EQUAL(deal.getEntryTime(),time-60);
   ASSERT_EQUAL(deal.getExitTime(),time);
+  
+  // Since the confidence was set to 0.5, this was a buy deal
+  ASSERT_EQUAL(deal.getEntryPrice(),man.getPriceManager().getAskPrice(symbol,time-60));
+  ASSERT_EQUAL(deal.getExitPrice(),man.getPriceManager().getBidPrice(symbol,time));
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should contain the proper sell deal informations")
+  nvPortfolioManager man;
+  string symbol = "GBPJPY";
+  nvCurrencyTrader* ct = man.addCurrencyTrader(symbol);
+  ct.setMarketType(MARKET_TYPE_VIRTUAL);
+
+  // set the current portfolio time:
+  datetime time = TimeLocal();
+  man.setCurrentTime(time-60);
+	  
+  ct.openPosition(-0.5);
+  man.setCurrentTime(time);
+  ct.closePosition();
+
+  // There should be on deal performed:
+  ASSERT_EQUAL(ct.getDealCount(),1);
+
+  ASSERT_EQUAL(ct.getPreviousDealCount(),1);
+
+  // Retrieve the previous deal:
+  // Note that this method will behave as a time series retriever
+  nvDeal* deal = ct.getPreviousDeal(0);
+
+  ASSERT_EQUAL(deal.getEntryTime(),time-60);
+  ASSERT_EQUAL(deal.getExitTime(),time);
+  
+  // Since the confidence was set to 0.5, this was a buy deal
+  ASSERT_EQUAL(deal.getEntryPrice(),man.getPriceManager().getBidPrice(symbol,time-60));
+  ASSERT_EQUAL(deal.getExitPrice(),man.getPriceManager().getAskPrice(symbol,time));
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should support multiple deals")
+  nvPortfolioManager man;
+  string symbol = "GBPJPY";
+  nvCurrencyTrader* ct = man.addCurrencyTrader(symbol);
+  ct.setMarketType(MARKET_TYPE_VIRTUAL);
+  SimpleRNG rng;
+  rng.SetSeedFromSystemTime();
+  
+  int num = 30;
+  // set the current portfolio time:
+  datetime time = TimeLocal()-num*3600;
+
+  int count = 0;
+
+  for(int i = 0; i<num;++i)
+  {
+  	// Compute a random start/stop time (always in the 1 hour range)
+  	int startOffset = rng.GetInt(0,3500);
+  	int stopOffset = rng.GetInt(startOffset+1,3599);
+  	
+  	// Open the position:
+  	man.setCurrentTime(time+startOffset);
+  	if(ct.openPosition((rng.GetUniform()-0.5)*2.0))
+  	{
+  		count++;
+  	};
+
+  	man.setCurrentTime(time+stopOffset);
+	  ct.closePosition();
+
+	  time += 3600;
+  }
+
+  // There should be on deal performed:
+  ASSERT_EQUAL(ct.getDealCount(),count);
+  ASSERT_EQUAL(ct.getPreviousDealCount(),count);
+
+  num = count;
+
+  nvPriceManager* pman = man.getPriceManager();
+
+  // Check the deal results:
+  for(int i=0; i<num-1;++i)
+  {
+	  nvDeal* deal_new = ct.getPreviousDeal(i);
+	  nvDeal* deal_old = ct.getPreviousDeal(i+1);
+
+	  if(deal_new.getOrderType()==ORDER_TYPE_BUY)
+	  {
+		  ASSERT_EQUAL(deal_new.getEntryPrice(),pman.getAskPrice(symbol,deal_new.getEntryTime()));
+		  ASSERT_EQUAL(deal_new.getExitPrice(),pman.getBidPrice(symbol,deal_new.getExitTime()));  
+	  }
+	  else
+	  {
+		  ASSERT_EQUAL(deal_new.getEntryPrice(),pman.getBidPrice(symbol,deal_new.getEntryTime()));
+		  ASSERT_EQUAL(deal_new.getExitPrice(),pman.getAskPrice(symbol,deal_new.getExitTime()));  
+	  }
+
+	  // Ensure that the order of the deals is preserved:
+	  ASSERT_LT(deal_old.getExitTime(),deal_new.getEntryTime());
+  }
+
+  // Since we have some deals we should also have utility statistics now:
+  ASSERT(man.getUtilityMean()!=0.0);
+  ASSERT_GT(man.getUtilityDeviation(),0.0);
+END_TEST_CASE()
+
+
+BEGIN_TEST_CASE("Should support multiple deals on multiple symbols")
+  nvPortfolioManager man;
+
+  int nsym = 4;
+  string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
+
+  for(int j=0;j<nsym;++j)
+  {
+  	nvCurrencyTrader* ct = man.addCurrencyTrader(symbols[j]);
+  	ct.setMarketType(MARKET_TYPE_VIRTUAL);	
+  }
+  
+  SimpleRNG rng;
+  rng.SetSeedFromSystemTime();
+  
+  int num = 50;
+  // set the current portfolio time:
+  datetime time = TimeLocal()-num*3600;
+
+  int counts[];
+  ArrayResize( counts, nsym );
+  ArrayFill(counts , 0, nsym, 0);
+
+  for(int i = 0; i<num;++i)
+  {
+  	for(int j=0;j<nsym;++j)
+  	{	
+	  	// Compute a random start/stop time (always in the 1 hour range)
+	  	int startOffset = rng.GetInt(0,3500);
+	  	int stopOffset = rng.GetInt(startOffset+1,3599);
+	  	
+	  	nvCurrencyTrader* ct = man.getCurrencyTrader(symbols[j]);
+
+	  	// Open the position:
+	  	man.setCurrentTime(time+startOffset);
+	  	double confidence = (rng.GetUniform()-0.5)*2.0;
+
+	  	bool res = ct.openPosition(confidence);
+
+	  	if(res)
+	  	{
+	  		counts[j]++;
+	  	}
+	  	else
+	  	{
+	  		// Check that the lot size is 0.0:
+	  		double lostPoints = ct.computeEstimatedMaxLost(0.95);
+	  		double lotsize = ct.computeLotSize(lostPoints,MathAbs(confidence));
+	  		ASSERT_EQUAL(lotsize,0.0)
+	  	}
+
+	  	man.setCurrentTime(time+stopOffset);
+		  ct.closePosition();
+  	}
+
+	  time += 3600;
+  }
+
+  // There should be on deal performed:
+  for(int j=0;j<nsym;++j)
+  {
+  	nvCurrencyTrader* ct = man.getCurrencyTrader(symbols[j]);
+	  ASSERT_EQUAL(ct.getDealCount(),counts[j]);
+	  ASSERT_EQUAL(ct.getPreviousDealCount(),counts[j]);  	
+  }
+
+  // Since we have some deals we should also have utility statistics now:
+  ASSERT(man.getUtilityMean()!=0.0);
+  ASSERT_GT(man.getUtilityDeviation(),0.0);
 END_TEST_CASE()
 
 END_TEST_SUITE()

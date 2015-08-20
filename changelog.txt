@@ -245,3 +245,4 @@ But we need the fix for issue #29 first.
 08/20/15-12:34:52: Working on issue #29: Removed util function nvConvertPrice.
 08/20/15-12:45:24: Working on issue #29: unified nvMarket::doOpenPosition() method for both real and virtual market.
 08/20/15-12:50:43: Fixed issue #29: unified nvMarket::doClosePosition() method for both real and virtual market.
+08/20/15-14:19:25: Fixed issue #27: Added some tests for analysis of the deals with random execution.

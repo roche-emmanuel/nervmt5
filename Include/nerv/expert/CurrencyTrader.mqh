@@ -491,12 +491,12 @@ public:
   
   Method called to open a position with this trader given a confidence value
   */
-  void openPosition(double confidence)
+  bool openPosition(double confidence)
   {
     if(confidence==0.0)
     {
       // nothing to do in that case.
-      return;
+      return false;
     }
 
     // Get the current estimation of the number of points that could be lost with a given
@@ -510,12 +510,13 @@ public:
     if(lotSize==0.0)
     {
       // nothing to open:
-      return;
+      return false;
     }
 
     // Retrieve the current market:
     nvMarket* market = getMarket();
     market.openPosition(_symbol, confidence>0.0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, lotSize, lostPoints );
+    return true;
   }
   
   /*
