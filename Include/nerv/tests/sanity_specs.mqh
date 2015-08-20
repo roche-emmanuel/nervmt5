@@ -81,9 +81,9 @@ END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should support encapsulating an error")
   
-  BEGIN_REQUIRE_ERROR("This is an error.")
+  BEGIN_ASSERT_ERROR("This is an error.")
   THROW("This is an error.")
-  END_REQUIRE_ERROR()
+  END_ASSERT_ERROR()
 
 END_TEST_CASE()
 
@@ -124,7 +124,7 @@ BEGIN_TEST_CASE("should allow conversion of datetime to number of seconds")
   ulong val2 = t2;
   DISPLAY(val1);
   DISPLAY(val2);
-  REQUIRE_EQUAL(diff,10);
+  ASSERT_EQUAL(diff,10);
   REQUIRE(t2>t1);
 END_TEST_CASE()
 
@@ -132,19 +132,19 @@ BEGIN_TEST_CASE("should allow manipulating array references")
   double arr[] = {0,0,0,3};
 
   assign_value(arr);
-  REQUIRE_EQUAL(arr[0],1.0);
-  REQUIRE_EQUAL(arr[3],3.0);
+  ASSERT_EQUAL(arr[0],1.0);
+  ASSERT_EQUAL(arr[3],3.0);
 END_TEST_CASE()
 
 #ifdef TEST_COPY_STRUCT
 BEGIN_TEST_CASE("should allow copy of structures")
   my_struct myres = buildStruct();
-  REQUIRE_EQUAL(myres.val1,1.0);
-  REQUIRE_EQUAL(ArraySize(myres.val2),3.0);
-  REQUIRE_EQUAL(myres.val2[0],2.0);
-  REQUIRE_EQUAL(myres.val2[1],3.0);
-  REQUIRE_EQUAL(myres.val2[2],4.0);
-  REQUIRE_EQUAL(myres.val3,"Helo world!");
+  ASSERT_EQUAL(myres.val1,1.0);
+  ASSERT_EQUAL(ArraySize(myres.val2),3.0);
+  ASSERT_EQUAL(myres.val2[0],2.0);
+  ASSERT_EQUAL(myres.val2[1],3.0);
+  ASSERT_EQUAL(myres.val2[2],4.0);
+  ASSERT_EQUAL(myres.val3,"Helo world!");
 END_TEST_CASE()
 #endif
 
@@ -152,8 +152,8 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("should support class as namespace")
   my_namespace::my_child* child = new my_namespace::my_child();
 
-  REQUIRE_EQUAL(child.getVal1(),1);
-  REQUIRE_EQUAL(child.getVal2(),3);
+  ASSERT_EQUAL(child.getVal1(),1);
+  ASSERT_EQUAL(child.getVal2(),3);
 END_TEST_CASE()
 #endif
 
@@ -183,7 +183,33 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("should be able to format time")
   ulong secs = 60;
   string res = formatTime(secs);
-  REQUIRE_EQUAL(res,"00:01:00");
+  ASSERT_EQUAL(res,"00:01:00");
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should retrieve rates as expected")
+  datetime basetime = TimeCurrent() - 3600;
+
+  string symbol = "EURUSD";
+  SimpleRNG rng;
+  rng.SetSeedFromSystemTime();
+
+  // A bar time should correspond to the beginning of the bar.
+  // And then each time given inside the period after that bar time, should return the same bar:
+  int num = 100;
+  for(int i=0;i<num;++i)
+  {
+    datetime time = basetime + rng.GetInt(0,3599);
+
+    MqlRates rates[];
+    ASSERT_EQUAL(CopyRates(symbol,PERIOD_M1,time,1,rates),1);
+    ASSERT_LE(rates[0].time,time);  
+    ASSERT_LT(time,rates[0].time+60);
+
+    int offset = rng.GetInt(0,59);
+    datetime btime = rates[0].time;
+    ASSERT_EQUAL(CopyRates(symbol,PERIOD_M1,btime+offset,1,rates),1);
+    ASSERT_EQUAL(btime,rates[0].time);
+  }
 END_TEST_CASE()
 
 END_TEST_SUITE()
