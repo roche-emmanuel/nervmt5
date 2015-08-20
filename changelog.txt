@@ -243,3 +243,4 @@ But we need the fix for issue #29 first.
 08/20/15-11:59:29: Working on issue #29: added test for current time price retrieval in nvPriceManager.
 08/20/15-12:28:11: Working on issue #29: Added implementation and test for nvPriceManager::convertPrice().
 08/20/15-12:34:52: Working on issue #29: Removed util function nvConvertPrice.
+08/20/15-12:45:24: Working on issue #29: unified nvMarket::doOpenPosition() method for both real and virtual market.

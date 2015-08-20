@@ -92,8 +92,28 @@ public:
     deal.setOrderType(otype);
     deal.setLotSize(lot);
 
+    nvPriceManager* pman = getManager().getPriceManager();
+
+    double price = 0.0;
+    double point = nvGetPointSize(deal.getSymbol());
+
+    if(deal.getOrderType()==ORDER_TYPE_BUY)
+    {
+      price = pman.getAskPrice(deal.getSymbol());      
+      deal.setStopLossPrice(price-sl*point);
+    }
+    else {
+      price = pman.getBidPrice(deal.getSymbol());      
+      deal.setStopLossPrice(price+sl*point);
+    }
+
+    deal.setEntryTime(getManager().getCurrentTime());
+    deal.setEntryPrice(price);
+
+    deal.open();
+
     // Perform the actual opening of the position:
-    if(doOpenPosition(deal,sl))
+    if(doOpenPosition(deal))
     {
       // The deal is opened properly, we keep a reference on it:
       nvAppendArrayElement(_currentDeals,deal);
@@ -149,7 +169,7 @@ public:
   Method called to actually open a position on a given symbol on that market.
   Must be reimplemented by derived classes.
   */
-  virtual bool doOpenPosition(nvDeal* deal, double sl = 0.0)
+  virtual bool doOpenPosition(nvDeal* deal)
   {
     THROW("No implementation");
     return false;

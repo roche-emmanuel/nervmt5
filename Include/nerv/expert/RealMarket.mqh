@@ -110,31 +110,8 @@ public:
   Method called to actually open a position on a given symbol on that market.
   Note that the stoploss value is given in number of points.
   */
-  virtual bool doOpenPosition(nvDeal* deal, double sl = 0.0)
+  virtual bool doOpenPosition(nvDeal* deal)
   {
-    // We simply retrieve the last tick on this symbol, the real market 
-    // cannot operate on the history !
-    MqlTick last_tick;
-    CHECK_RET(SymbolInfoTick(deal.getSymbol(),last_tick),false,"Cannot retrieve the latest tick");
-
-    double price = last_tick.bid;
-
-    double point = nvGetPointSize(deal.getSymbol());
-
-    if(deal.getOrderType()==ORDER_TYPE_BUY)
-    {
-      price = last_tick.ask;      
-      deal.setStopLossPrice(price-sl*point);
-    }
-    else {
-      deal.setStopLossPrice(price+sl*point);
-    }
-
-    deal.setEntryTime(last_tick.time);
-    deal.setEntryPrice(price);
-
-    deal.open();
-
     // Place the order on the market:
     return sendDealOrder(deal);
   }
