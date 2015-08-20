@@ -327,38 +327,3 @@ bool nvIsSymbolValid(string symbol)
 
   return false;
 }
-
-
-// convert price from one currency to another:
-double nvConvertPrice(double price, string srcCurrency, string destCurrency)
-{
-  if(srcCurrency==destCurrency)
-    return price;
-
-  // If the currencies are not the same, we have to do the convertion:
-  string symbol1 = srcCurrency+destCurrency;
-  string symbol2 = destCurrency+srcCurrency;
-
-  if(nvIsSymbolValid(symbol1))
-  {
-    // Then we retrieve the current symbol1 value:
-    MqlTick latest_price;
-    CHECK_RET(SymbolInfoTick(symbol1,latest_price),0.0,"Cannot retrieve latest price.");
-
-    // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
-    // And thus ise the bid price:
-    return  price * latest_price.bid;
-  }
-  else if(nvIsSymbolValid(symbol2))
-  {
-    // Then we retrieve the current symbol2 value:
-    MqlTick latest_price;
-    CHECK_RET(SymbolInfoTick(symbol2,latest_price),0.0,"Cannot retrieve latest price.");
-
-    // we want to buy the "base" currency here so we have to divide by the ask price in that case:
-    return price /= latest_price.ask; // ask is bigger than bid, so we get the smallest value out of it.
-  }
-  
-  THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
-  return 0.0;
-}

@@ -95,8 +95,7 @@ public:
     double balance = AccountInfoDouble(ACCOUNT_BALANCE);
     
     // convert from account currency to the given currency:
-    balance = nvConvertPrice(balance,_accountCurrency,currencyName);
-
+    balance = getManager().getPriceManager().convertPrice(balance,_accountCurrency,currencyName);
     return balance;
   }
   

@@ -361,7 +361,7 @@ public:
     // We can also compute our profit value here:
     // First we compute the profit in the quote currency:
     double profit = nvGetPointValue(_symbol,_lotSize)*_numPoints;
-    profit = nvConvertPrice(profit, nvGetQuoteCurrency(_symbol), nvGetAccountCurrency());
+    profit = _trader.getManager().getPriceManager().convertPrice(profit,nvGetQuoteCurrency(_symbol),nvGetAccountCurrency(),_exitTime);
 
     setProfit(profit);  
   }
