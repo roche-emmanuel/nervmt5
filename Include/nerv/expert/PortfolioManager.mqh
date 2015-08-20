@@ -13,7 +13,7 @@
 #define AGENT_MAX_LAG 6
 
 // Minimal number of samples used to built a statistic:
-#define TRADER_MIN_NUM_SAMPLES 50
+#define TRADER_MIN_NUM_SAMPLES 10
 
 // Minimal deviation to consider for the utility statistics:
 #define TRADER_MIN_UTILITY_DEVIATION 0.00001

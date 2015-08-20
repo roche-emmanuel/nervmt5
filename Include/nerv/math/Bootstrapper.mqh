@@ -95,6 +95,8 @@ public:
 
     // use the portfolioManager for shuttling:
     SimpleRNG defrng;
+    defrng.SetSeedFromSystemTime();
+    
     if(rng==NULL)
     {
       rng = GetPointer(defrng);

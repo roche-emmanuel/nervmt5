@@ -426,6 +426,41 @@ BEGIN_TEST_CASE("Should support multiple deals on multiple symbols")
   	nvCurrencyTrader* ct = man.getCurrencyTrader(symbols[j]);
 	  ASSERT_EQUAL(ct.getDealCount(),counts[j]);
 	  ASSERT_EQUAL(ct.getPreviousDealCount(),counts[j]);  	
+
+	  // We can also compute the statistics for the max lost points, since we now have some deals:
+	      // First we have to retrieve all the negative profits from the deal history:
+    double negPoints[];
+    num = counts[j];
+    double points;
+    for(int i=0;i<num;++i)
+    {
+      points = -ct.getPreviousDeal(i).getNumPoints();
+      if(points>0.0)
+      {
+        nvAppendArrayElement(negPoints,points);
+      }
+    }
+
+    num = ArraySize( negPoints );
+    logDEBUG("Computing estimated max lost with "<<num<<" samples.");
+
+    // if we don't have enough samples then we just return an initialization value:
+    if(num>TRADER_MIN_NUM_SAMPLES)
+    {
+    	double confidenceLevel = 0.95;
+
+	    nvMeanBootstrap meanBoot;
+	    meanBoot.evaluate(negPoints);
+	    double max_mean = meanBoot.getMaxValue(confidenceLevel);
+
+	    nvStdDevBootstrap devBoot;
+	    devBoot.evaluate(negPoints);
+	    double max_dev = devBoot.getMaxValue(confidenceLevel);
+	
+	    double max_lost = max_mean + 2*max_dev;
+
+	    ASSERT_CLOSE(max_lost,ct.computeEstimatedMaxLost(confidenceLevel),0.1);
+    }
   }
 
   // Since we have some deals we should also have utility statistics now:
