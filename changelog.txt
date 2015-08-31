@@ -249,3 +249,4 @@ But we need the fix for issue #29 first.
 08/20/15-16:12:06: Fixed issue #28: Added sanity check for behavior of CopyRates.
 08/20/15-16:15:11: Working on issue #28: added some additional checks on CopyRates behavior.
 08/20/15-17:36:17: Fixed issue #31: Added test for the computation of the max lost points statistic.
+08/31/15-16:41:36: Fixed issue #33: this is now done.
