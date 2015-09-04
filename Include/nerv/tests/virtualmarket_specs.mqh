@@ -70,7 +70,7 @@ BEGIN_TEST_CASE("Should update the virtual balance in case of virtual deal")
   ct.onDeal(deal);
 
   double newb = market.getBalance();
-  ASSERT_EQUAL(newb, 2990.0);
+  ASSERT_EQUAL(newb, 3010.0);
 END_TEST_CASE()
 
 END_TEST_SUITE()

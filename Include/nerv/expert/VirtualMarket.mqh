@@ -77,6 +77,19 @@ public:
   }
 
   /*
+  Function: acknowledgeDeal
+  
+  Re-implementation to update the current balance properly
+  */
+  virtual void acknowledgeDeal(nvDeal* deal)
+  {
+    CHECK(deal,"Invalid deal");
+    CHECK(deal.getMarketType()==MARKET_TYPE_VIRTUAL,"Invalid deal market type");
+
+    _balance += deal.getProfit();
+  }
+
+  /*
   Function: doOpenPosition
   
   Method called to actually open a position on a given symbol on that market.

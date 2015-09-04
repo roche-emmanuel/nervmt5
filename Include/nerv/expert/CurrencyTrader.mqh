@@ -543,6 +543,9 @@ public:
     CHECK(deal.isDone(),"Received not done deal");
     CHECK(deal.getMarketType()==_marketType,"Mismatch in currency trader and deal market type.");
     
+    // If this is a virtual deal, then we should ensure that the virtual balance gets updated properly.
+    getMarket().acknowledgeDeal(deal);
+
     // Increment the deal count:
     _dealCount++;
 

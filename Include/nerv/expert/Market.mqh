@@ -206,6 +206,17 @@ public:
   }
 
   /*
+  Function: acknowledgeDeal
+  
+  Method called by the currency traders to notify its market that a deal 
+  is indeed acknowledged
+  */
+  virtual void acknowledgeDeal(nvDeal* deal)
+  {
+    // No op by default.
+  }
+  
+  /*
   Function:   
   
   Retrieve the current deal on a given symbol is any.
