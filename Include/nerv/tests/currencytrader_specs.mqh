@@ -47,6 +47,7 @@ BEGIN_TEST_CASE("Should compute its utility each time a deal is received")
 	datetime time = TimeCurrent();
 	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	deal.close(1.23457,time,10.0);
+  deal.setMarketType(ct.getMarketType());
 
 	// Send the deal to the CurrencyTrader:
 	ct.onDeal(deal);
@@ -82,6 +83,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 	datetime time = TimeCurrent();
 	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
 	deal.close(1.23457,time-3600*2,10.0);
+  deal.setMarketType(ct.getMarketType());
 
 	// Send the deal to the CurrencyTrader:
 	ct.onDeal(deal);
@@ -105,6 +107,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 
 	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	deal.close(1.23457,time-3600,1.0);
+  deal.setMarketType(ct.getMarketType());
 
 	ct.onDeal(deal);
 
@@ -124,6 +127,7 @@ BEGIN_TEST_CASE("Should compute its utility with 2 traders")
 
 	deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600,2.0);
 	deal.close(1.23457,time-1800,-4.0);
+  deal.setMarketType(ct.getMarketType());
 
 	ct.onDeal(deal);
 
@@ -155,11 +159,13 @@ BEGIN_TEST_CASE("Should release the deals it contains on deletion.")
   nvDeal* d1 = new nvDeal();
 	d1.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
 	d1.close(1.23457,time-3600*2,10.0);
+  d1.setMarketType(ct.getMarketType());
 	ct.onDeal(d1);
 
 	nvDeal* d2 = new nvDeal();
 	d2.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	d2.close(1.23457,time-3600,1.0);
+  d2.setMarketType(ct.getMarketType());
 	ct.onDeal(d2);
 
   man.reset();
@@ -179,16 +185,19 @@ BEGIN_TEST_CASE("Should support collecting deals")
   nvDeal* d1 = new nvDeal();
 	d1.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
 	d1.close(1.23457,time-3600*2,10.0);
+  d1.setMarketType(ct.getMarketType());
 	ct.onDeal(d1);
 
 	nvDeal* d2 = new nvDeal();
 	d2.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
 	d2.close(1.23457,time-3600,1.0);
+  d2.setMarketType(ct.getMarketType());
 	ct.onDeal(d2);
 
 	nvDeal* d3 = new nvDeal();
 	d3.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600,1.0);
 	d3.close(1.23457,time-1800,1.0);
+  d3.setMarketType(ct.getMarketType());
 	ct.onDeal(d3);
 
 	nvDeal* list[];

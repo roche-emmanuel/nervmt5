@@ -254,3 +254,4 @@ But we need the fix for issue #29 first.
 09/04/15-09:57:24: Merged changelog.
 09/04/15-10:30:58: Working on issue #32: Using current market in RiskManager when computing lot size.
 09/04/15-10:45:08: Working on issue #32: Added default value for currency in getBalance() method. Added unit test for virtual balance update (not passed yet). Added CHECK on deal market type in CurrencyTrader::onDeal() (this might generated errors in the unit tests).
+09/04/15-10:50:03: Working on issue #32: Added fix in unit test for market type mismatches between deals and currency traders.

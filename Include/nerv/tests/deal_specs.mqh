@@ -167,6 +167,7 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   datetime time = TimeCurrent();
   deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
   deal.close(1.23457,time-3600*2,10.0);
+  deal.setMarketType(ct.getMarketType());
 
   // Send the deal to the CurrencyTrader:
   ct.onDeal(deal);
@@ -193,6 +194,7 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
 
   deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
   deal.close(1.23457,time-3600,1.0);
+  deal.setMarketType(ct.getMarketType());
 
   ct.onDeal(deal);
 
@@ -214,6 +216,7 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   deal = new nvDeal();
   deal.open(ct2,ORDER_TYPE_BUY,1.23456,(int)time-3600*4,0.5);
   deal.close(1.23457,time-3600*2,8.0);
+  deal.setMarketType(ct.getMarketType());
   ct2.onDeal(deal);
 
   ASSERT_EQUAL(ct2.getUtility(),8.0);
@@ -221,6 +224,7 @@ BEGIN_TEST_CASE("Should support computing the weight derivative")
   deal = new nvDeal();
   deal.open(ct2,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
   deal.close(1.23457,time-3600,1.0);
+  deal.setMarketType(ct.getMarketType());
   ct2.onDeal(deal);
 
   // utilities are u1=5.5, u2=8
