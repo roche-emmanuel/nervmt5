@@ -66,8 +66,11 @@ public:
   Re-implementation of the getBalance method, this will use the virtual balance
   value.
   */
-  virtual double getBalance(string currency)
+  virtual double getBalance(string currency = "")
   {
+    if(currency=="")
+      currency = nvGetAccountCurrency();
+      
     // convert from account currency to the given currency:
     double balance = getManager().getPriceManager().convertPrice(_balance,nvGetAccountCurrency(),currency);
     return balance;    

@@ -248,7 +248,8 @@ public:
   /*
   Function: setProfit
   
-  Set the profit of this deal
+  Set the profit of this deal, note that the profit
+  must be specified in the account balance currency.
   */
   void setProfit(double profit)
   {
@@ -361,6 +362,8 @@ public:
     // We can also compute our profit value here:
     // First we compute the profit in the quote currency:
     double profit = nvGetPointValue(_symbol,_lotSize)*_numPoints;
+
+    // Then we report it in the balance currency:
     profit = _trader.getManager().getPriceManager().convertPrice(profit,nvGetQuoteCurrency(_symbol),nvGetAccountCurrency(),_exitTime);
 
     setProfit(profit);  

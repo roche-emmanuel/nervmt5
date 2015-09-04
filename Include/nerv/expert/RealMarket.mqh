@@ -110,8 +110,11 @@ public:
   Re-implementation of the getBalance method, this will use the concrete balance
   on the user account.
   */
-  virtual double getBalance(string currency)
+  virtual double getBalance(string currency = "")
   {
+    if(currency=="")
+      currency = nvGetAccountCurrency();
+      
     double balance = AccountInfoDouble(ACCOUNT_BALANCE);
     
     // convert from account currency to the given currency:

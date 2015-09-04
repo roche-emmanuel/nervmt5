@@ -541,7 +541,8 @@ public:
     CHECK(deal!=NULL,"Invalid deal pointer.");
     CHECK(deal.getCurrencyTrader()==THIS,"Invalid deal trader "<<deal.getCurrencyTrader().getID());
     CHECK(deal.isDone(),"Received not done deal");
-
+    CHECK(deal.getMarketType()==_marketType,"Mismatch in currency trader and deal market type.");
+    
     // Increment the deal count:
     _dealCount++;
 

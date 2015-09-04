@@ -47,6 +47,32 @@ BEGIN_TEST_CASE("Should have a valid initial balance")
   ASSERT_GT(market.getBalance("EUR"),0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should update the virtual balance in case of virtual deal")
+  nvPortfolioManager man;
+  nvVirtualMarket* market = (nvVirtualMarket*)man.getMarket(MARKET_TYPE_VIRTUAL); 
+  
+  // Initialize the balance:
+  market.setBalance(3000.0);
+
+  // prepare a currency trader:
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  ct.setMarketType(MARKET_TYPE_VIRTUAL);
+
+  // Now generate the virtual deal:
+  nvDeal* deal = new nvDeal();
+  deal.setMarketType(MARKET_TYPE_VIRTUAL);
+
+  datetime time = TimeCurrent();
+  deal.open(ct,ORDER_TYPE_BUY,1.23456,(int)time-3600*2,1.0);
+  deal.close(1.23457,time,10.0);
+
+  // Send the deal to the CurrencyTrader:
+  ct.onDeal(deal);
+
+  double newb = market.getBalance();
+  ASSERT_EQUAL(newb, 2990.0);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
