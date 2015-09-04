@@ -252,3 +252,4 @@ But we need the fix for issue #29 first.
 08/31/15-16:41:36: Fixed issue #33: this is now done.
 09/04/15-09:54:59: Working on issue #32: Added get/set balance implementation in real/virtual market classes.
 09/04/15-09:57:24: Merged changelog.
+09/04/15-10:30:58: Working on issue #32: Using current market in RiskManager when computing lot size.

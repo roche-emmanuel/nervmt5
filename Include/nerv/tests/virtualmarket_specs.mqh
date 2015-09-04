@@ -41,6 +41,12 @@ BEGIN_TEST_CASE("Should provide the value of the balance")
   ASSERT_EQUAL(balance,2001.0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should have a valid initial balance")
+  nvPortfolioManager man;
+  nvMarket* market = man.getMarket(MARKET_TYPE_VIRTUAL); 
+  ASSERT_GT(market.getBalance("EUR"),0);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

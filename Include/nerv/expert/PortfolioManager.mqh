@@ -442,6 +442,9 @@ public:
 
     // On reset we should also reset the random generated seeds:
     _randomGenerator.SetSeedFromSystemTime();
+
+    // initialize the virtual balance:
+    _virtualMarket.setBalance(3000.0);
   }
 
   /*

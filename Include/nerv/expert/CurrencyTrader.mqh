@@ -483,7 +483,7 @@ public:
   double computeLotSize(double lostPoints, double confidence)
   {
     nvRiskManager* rman = getManager().getRiskManager();
-    return rman.evaluateLotSize(_symbol, lostPoints, _weight, confidence);
+    return rman.evaluateLotSize(getMarket(), _symbol, lostPoints, _weight, confidence);
   }
   
   /*

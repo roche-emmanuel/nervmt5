@@ -51,21 +51,22 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("Should be able to evaluate a lot size")
   nvPortfolioManager man;
   nvRiskManager* rman = man.getRiskManager();
-	
-  double balance = rman.getBalanceValue("JPY");
+  nvMarket* market = man.getMarket(MARKET_TYPE_REAL);
+
+  double balance = market.getBalance("JPY");
 	
 	double var = balance*0.03*0.5*0.8;
 	double mylot = var/(100.0*30.0);
 
 	rman.setRiskLevel(0.03);
-	double lot = rman.evaluateLotSize("EURJPY",30.0,0.5,0.8);
+	double lot = rman.evaluateLotSize(market,"EURJPY",30.0,0.5,0.8);
 	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
 
-  balance = rman.getBalanceValue("CAD");
+  balance = market.getBalance("CAD");
 	
 	var = balance*0.03*0.2*0.6;
 	mylot = var/(1.0*50.0);
-	lot = rman.evaluateLotSize("EURCAD",50.0,0.2,0.6);
+	lot = rman.evaluateLotSize(market,"EURCAD",50.0,0.2,0.6);
 	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
 
 	man.reset();  
