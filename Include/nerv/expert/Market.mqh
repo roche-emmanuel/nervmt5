@@ -195,6 +195,17 @@ public:
   }
 
   /*
+  Function: getBalance
+  
+  Retrieve the current balance on this market in a given currency.
+  */
+  virtual double getBalance(string currency)
+  {
+    THROW("No implementation");
+    return 0.0;
+  }
+
+  /*
   Function:   
   
   Retrieve the current deal on a given symbol is any.

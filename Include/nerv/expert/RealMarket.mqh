@@ -105,6 +105,21 @@ public:
   }
 
   /*
+  Function: getBalance
+  
+  Re-implementation of the getBalance method, this will use the concrete balance
+  on the user account.
+  */
+  virtual double getBalance(string currency)
+  {
+    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+    
+    // convert from account currency to the given currency:
+    balance = getManager().getPriceManager().convertPrice(balance,nvGetAccountCurrency(),currency);
+    return balance;    
+  }
+  
+  /*
   Function: doOpenPosition
   
   Method called to actually open a position on a given symbol on that market.

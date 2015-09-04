@@ -22,6 +22,17 @@ BEGIN_TEST_CASE("Should provide info on open position status")
 
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide the value of the balance")
+  nvPortfolioManager man;
+  nvMarket* market = man.getMarket(MARKET_TYPE_REAL);
+	
+	double balance = market.getBalance("EUR");
+
+	// Compare with the actual real balance:
+	double rbalance = AccountInfoDouble(ACCOUNT_BALANCE);
+	ASSERT_EQUAL(balance,rbalance);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

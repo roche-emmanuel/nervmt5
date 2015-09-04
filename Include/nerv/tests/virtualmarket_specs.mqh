@@ -28,6 +28,19 @@ BEGIN_TEST_CASE("Should allow retrieving position type")
   ASSERT_EQUAL((int)market.getPositionType("EURUSD"),(int)POS_NONE);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should provide the value of the balance")
+  nvPortfolioManager man;
+  nvVirtualMarket* market = (nvVirtualMarket*)man.getMarket(MARKET_TYPE_VIRTUAL);
+  
+  // Assign a balance value:
+  market.setBalance(2001.0);
+
+  double balance = market.getBalance("EUR");
+
+  // Compare with the assigned balance value:
+  ASSERT_EQUAL(balance,2001.0);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

@@ -9,6 +9,10 @@ but where the currency traders can perform trades with virtual money (and no rea
 */
 class nvVirtualMarket : public nvMarket
 {
+protected:
+  // Current value of the virtual balance:
+  double _balance;
+
 public:
   /*
     Class constructor.
@@ -16,6 +20,9 @@ public:
   nvVirtualMarket()
   {
     _marketType = MARKET_TYPE_VIRTUAL;
+
+    // Init the virtual balance to 0:
+    _balance = 0.0;
   }
 
   /*
@@ -40,6 +47,30 @@ public:
   ~nvVirtualMarket()
   {
     // No op.
+  }
+
+  /*
+  Function: setBalance
+  
+  Method used to set the value of the virtual balance:
+  */
+  void setBalance(double val)
+  {
+    CHECK(val > 0.0,"Balance value should always be positive.");
+    _balance = val;
+  }
+  
+  /*
+  Function: getBalance
+  
+  Re-implementation of the getBalance method, this will use the virtual balance
+  value.
+  */
+  virtual double getBalance(string currency)
+  {
+    // convert from account currency to the given currency:
+    double balance = getManager().getPriceManager().convertPrice(_balance,nvGetAccountCurrency(),currency);
+    return balance;    
   }
 
   /*
