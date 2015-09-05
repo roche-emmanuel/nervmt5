@@ -8,22 +8,20 @@ int WSACleanup();
 int WSAGetLastError(); 
 int socket(int domaint,int type,int protocol); 
 int closesocket(int socket); 
+ushort htons(ushort hostshort);
+ulong inet_addr(char &cp[]);
+int connect(int socket, char& address[], int address_len); 
 
-int bind(int socket, int& address[], int address_len); 
-int connect(int socket, int& address[], int address_len); 
-int listen(int socket, int backlog); 
-int accept(int socket, int& address[], int& address_len[]); 
-int recv(int socket, int& buffer[], int length, int flags); 
-int recvfrom(int socket, int& buffer[], int length, int flags, int& address[], int& address_len[]); 
-int send(int socket, int& buffer[], int length, int flags); 
-int sendto(int socket, int& message[], int length, int flags, int& dest_addr[], int dest_len); 
-int gethostbyname(string name); 
-int gethostbyaddr(string addr, int len, int type); 
-int inet_addr(string addr); 
-string inet_ntoa(int addr ); 
-// ushort htons(ushort hostshort);
-// ulong inet_addr(char &cp[]);
-// int connect(int s, char &name[], int namelen);
+// int bind(int socket, int& address[], int address_len); 
+// int listen(int socket, int backlog); 
+// int accept(int socket, int& address[], int& address_len[]); 
+// int recv(int socket, int& buffer[], int length, int flags); 
+// int recvfrom(int socket, int& buffer[], int length, int flags, int& address[], int& address_len[]); 
+// int send(int socket, int& buffer[], int length, int flags); 
+// int sendto(int socket, int& message[], int length, int flags, int& dest_addr[], int dest_len); 
+// int gethostbyname(string name); 
+// int gethostbyaddr(string addr, int len, int type); 
+// string inet_ntoa(int addr ); 
 #import
 
 //Addresses 
@@ -232,8 +230,21 @@ string inet_ntoa(int addr );
 //   char FAR       *lpVendorInfo;  
 // };
 
-struct WSAData_in {
+struct WSAData_stream {
 	char data[400];
 };
 
+
+struct sockaddr_in
+{
+  short   sin_family;
+  ushort  sin_port;
+  ulong   sin_addr; // additional 8 byte structure
+  char    sin_zero[8];
+};
+
+struct sockaddr_in_stream
+{
+  uchar data[2+2+8+8];
+};
 

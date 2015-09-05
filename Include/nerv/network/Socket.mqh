@@ -1,7 +1,7 @@
 #include <nerv/core.mqh>
 #include <nerv/network/Winsock.mqh>
 
-WSAData_in g_wsaData;
+WSAData_stream g_wsaData;
 bool g_initialized = false;
 
 class nvSocket : public nvObject
@@ -76,13 +76,34 @@ public:
   }
 
   /*
-  Function: open
+  Function: connect
   
-  Method called to open a socket
+  Method called to connect a socket
   */
-  void open()
+  bool connect(string ip, ushort port)
   {
+    //--- connecting the host after the socket initialization
+    char ch[];
+    StringToCharArray(ip, ch);
     
+    //--- preparing the structure
+    sockaddr_in addrin;
+    addrin.sin_family=AF_INET;
+    addrin.sin_addr=inet_addr(ch);
+    addrin.sin_port=htons(port);
+
+    // Convert to char array:
+    sockaddr_in_stream ref=(sockaddr_in_stream)addrin;
+
+    // Perform the connection:
+    int res=connect(_socket, ref.data, sizeof(addrin));
+    if(res!=0) {
+      logERROR("Error in socket connection: " << WSAGetLastError());
+      return false;
+    }
+
+    // connection established:
+    return true;
   }
   
 };

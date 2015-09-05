@@ -40,6 +40,16 @@ BEGIN_TEST_CASE("Should support multiple calls to init/uninit")
   nvSocket::uninitialize();  
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should not be able to connect to invalid server")
+  nvSocket::initialize();
+  {
+	  nvSocket socket;
+	  bool res = socket.connect("127.0.0.1",10000);
+	  ASSERT_EQUAL(res,false);  	
+  }
+  nvSocket::uninitialize();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
