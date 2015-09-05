@@ -6,9 +6,32 @@ bool g_initialized = false;
 
 class nvSocket : public nvObject
 {
+protected:
+  int _socket;
+
 public:
-  nvSocket() {};
-  ~nvSocket() {};
+  nvSocket() {
+    // We assume that the initialize method is called first:
+    _socket = INVALID_SOCKET;
+    CHECK(g_initialized,"Winsock not initialized.");
+
+    // logDEBUG("Creating real socket");
+    _socket = socket(AF_INET , SOCK_STREAM , IPPROTO_IP);
+    CHECK(_socket!=INVALID_SOCKET,"Cannot create socket.");      
+    // logDEBUG("Initial socket is: "<<_socket);
+  };
+
+  ~nvSocket() {   
+    // Close the socket:
+    if(_socket!=INVALID_SOCKET)
+    {
+      CHECK(g_initialized,"Winsock not initialized.");
+
+      // logDEBUG("Socket is: "<<_socket);
+      int res = closesocket(_socket);
+      CHECK(res==0,"Cannot close socket.")      
+    }
+  };
 
   virtual string toString() const
   {
@@ -51,4 +74,15 @@ public:
       g_initialized = false;      
     }
   }
+
+  /*
+  Function: open
+  
+  Method called to open a socket
+  */
+  void open()
+  {
+    
+  }
+  
 };

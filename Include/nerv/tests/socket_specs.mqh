@@ -7,8 +7,19 @@ BEGIN_TEST_PACKAGE(socket_specs)
 BEGIN_TEST_SUITE("Socket class")
 
 BEGIN_TEST_CASE("should be able to create a socket instance")
-	nvSocket socket;
-	ASSERT_VALID_PTR(socket);
+	// Should throw an error if lib is not initialized yet:
+	BEGIN_ASSERT_ERROR("Winsock not initialized.")
+  { nvSocket socket;
+		// ASSERT_VALID_PTR(socket); 
+	}
+	END_ASSERT_ERROR();
+
+	// Should create properly once initialized:
+	nvSocket::initialize();
+	{
+		nvSocket socket;	
+	}
+	nvSocket::uninitialize();
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should support WSA init/unit")

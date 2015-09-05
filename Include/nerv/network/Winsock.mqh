@@ -7,6 +7,8 @@ int WSAStartup(int cmd, char &wsadata[]);
 int WSACleanup(); 
 int WSAGetLastError(); 
 int socket(int domaint,int type,int protocol); 
+int closesocket(int socket); 
+
 int bind(int socket, int& address[], int address_len); 
 int connect(int socket, int& address[], int address_len); 
 int listen(int socket, int backlog); 
@@ -15,7 +17,6 @@ int recv(int socket, int& buffer[], int length, int flags);
 int recvfrom(int socket, int& buffer[], int length, int flags, int& address[], int& address_len[]); 
 int send(int socket, int& buffer[], int length, int flags); 
 int sendto(int socket, int& message[], int length, int flags, int& dest_addr[], int dest_len); 
-int closesocket(int socket); 
 int gethostbyname(string name); 
 int gethostbyaddr(string addr, int len, int type); 
 int inet_addr(string addr); 
