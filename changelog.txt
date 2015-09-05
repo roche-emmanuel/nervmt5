@@ -256,3 +256,4 @@ But we need the fix for issue #29 first.
 09/04/15-10:45:08: Working on issue #32: Added default value for currency in getBalance() method. Added unit test for virtual balance update (not passed yet). Added CHECK on deal market type in CurrencyTrader::onDeal() (this might generated errors in the unit tests).
 09/04/15-10:50:03: Working on issue #32: Added fix in unit test for market type mismatches between deals and currency traders.
 09/04/15-15:31:21: Fixed issue #32: updating the value of the virtual balance when a virtual deal is completed.
+09/05/15-12:50:44: Working on issue #26: Adding support for socket class.
