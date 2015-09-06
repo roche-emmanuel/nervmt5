@@ -262,3 +262,4 @@ But we need the fix for issue #29 first.
 09/06/15-13:48:10: Working on issue #35: building bindings for zmq in MQL5
 09/06/15-13:53:19: Fixed issue with test during week end : was not producing any deal.
 09/06/15-15:11:19: Working on issue #35: init/uninit support for ZMQ contexts.
+09/06/15-15:18:57: Working on issue #35: automated init/uninit of ZMQ context.

@@ -11,6 +11,7 @@ protected:
   nvZMQContext(void)
   {
     _context = 0;
+    init();
   };
 
   ~nvZMQContext(void)
@@ -34,6 +35,9 @@ public:
   void init()
   {
     // Should create a new context here:
+    if(_context!=0)
+      return; // already initialized, nothing to do.
+
     _context = zmq_ctx_new();
     if(_context==0)
     {

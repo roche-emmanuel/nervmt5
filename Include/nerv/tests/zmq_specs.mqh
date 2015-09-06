@@ -14,7 +14,8 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("Should be able to init/uninit")
 	nvZMQContext* context = nvZMQContext::instance();
 	context.init();
-
+	context.init();
+	context.uninit();
 	context.uninit();
 END_TEST_CASE()
 
