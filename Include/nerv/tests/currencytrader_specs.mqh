@@ -388,7 +388,8 @@ BEGIN_TEST_CASE("Should support multiple deals on multiple symbols")
   SimpleRNG rng;
   rng.SetSeedFromSystemTime();
   
-  int num = 50;
+  // Using 72 hours to ensure we get some deals.
+  int num = 72;
   // set the current portfolio time:
   datetime time = TimeLocal()-num*3600;
 

@@ -264,3 +264,4 @@ But we need the fix for issue #29 first.
 09/06/15-15:11:19: Working on issue #35: init/uninit support for ZMQ contexts.
 09/06/15-15:18:57: Working on issue #35: automated init/uninit of ZMQ context.
 09/06/15-17:29:18: Working on issue #35: Added initial implementation for ZMQSocket.
+09/06/15-17:31:10: Working on issue #35: ensuring that we get some deals for unit tests even during the week end.
