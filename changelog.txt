@@ -259,3 +259,4 @@ But we need the fix for issue #29 first.
 09/05/15-12:50:44: Working on issue #26: Adding support for socket class.
 09/05/15-13:59:59: Working on issue #26: Added support to create/close socket.
 09/05/15-14:17:26: Working on issue #26: Added support for nvSocket::connect()
+09/06/15-13:48:10: Working on issue #35: building bindings for zmq in MQL5

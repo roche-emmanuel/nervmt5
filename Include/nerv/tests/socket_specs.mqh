@@ -50,6 +50,41 @@ BEGIN_TEST_CASE("Should not be able to connect to invalid server")
   nvSocket::uninitialize();
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should connect to external server")
+  nvSocket::initialize();
+  {
+	  nvSocket socket;
+	  bool res = socket.connect("127.0.0.1",22222);
+	  ASSERT_EQUAL(res,true);
+
+	  // Send a socket message:
+	  socket.send("Hello manu!");
+	  
+  }
+  nvSocket::uninitialize();
+END_TEST_CASE()
+
+XBEGIN_TEST_CASE("Establish a connection with a server socket")
+  nvSocket::initialize();
+  {
+	  nvSocket server;
+	  logDEBUG("Calling server:bind()")
+	  bool res = server.bind(10000);
+	  ASSERT_EQUAL(res,true);
+
+	  logDEBUG("Calling server:listen()")
+	  res = server.listen(3);
+	  ASSERT_EQUAL(res,true);
+
+	  // Now create the client:
+	  logDEBUG("Calling client:connect()")
+	  nvSocket client;
+	  res = client.connect("127.0.0.1",10000);
+	  ASSERT_EQUAL(res,true);
+  }
+  nvSocket::uninitialize();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

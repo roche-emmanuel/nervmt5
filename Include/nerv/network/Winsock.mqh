@@ -12,12 +12,12 @@ ushort htons(ushort hostshort);
 ulong inet_addr(char &cp[]);
 int connect(int socket, char& address[], int address_len); 
 
-// int bind(int socket, int& address[], int address_len); 
-// int listen(int socket, int backlog); 
-// int accept(int socket, int& address[], int& address_len[]); 
+int bind(int socket, char& address[], int address_len); 
+int listen(int socket, int backlog); 
+int accept(int socket, char& address[], int& address_len[]); 
+int send(int socket, char& buffer[], int length, int flags); 
 // int recv(int socket, int& buffer[], int length, int flags); 
 // int recvfrom(int socket, int& buffer[], int length, int flags, int& address[], int& address_len[]); 
-// int send(int socket, int& buffer[], int length, int flags); 
 // int sendto(int socket, int& message[], int length, int flags, int& dest_addr[], int dest_len); 
 // int gethostbyname(string name); 
 // int gethostbyaddr(string addr, int len, int type); 
