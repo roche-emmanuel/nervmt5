@@ -1,5 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/network/zmq_bind.mqh>
+#include <nerv/network/ZMQSocket.mqh>
 
 class nvZMQContext
 {
@@ -62,6 +63,23 @@ public:
       }
       _context = 0;
     }    
+  }
+  
+  /*
+  Function: createSocket
+  
+  Method used to create a new socket object
+  */
+  long createSocket(int type)
+  {
+    CHECK_RET(_context>0,0,"ZMQ is not initialized.");
+    long socket = zmq_socket(_context,type);
+    if(socket==0)
+    {
+      THROW("Error in zmq_socket(): error "<<zmq_errno());
+    }
+
+    return socket;
   }
   
 };
