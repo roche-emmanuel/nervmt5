@@ -51,16 +51,25 @@ BEGIN_TEST_CASE("Should be able to open/close a new socket")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to connect a socket")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
+
   nvZMQSocket socket(ZMQ_PAIR);
   socket.connect("tcp://localhost:22222");
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to bind a socket")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
+
   nvZMQSocket socket(ZMQ_PAIR);
   socket.bind("tcp://*:22222");
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to send/receive with simple commands")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
+
   nvZMQSocket client(ZMQ_PUSH);
 	client.connect("tcp://localhost:22222");  
   nvZMQSocket server(ZMQ_PULL);
@@ -83,6 +92,9 @@ BEGIN_TEST_CASE("Should be able to send/receive with simple commands")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to send/receive with a message")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
+
   nvZMQSocket client(ZMQ_PUSH);
   client.connect("tcp://localhost:22222");  
   nvZMQSocket server(ZMQ_PULL);
@@ -105,6 +117,8 @@ BEGIN_TEST_CASE("Should be able to send/receive with a message")
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to handle multiple messages")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
 
   nvZMQSocket client(ZMQ_PUSH);
   client.connect("tcp://localhost:22222");  
@@ -132,7 +146,54 @@ BEGIN_TEST_CASE("Should be able to handle multiple messages")
     // Now send the data:
     client.send(data);
 
-    Sleep(1);
+    Sleep(5);
+
+    server.receive(data2);
+   
+    int size2 = ArraySize( data2 );
+    ASSERT_EQUAL(size2,size);
+    
+    if(size2==size)
+    {
+      for(int j=0;j<size;++j)
+      {
+        ASSERT_EQUAL((int)data2[j],(int)data[j]);
+      }
+    }
+  }
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to handle large messages")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
+
+  nvZMQSocket client(ZMQ_PUSH);
+  client.connect("tcp://localhost:22222");  
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22222");
+
+  SimpleRNG rng;
+  rng.SetSeedFromSystemTime();
+
+  int num = 2;
+  int max_size = 20000;
+  char data[];
+  char data2[];
+  for(int i =0;i<num;++i)
+  {
+    int size = max_size; //rng.GetInt(10,max_size);
+    ArrayResize( data, size );
+    ArrayResize( data2, 0 );
+
+    for(int j=0;j<size;++j)
+    {
+      data[j]=(char)rng.GetInt(0,255);
+    }
+
+    // Now send the data:
+    client.send(data);
+
+    Sleep(10);
 
     server.receive(data2);
 
@@ -144,7 +205,6 @@ BEGIN_TEST_CASE("Should be able to handle multiple messages")
     }
   }
 END_TEST_CASE()
-
 
 END_TEST_SUITE()
 

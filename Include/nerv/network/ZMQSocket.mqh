@@ -196,7 +196,9 @@ public:
 
     long src = getMemAddress(data);
 
+    // logDEBUG("send: memcpy("<<dest<<","<<src<<","<<len<<")");
     memcpy(dest,src,len);
+    // logDEBUG("send: memcpy done.");
 
     // Now we can send the message:
     int len2 = zmq_msg_send(_msg,_socket,ZMQ_DONTWAIT);
@@ -241,12 +243,17 @@ public:
       THROW("Error in zmq_msg_recv(): received a message with length 0.");
     }
 
-    ArrayResize( data, len );
+    ArrayResize( data, MathMax(len,0) );
 
-    long dest = getMemAddress(data);
-    long src = zmq_msg_data(_msg);
+    if(len>0)
+    {
+      long dest = getMemAddress(data);
+      long src = zmq_msg_data(_msg);
 
-    memcpy(dest,src,len);
+      // logDEBUG("receive: memcpy("<<dest<<","<<src<<","<<len<<")");
+      memcpy(dest,src,len);
+      // logDEBUG("send: memcpy done.");      
+    }
 
     // Close that message:
     res = zmq_msg_close(_msg);
