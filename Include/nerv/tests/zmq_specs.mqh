@@ -104,6 +104,47 @@ BEGIN_TEST_CASE("Should be able to send/receive with a message")
   ASSERT_EQUAL(msg1,msg2);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to handle multiple messages")
+
+  nvZMQSocket client(ZMQ_PUSH);
+  client.connect("tcp://localhost:22222");  
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22222");
+
+  SimpleRNG rng;
+  rng.SetSeedFromSystemTime();
+
+  int num = 30;
+  int max_size = 1000;
+  char data[];
+  char data2[];
+  for(int i =0;i<num;++i)
+  {
+    int size = rng.GetInt(10,max_size);
+    ArrayResize( data, size );
+    ArrayResize( data2, 0 );
+
+    for(int j=0;j<size;++j)
+    {
+      data[j]=(char)rng.GetInt(0,255);
+    }
+
+    // Now send the data:
+    client.send(data);
+
+    Sleep(1);
+
+    server.receive(data2);
+
+    ASSERT_EQUAL(ArraySize( data2 ),size);
+
+    for(int j=0;j<size;++j)
+    {
+      ASSERT_EQUAL((int)data2[j],(int)data[j]);
+    }
+  }
+END_TEST_CASE()
+
 
 END_TEST_SUITE()
 
