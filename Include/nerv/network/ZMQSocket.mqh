@@ -56,9 +56,9 @@ public:
     // Release the opaque socket pointer here:
     if(_socket!=0)
     {
-      logDEBUG("Closing ZMQSocket.");
+      // logDEBUG("Closing ZMQSocket.");
       int res = zmq_close(_socket);
-      logDEBUG("ZMQSocket closed.");
+      // logDEBUG("ZMQSocket closed.");
       if(res!=0)
       {
         THROW("Error in zmq_close(): error "<<zmq_errno());
@@ -122,11 +122,11 @@ public:
   }
   
   /*
-  Function: send
+  Function: simple_send
   
   Method used to send a char array on this socket
   */
-  void send(const char& data[])
+  void simple_send(const char& data[])
   {
     CHECK(_socket!=0,"Invalid socket.")
     int len = ArraySize( data );
@@ -141,23 +141,11 @@ public:
   }
   
   /*
-  Function: send
-  
-  Helper method used to send a string
-  */
-  void send(string msg)
-  {
-    char ch[];
-    StringToCharArray(msg,ch);
-    send(ch);
-  }
-  
-  /*
-  Function: receive
+  Function: simple_receive
   
   Method used to receive some data with a known size
   */
-  void receive(char &data[], int len)
+  void simple_receive(char &data[], int len)
   {
     CHECK(_socket!=0,"Invalid socket.")
     CHECK(len>0,"Invalid data length")

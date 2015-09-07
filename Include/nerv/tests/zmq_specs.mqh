@@ -67,12 +67,15 @@ BEGIN_TEST_CASE("Should be able to send/receive a message")
   server.bind("tcp://*:22222");
 
   string msg1 = "Hello world!";
-  client.send(msg1);
+  char ch1[];
+  StringToCharArray(msg1,ch1);
+  client.simple_send(ch1);
+
   Sleep(10); // We add some sleep to ensure the underlying IO threads gets
   // the time to send the message.
 
   char ch[];
-  server.receive(ch,13);
+  server.simple_receive(ch,13);
   int len = ArraySize( ch );
   ASSERT_EQUAL(len,13);
   string msg2 = CharArrayToString(ch);

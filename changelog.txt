@@ -266,3 +266,4 @@ But we need the fix for issue #29 first.
 09/06/15-17:29:18: Working on issue #35: Added initial implementation for ZMQSocket.
 09/06/15-17:31:10: Working on issue #35: ensuring that we get some deals for unit tests even during the week end.
 09/07/15-19:47:31: Working on issue #35: Adding support for simple send/receive
+09/07/15-19:50:16: Renamed the send/receive methods to simple_send/simple_receive.
