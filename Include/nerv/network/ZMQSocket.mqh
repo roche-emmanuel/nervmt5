@@ -219,9 +219,9 @@ public:
   
   Method used to receive a char array on this socket
   */
-  void receive(char& data[])
+  int receive(char& data[])
   {
-    CHECK(_socket!=0,"Invalid socket.")
+    CHECK_RET(_socket!=0,0,"Invalid socket.")
 
     // Prepare a message object:
     // Create a message object:
@@ -260,7 +260,9 @@ public:
     if(res!=0)
     {
       THROW("Cannot close ZMQ message: error "<<zmq_errno());      
-    }    
+    }  
+
+    return MathMax(len,0);
   }
 };
 

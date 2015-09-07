@@ -105,11 +105,14 @@ BEGIN_TEST_CASE("Should be able to send/receive with a message")
   StringToCharArray(msg1,ch1);
   client.send(ch1);
 
-  Sleep(10); // We add some sleep to ensure the underlying IO threads gets
-  // the time to send the message.
-
   char ch[];
-  server.receive(ch);
+  while(server.receive(ch)==0)
+  {
+    logDEBUG("Waiting...");
+    Sleep(5); // We add some sleep to ensure the underlying IO threads gets
+    // the time to send the message.    
+  };
+
   int len = ArraySize( ch );
   ASSERT_EQUAL(len,13);
   string msg2 = CharArrayToString(ch);
@@ -146,9 +149,12 @@ BEGIN_TEST_CASE("Should be able to handle multiple messages")
     // Now send the data:
     client.send(data);
 
-    Sleep(5);
-
-    server.receive(data2);
+    while(server.receive(data2)==0)
+    {
+      logDEBUG("Waiting...");
+      Sleep(5); // We add some sleep to ensure the underlying IO threads gets
+      // the time to send the message.    
+    };
    
     int size2 = ArraySize( data2 );
     ASSERT_EQUAL(size2,size);
@@ -193,9 +199,12 @@ BEGIN_TEST_CASE("Should be able to handle large messages")
     // Now send the data:
     client.send(data);
 
-    Sleep(10);
-
-    server.receive(data2);
+    while(server.receive(data2)==0)
+    {
+      logDEBUG("Waiting...");
+      Sleep(5); // We add some sleep to ensure the underlying IO threads gets
+      // the time to send the message.    
+    };
 
     ASSERT_EQUAL(ArraySize( data2 ),size);
 
@@ -204,6 +213,20 @@ BEGIN_TEST_CASE("Should be able to handle large messages")
       ASSERT_EQUAL((int)data2[j],(int)data[j]);
     }
   }
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should return nothing if there is no data to receive")
+  nvZMQContext::instance().uninit();
+
+  nvZMQSocket client(ZMQ_PUSH);
+  client.connect("tcp://localhost:22222");  
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22222");
+
+  char data[];
+
+  server.receive(data);
+  ASSERT_EQUAL(ArraySize( data ),0);  
 END_TEST_CASE()
 
 END_TEST_SUITE()
