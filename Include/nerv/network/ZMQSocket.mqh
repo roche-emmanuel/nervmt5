@@ -164,5 +164,96 @@ public:
     }
   }
   
+  /*
+  Function: send
+  
+  Method used to send a char array on this socket
+  */
+  void send(const char& data[])
+  {
+    CHECK(_socket!=0,"Invalid socket.")
+    int len = ArraySize( data );
+    if(len==0)
+      return; // nothing to send.
+
+    // Otherwise we try to send the data:
+    // Create a message object:
+    zmq_msg_stream msg;
+    long madr = getMemAddress(msg.data);
+
+    int res = zmq_msg_init_size(madr,len);
+    if (res!=0)
+    {
+      THROW("Cannot init ZMQ message: error "<<zmq_errno());
+    }
+
+    // Copy the actual data into the message:
+    long dest = zmq_msg_data(madr);
+    CHECK(dest!=0,"Invalid data address.");
+
+    long src = getMemAddress(data);
+
+    memcpy(dest,src,len);
+
+    // Now we can send the message:
+    int len2 = zmq_msg_send(madr,_socket,ZMQ_DONTWAIT);
+    if (len2!=len) {
+      THROW("Error in zmq_send(): error "<<zmq_errno());
+    }
+
+    // Close that message:
+    res = zmq_msg_close(madr);
+    if(res!=0)
+    {
+      THROW("Cannot close ZMQ message: error "<<zmq_errno());      
+    }
+  }
+
+  /*
+  Function: receive
+  
+  Method used to receive a char array on this socket
+  */
+  void receive(char& data[])
+  {
+    CHECK(_socket!=0,"Invalid socket.")
+
+    // Prepare a message object:
+    // Create a message object:
+    zmq_msg_stream msg;
+    long madr = getMemAddress(msg.data);
+
+    int res = zmq_msg_init(madr);
+    if (res!=0)
+    {
+      THROW("Cannot init ZMQ message: error "<<zmq_errno());
+    }
+
+    int len = zmq_msg_recv(madr,_socket,ZMQ_DONTWAIT);
+    if (len<0)
+    {
+      int err = zmq_errno();
+      if(err!=EAGAIN) {
+        THROW("Error in zmq_msg_recv(): error: "<<err);
+      }
+    }
+    else if(len==0) {
+      THROW("Error in zmq_msg_recv(): received a message with length 0.");
+    }
+
+    ArrayResize( data, len );
+
+    long dest = getMemAddress(data);
+    long src = zmq_msg_data(madr);
+
+    memcpy(dest,src,len);
+
+    // Close that message:
+    res = zmq_msg_close(madr);
+    if(res!=0)
+    {
+      THROW("Cannot close ZMQ message: error "<<zmq_errno());      
+    }    
+  }
 };
 

@@ -2,6 +2,9 @@
 
 // Bindings for zeromq direct usage:
 
+#import "msvcrt.dll"
+  long memcpy(long dst, long src, long cnt);
+  long memcpy(const char &dst[], const char &src[], long cnt);
 #import "libzmq.dll"
 int zmq_errno (void);
 // void zmq_version (int *major, int *minor, int *patch);
@@ -16,19 +19,40 @@ int zmq_ctx_get (long context, int option);
 long zmq_socket (long context, int type);
 int zmq_close (long s);
 int zmq_connect (long s, const char &addr[]);
-
-int zmq_setsockopt (long s, int option, const char &optval[], long optvallen);
-int zmq_getsockopt (long s, int option, char &optval[], long &optvallen[]);
 int zmq_bind (long s, const char &addr[]);
-int zmq_unbind (long s, const char &addr[]);
-int zmq_disconnect (long s, const char &addr[]);
-int zmq_send (long s, const char &buf[], long len, int flags);
-int zmq_send_const (long s, const char &buf[], long len, int flags);
-int zmq_recv (long s, char &buf[], long len, int flags);
-int zmq_socket_monitor (long s, const char &addr[], int events);
 
-int zmq_poll (char &items[], int nitems, long timeout);
+int zmq_send (long s, const char &buf[], long len, int flags);
+int zmq_recv (long s, char &buf[], long len, int flags);
+
+int zmq_msg_init (long msg);
+int zmq_msg_init_size (long msg, long size);
+int zmq_msg_send (long msg, long s, int flags);
+int zmq_msg_recv (long msg, long s, int flags);
+int zmq_msg_close (long msg);
+long zmq_msg_data (long msg);
+long zmq_msg_size (long msg);
+
+// int zmq_msg_move (long dest, long src);
+// int zmq_msg_copy (long dest, long src);
+
+// int zmq_setsockopt (long s, int option, const char &optval[], long optvallen);
+// int zmq_getsockopt (long s, int option, char &optval[], long &optvallen[]);
+// int zmq_unbind (long s, const char &addr[]);
+// int zmq_disconnect (long s, const char &addr[]);
+// int zmq_send_const (long s, const char &buf[], long len, int flags);
+// int zmq_socket_monitor (long s, const char &addr[], int events);
+
+// int zmq_poll (char &items[], int nitems, long timeout);
 #import
+
+long getMemAddress(const char &array[])
+{
+	return memcpy(array,array,0);
+}
+
+struct zmq_msg_stream {
+	uchar data[64];
+};
 
 /*  Context options                                                           */
 #define ZMQ_IO_THREADS  1

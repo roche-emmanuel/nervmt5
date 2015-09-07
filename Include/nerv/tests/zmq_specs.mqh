@@ -60,7 +60,7 @@ BEGIN_TEST_CASE("Should be able to bind a socket")
   socket.bind("tcp://*:22222");
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("Should be able to send/receive a message")
+BEGIN_TEST_CASE("Should be able to send/receive with simple commands")
   nvZMQSocket client(ZMQ_PUSH);
 	client.connect("tcp://localhost:22222");  
   nvZMQSocket server(ZMQ_PULL);
@@ -81,6 +81,29 @@ BEGIN_TEST_CASE("Should be able to send/receive a message")
   string msg2 = CharArrayToString(ch);
   ASSERT_EQUAL(msg1,msg2);
 END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to send/receive with a message")
+  nvZMQSocket client(ZMQ_PUSH);
+  client.connect("tcp://localhost:22222");  
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22222");
+
+  string msg1 = "Hello world!";
+  char ch1[];
+  StringToCharArray(msg1,ch1);
+  client.send(ch1);
+
+  Sleep(10); // We add some sleep to ensure the underlying IO threads gets
+  // the time to send the message.
+
+  char ch[];
+  server.receive(ch);
+  int len = ArraySize( ch );
+  ASSERT_EQUAL(len,13);
+  string msg2 = CharArrayToString(ch);
+  ASSERT_EQUAL(msg1,msg2);
+END_TEST_CASE()
+
 
 END_TEST_SUITE()
 
