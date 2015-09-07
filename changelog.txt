@@ -268,3 +268,4 @@ But we need the fix for issue #29 first.
 09/07/15-19:47:31: Working on issue #35: Adding support for simple send/receive
 09/07/15-19:50:16: Renamed the send/receive methods to simple_send/simple_receive.
 09/07/15-20:32:24: Added initial implementation for message support in zmq socket.
+09/07/15-20:36:46: Using a single instance of the zmq message object in the socket class.

@@ -12,12 +12,19 @@ class nvZMQSocket : public nvObject
 protected:
   long _socket;
 
+  // Store a message object
+  zmq_msg_stream _msgObject;
+  long _msg;
+
 public:
   /*
     Class constructor.
   */
   nvZMQSocket(int type)
   {
+    // Retrieve the address of the message object:
+    _msg = getMemAddress(_msgObject.data);
+
     _socket = 0;
     open(type);
   }
@@ -177,18 +184,14 @@ public:
       return; // nothing to send.
 
     // Otherwise we try to send the data:
-    // Create a message object:
-    zmq_msg_stream msg;
-    long madr = getMemAddress(msg.data);
-
-    int res = zmq_msg_init_size(madr,len);
+    int res = zmq_msg_init_size(_msg,len);
     if (res!=0)
     {
       THROW("Cannot init ZMQ message: error "<<zmq_errno());
     }
 
     // Copy the actual data into the message:
-    long dest = zmq_msg_data(madr);
+    long dest = zmq_msg_data(_msg);
     CHECK(dest!=0,"Invalid data address.");
 
     long src = getMemAddress(data);
@@ -196,13 +199,13 @@ public:
     memcpy(dest,src,len);
 
     // Now we can send the message:
-    int len2 = zmq_msg_send(madr,_socket,ZMQ_DONTWAIT);
+    int len2 = zmq_msg_send(_msg,_socket,ZMQ_DONTWAIT);
     if (len2!=len) {
       THROW("Error in zmq_send(): error "<<zmq_errno());
     }
 
     // Close that message:
-    res = zmq_msg_close(madr);
+    res = zmq_msg_close(_msg);
     if(res!=0)
     {
       THROW("Cannot close ZMQ message: error "<<zmq_errno());      
@@ -220,16 +223,13 @@ public:
 
     // Prepare a message object:
     // Create a message object:
-    zmq_msg_stream msg;
-    long madr = getMemAddress(msg.data);
-
-    int res = zmq_msg_init(madr);
+    int res = zmq_msg_init(_msg);
     if (res!=0)
     {
       THROW("Cannot init ZMQ message: error "<<zmq_errno());
     }
 
-    int len = zmq_msg_recv(madr,_socket,ZMQ_DONTWAIT);
+    int len = zmq_msg_recv(_msg,_socket,ZMQ_DONTWAIT);
     if (len<0)
     {
       int err = zmq_errno();
@@ -244,12 +244,12 @@ public:
     ArrayResize( data, len );
 
     long dest = getMemAddress(data);
-    long src = zmq_msg_data(madr);
+    long src = zmq_msg_data(_msg);
 
     memcpy(dest,src,len);
 
     // Close that message:
-    res = zmq_msg_close(madr);
+    res = zmq_msg_close(_msg);
     if(res!=0)
     {
       THROW("Cannot close ZMQ message: error "<<zmq_errno());      
