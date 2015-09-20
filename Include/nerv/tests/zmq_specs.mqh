@@ -229,6 +229,31 @@ BEGIN_TEST_CASE("Should return nothing if there is no data to receive")
   ASSERT_EQUAL(ArraySize( data ),0);  
 END_TEST_CASE()
 
+XBEGIN_TEST_CASE("Should be able to send data to lua")
+  nvZMQContext::instance().uninit();
+
+  nvZMQSocket client(ZMQ_PUSH);
+  client.connect("tcp://localhost:22223");  
+
+  char ch[];
+  StringToCharArray("Hello Manu! It's me!\nHow have you bean ?\n",ch);
+  client.send(ch);
+  Sleep( 5 );
+
+  client.close();
+
+  nvZMQSocket client2(ZMQ_PUSH);
+  client2.connect("tcp://localhost:22223");  
+
+  StringToCharArray("You are too strong!\n",ch);
+  client2.send(ch);
+
+  Sleep( 5 );
+  client2.close();
+  
+  nvZMQContext::instance().uninit();
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
