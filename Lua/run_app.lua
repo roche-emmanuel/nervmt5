@@ -16,8 +16,8 @@ end
 local path = getPath(scriptFile)
 -- print("Using path: ",path)
 
-print("OS: ", jit.os)
-print("arch: ", jit.arch)
+-- print("OS: ", jit.os)
+-- print("arch: ", jit.arch)
 
 local flavor=""
 if jit.os=="Windows" and jit.arch=="x64" then
@@ -27,9 +27,9 @@ else
 end
 
 root_path = path
-print("Root path: ", root_path)
+-- print("Root path: ", root_path)
 
-package.path = path.."?.lua;"..path.."?/init.lua;"..path.."packages/?.lua;"..package.path
+package.path = path.."?.lua;"..path.."?/init.lua;"..path.."modules/?.lua;"..path.."packages/?.lua;"..package.path
 package.cpath = path.."bin/"..flavor.."/modules/?.dll;".. path.."bin/"..flavor.."/modules/?51.dll;" ..package.cpath
 
 -- if the appfile contains a final .lua extension then we remove it:
