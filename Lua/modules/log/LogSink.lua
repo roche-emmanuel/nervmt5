@@ -22,7 +22,7 @@ Parameters:
 function LogSink(options)
 ]=]
 function Class:initialize(options)
-	self._name = type(options)=="string" and options or options.name
+	self._name = type(options)=="table" and options.name or options
 end
 
 --[[

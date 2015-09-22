@@ -274,3 +274,4 @@ But we need the fix for issue #29 first.
 09/07/15-21:40:39: Added waiting support in socket tests to avoid some retrieval errors.
 09/20/15-22:56:27: Added binaries for Lua app.
 09/22/15-00:44:47: Working on issue #38: added pure lua Log manager.
+09/23/15-00:24:42: Added support for gui log sink. Added support for visual styles.
