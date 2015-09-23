@@ -26,11 +26,14 @@ Parameters:
 function MT5Control(options)
 ]=]
 function Class:initialize(options)
+	self._reload = false
+
 	-- Main Application GUI.
-	-- We should add a button line for simple tests:
+
+	local reload_btn = iup.button{title = "Reload"} --, image=im:getImage("refresh")}
 	local test_btn = iup.button{title = "Test"} --, image=im:getImage("refresh")}
 
-	local line = iup.vbox { test_btn, gap=2, alignment="acenter"}
+	local line = iup.hbox { reload_btn, test_btn, gap=2, alignment="acenter"}
 
 	local logArea = iup.multiline{expand = "YES", appendnewline="yes", formatting="yes"}
 
@@ -40,8 +43,15 @@ function Class:initialize(options)
 	dlg = iup.dialog{col; title="MT5 Control", size="400x200"}
 	dlg:show()
 
+	reload_btn.action = function()
+		self._reload = true
+		dlg:destroy()
+		return iup.CLOSE
+	end
+
 	test_btn.action = function()
 		self:debug("Should print this line.")
+		self:debug("Timetag: ", os.time())
   end
 end
 
@@ -64,18 +74,11 @@ function Class:createLogSink(target)
 
 	function LogClass:output(level,trace,msg)
 		target.addformattag = iup.user { fgcolor = levelColors[level] or "0 0 0" }
-
-		-- We should remove the content if found:
-		-- (in W:\Cloud\INSYEN\Projects\VBSSim3\sources\plug_core2\src\plug_common.cpp at line 5)
-		-- msg = msg:gsub("%(in .-\\plug_core2\\src\\plug_common%.cpp at line 5%) ","")
-		-- msg = msg:gsub("%(in .-\\plug_core2\\src\\plug_common%.cpp at line 9%) ","")
-		-- msg = msg:gsub("%(in .-\\plug_core2\\src\\plug_common%.cpp at line 13%) ","")
-		-- msg = msg:gsub("%(in .-\\plug_core2\\src\\plug_common%.cpp at line 17%) ","")
 		target.append = msg
 	end
 	
 	lm:removeAllSinks()
-	
+
 	-- Connect the log sink:
 	lm:addSink(LogClass())
 end
@@ -93,6 +96,8 @@ function Class:run()
 
 	-- release the log manager:
 	lm:release()
+
+	return self._reload
 end
 
 -- return singleton:
