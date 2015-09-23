@@ -1,10 +1,14 @@
 local Class = createClass{name="MT5Control",bases={"base.Object"}};
 
-require( "iuplua" )
-require( "cdlua" )
-require( "iupluacontrols" )
+require "iuplua"
+require "cdlua"
+require "imlua"
+require "imlua_process"
+require "iupluaim"
+require "iupluacontrols"
 
 local lm = require "log.LogManager"
+local im = require "gui.ImageManager"
 
 --[[
 Class: gui.MT5Control
@@ -30,8 +34,8 @@ function Class:initialize(options)
 
 	-- Main Application GUI.
 
-	local reload_btn = iup.button{title = "Reload"} --, image=im:getImage("refresh")}
-	local test_btn = iup.button{title = "Test"} --, image=im:getImage("refresh")}
+	local reload_btn = iup.button{title = "Reload", image=im:getImage("refresh")}
+	local test_btn = iup.button{title = "Test", image=im:getImage("test")}
 
 	local line = iup.hbox { reload_btn, test_btn, gap=2, alignment="acenter"}
 
@@ -39,8 +43,8 @@ function Class:initialize(options)
 
 	self:createLogSink(logArea)
 
-	local col = iup.vbox { line, logArea, gap=2 }
-	dlg = iup.dialog{col; title="MT5 Control", size="400x200"}
+	local col = iup.vbox { line, logArea, gap=2, margin="1x1" }
+	dlg = iup.dialog{col; title="MT5 Control", size="400x200", icon=im:getImage("nerv")}
 	dlg:show()
 
 	reload_btn.action = function()
