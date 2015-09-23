@@ -9,6 +9,7 @@ require "iupluacontrols"
 
 local lm = require "log.LogManager"
 local im = require "gui.ImageManager"
+local zmq = require "zmq"
 
 --[[
 Class: gui.MT5Control
@@ -33,7 +34,6 @@ function Class:initialize(options)
 	self._reload = false
 
 	-- Main Application GUI.
-
 	local reload_btn = iup.button{title = "Reload", image=im:getImage("refresh")}
 	local test_btn = iup.button{title = "Test", image=im:getImage("test")}
 
@@ -54,8 +54,68 @@ function Class:initialize(options)
 	end
 
 	test_btn.action = function()
-		self:debug("Should print this line.")
-		self:debug("Timetag: ", os.time())
+		self:debug("Sending message...")
+
+		PROTECT(function()
+			-- Create a ZMQ client and send data:
+		  local client = zmq.socket(zmq.PUSH);
+		  client:connect("tcp://localhost:22223");
+
+		  client:send("Hello world!")
+		  -- client:close()
+	  end)
+  end
+
+	self:initSockets()
+	self:initTimer()
+
+  self:debug("MT5 control ready.")
+end
+
+--[[
+Function: initSockets
+
+Methoc called during initialization to setup the ZMQ sockets
+]]
+function Class:initSockets()
+	PROTECT(function()
+		self._server = zmq.socket(zmq.PULL)
+
+		self:debug("Binding server...")
+		self._server:bind("tcp://*:22223")
+	end)
+end
+
+--[[
+Function: initTimer
+
+Methoc called during initialization to setup the timer for
+ZMQ reception:
+]]
+function Class:initTimer()
+	self._timer = iup.timer{time=50}
+
+
+	self._timer.action_cb = function()
+		PROTECT(function()
+			self:onTimer()
+		end)
+	end	
+
+	self._timer.run = "yes"
+end
+
+--[[
+Function: onTimer
+
+Callbeck called to handle a timer event
+]]
+function Class:onTimer()
+	-- self:debug("Executing timer callback...")	
+  local msg = self._server:receive()
+
+  if msg then
+    self:debug("Received message of length ", #msg)
   end
 end
 
@@ -97,6 +157,12 @@ function Class:run()
 	if (iup.MainLoopLevel()==0) then
 	  iup.MainLoop()
 	end	
+
+	-- Stop the timer:
+	self._timer.run = "no"
+
+	-- close the server:
+	self._server:close()
 
 	-- release the log manager:
 	lm:release()

@@ -29,6 +29,13 @@ repeat
     end
   end
 
+  PROTECT = function(func)
+    local status, res = pcall(func)
+    if not status then
+      log:error("Error detected: ",res)
+    end
+  end
+
   config_file = "mt5_config"
 
   local app = require "gui.MT5Control"
