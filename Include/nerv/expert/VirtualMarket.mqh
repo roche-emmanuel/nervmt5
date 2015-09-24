@@ -87,6 +87,9 @@ public:
     CHECK(deal.getMarketType()==MARKET_TYPE_VIRTUAL,"Invalid deal market type");
 
     _balance += deal.getProfit();
+
+    // Call the parent implementation (to send the data on the ZMQ socket)
+    nvMarket::acknowledgeDeal(deal);
   }
 
   /*

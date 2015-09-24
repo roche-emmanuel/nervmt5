@@ -229,6 +229,24 @@ BEGIN_TEST_CASE("Should return nothing if there is no data to receive")
   ASSERT_EQUAL(ArraySize( data ),0);  
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to set Linger option on a socket")
+  nvZMQContext::instance().uninit();
+  nvZMQSocket socket(ZMQ_PUSH);
+
+  socket.connect("tcp://localhost:22221");  
+
+  char ch1[];
+  StringToCharArray("Hello world!",ch1);
+
+  socket.send(ch1);
+  Sleep(5);
+
+  // Now close the socket and stop:
+  socket.close();
+  nvZMQContext::instance().uninit();  
+END_TEST_CASE()
+
+
 XBEGIN_TEST_CASE("Should be able to send data to lua")
   nvZMQContext::instance().uninit();
 
@@ -252,6 +270,27 @@ XBEGIN_TEST_CASE("Should be able to send data to lua")
   client2.close();
   
   nvZMQContext::instance().uninit();
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should convert properly int32 to structure")
+  int val[] = {1};
+  int32_stream opt;
+  ArrayFill(opt.data,0,4,0);  
+
+  long lval[] = {2};
+  long src2 = getMemAddress(lval);
+  logDEBUG("Read long address: "<<src2);
+
+  long src = getMemAddress(val);
+  logDEBUG("Read int address: "<<src);
+  long dest = getMemAddress(opt.data);
+
+  memcpy(dest,src,4);
+  // data is written in little endian :-)
+  ASSERT_EQUAL((int)opt.data[0],1);
+  ASSERT_EQUAL((int)opt.data[1],0);
+  ASSERT_EQUAL((int)opt.data[2],0);
+  ASSERT_EQUAL((int)opt.data[3],0);
 END_TEST_CASE()
 
 END_TEST_SUITE()

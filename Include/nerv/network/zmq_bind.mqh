@@ -4,6 +4,8 @@
 
 #import "msvcrt.dll"
   long memcpy(long dst, long src, long cnt);
+  long memcpy(const int &dst[], const int &src[], long cnt);
+  long memcpy(const long &dst[], const long &src[], long cnt);
   long memcpy(const char &dst[], const char &src[], long cnt);
 #import "libzmq.dll"
 int zmq_errno (void);
@@ -32,10 +34,11 @@ int zmq_msg_close (long msg);
 long zmq_msg_data (long msg);
 long zmq_msg_size (long msg);
 
+int zmq_setsockopt (long s, int option, const char &optval[], long optvallen);
+
 // int zmq_msg_move (long dest, long src);
 // int zmq_msg_copy (long dest, long src);
 
-// int zmq_setsockopt (long s, int option, const char &optval[], long optvallen);
 // int zmq_getsockopt (long s, int option, char &optval[], long &optvallen[]);
 // int zmq_unbind (long s, const char &addr[]);
 // int zmq_disconnect (long s, const char &addr[]);
@@ -50,8 +53,22 @@ long getMemAddress(const char &array[])
 	return memcpy(array,array,0);
 }
 
+long getMemAddress(const long &val[])
+{
+	return memcpy(val,val,0);
+}
+
+long getMemAddress(const int &val[])
+{
+	return memcpy(val,val,0);
+}
+
 struct zmq_msg_stream {
 	uchar data[64];
+};
+
+struct int32_stream {
+	uchar data[4];
 };
 
 /*  Context options                                                           */

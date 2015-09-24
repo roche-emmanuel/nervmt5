@@ -278,3 +278,4 @@ But we need the fix for issue #29 first.
 09/23/15-09:32:26: Working on issue #38: added initial support to reload the lua MT5 control app.
 09/23/15-21:59:57: Working on issue #40: added support for image manager.
 09/23/15-22:50:39: Working on issue #38: added support for ZMQ socket with an IUP timer.
+09/24/15-20:39:42: Working on issue #41: Added ZMQ socket in portfolio manager.

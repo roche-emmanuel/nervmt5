@@ -1,6 +1,8 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/math.mqh>
+#include <nerv/network/ZMQContext.mqh>
+#include <nerv/network/ZMQSocket.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -87,12 +89,21 @@ protected:
   // Price manager for this portfolio:
   nvPriceManager _priceManager;
 
+  // Pointer on the ZMQ socket to use in this portfolio manager:
+  nvZMQSocket* _socket;
+
 public:
   /*
     Class constructor.
   */
   nvPortfolioManager()
   {
+    _socket = new nvZMQSocket(ZMQ_PUSH);
+    _socket.setOption(ZMQ_LINGER,0);
+    
+    // connect the socket:
+    _socket.connect("tcp://localhost:22223");
+
     // Initiliaze state (and efficiency value):
     reset();
 
@@ -126,6 +137,8 @@ public:
   ~nvPortfolioManager()
   {
     reset();
+
+    RELEASE_PTR(_socket);
   }
   
   /*
@@ -426,7 +439,6 @@ public:
     // Initialize the next Trader ID;
     _nextTraderID = 10000;
 
-
     // Reset current time:
     _currentTime = TimeCurrent(); // This should be overriden anyway.
 
@@ -558,4 +570,28 @@ public:
     // And that should be our new efficiency factor:
     _utilityEfficiencyFactor = 2.0*corr;
   }  
+
+  /*
+  Function: sendData
+  
+  Method used to send data on the ZMQ socket connection
+  */
+  void sendData(const char &data[])
+  {
+    _socket.send(data);
+  }
+
+  /*
+  Function: sendData
+  
+  Overloaded method to send data on the ZMQ socket connection
+  */
+  void sendData(string data)
+  {
+    char ch1[];
+    StringToCharArray(data,ch1);
+    sendData(ch1);
+  }
+  
+  
 };

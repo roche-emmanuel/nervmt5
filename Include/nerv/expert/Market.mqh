@@ -213,7 +213,9 @@ public:
   */
   virtual void acknowledgeDeal(nvDeal* deal)
   {
-    // No op by default.
+    // send the current balance value on the socket:
+    double val = getBalance();
+    getManager().sendData("Balance updated to: "+(string)val);
   }
   
   /*

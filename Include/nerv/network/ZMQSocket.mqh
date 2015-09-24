@@ -264,5 +264,35 @@ public:
 
     return MathMax(len,0);
   }
+
+  /*
+  Function: setOption
+  
+  Method to set an option on this socket
+  */
+  void setOption(int id, int value)
+  {
+    CHECK(_socket!=0,"Invalid socket.")
+
+    // Set an option as an integer:
+    int32_stream opt;
+    ArrayFill(opt.data,0,4,0);
+
+    // Need to turn the int value into an array:
+    int arr[1];
+    arr[0] = value;
+
+    long src = getMemAddress(arr);
+    long dest = getMemAddress(opt.data);
+
+    memcpy(dest,src,4);
+
+    int res = zmq_setsockopt(_socket, id, opt.data, 4);
+    if(res!=0)
+    {
+      THROW("Cannot set ZMQ socket option: error "<<zmq_errno());
+    }
+  }
+  
 };
 
