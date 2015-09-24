@@ -35,9 +35,10 @@ function Class:initialize(options)
 
 	-- Main Application GUI.
 	local reload_btn = iup.button{title = "Reload", image=im:getImage("refresh")}
+	local clear_btn = iup.button{title = "Clear", image=im:getImage("delete")}
 	local test_btn = iup.button{title = "Test", image=im:getImage("test")}
 
-	local line = iup.hbox { reload_btn, test_btn, gap=2, alignment="acenter"}
+	local line = iup.hbox { reload_btn, clear_btn, test_btn, gap=2, alignment="acenter"}
 
 	local logArea = iup.multiline{expand = "YES", appendnewline="yes", formatting="yes"}
 
@@ -51,6 +52,10 @@ function Class:initialize(options)
 		self._reload = true
 		dlg:destroy()
 		return iup.CLOSE
+	end
+
+	clear_btn.action = function()
+		logArea.value = ""
 	end
 
 	test_btn.action = function()
