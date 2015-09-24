@@ -113,9 +113,9 @@ Callbeck called to handle a timer event
 function Class:onTimer()
 	-- self:debug("Executing timer callback...")	
   local msg = self._server:receive()
-
-  if msg then
-    self:debug("Received message of length ", #msg)
+  while msg do
+  	self:debug("Received message: '",msg,"' (length=",#msg,")")
+  	msg = self._server:receive()
   end
 end
 
