@@ -234,7 +234,8 @@ BEGIN_TEST_CASE("Should be able to set Linger option on a socket")
   nvZMQSocket socket(ZMQ_PUSH);
 
   socket.connect("tcp://localhost:22221");  
-
+  socket.setOption(ZMQ_LINGER,0);
+  
   char ch1[];
   StringToCharArray("Hello world!",ch1);
 

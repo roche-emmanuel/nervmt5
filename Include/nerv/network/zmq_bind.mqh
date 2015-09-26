@@ -6,6 +6,7 @@
   long memcpy(long dst, long src, long cnt);
   long memcpy(const int &dst[], const int &src[], long cnt);
   long memcpy(const long &dst[], const long &src[], long cnt);
+  long memcpy(const double &dst[], const double &src[], long cnt);
   long memcpy(const char &dst[], const char &src[], long cnt);
 #import "libzmq.dll"
 int zmq_errno (void);
@@ -53,6 +54,11 @@ long getMemAddress(const char &array[])
 	return memcpy(array,array,0);
 }
 
+long getMemAddress(const double &val[])
+{
+	return memcpy(val,val,0);
+}
+
 long getMemAddress(const long &val[])
 {
 	return memcpy(val,val,0);
@@ -69,6 +75,10 @@ struct zmq_msg_stream {
 
 struct int32_stream {
 	uchar data[4];
+};
+
+struct double_stream {
+	uchar data[8];
 };
 
 /*  Context options                                                           */
