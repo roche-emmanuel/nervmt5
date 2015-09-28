@@ -282,3 +282,4 @@ But we need the fix for issue #29 first.
 09/24/15-21:03:33: Working on issue #41: ensuring that we process as many messages as possible on each timer callback call.
 09/24/15-21:56:02: Added a button to clear the log area.
 09/26/15-12:44:20: Working on issue #37: adding implementation for BinStream.
+09/28/15-23:02:14: Working on issue #43: added initial support for vstruct. Now Need to ass unit tests.
