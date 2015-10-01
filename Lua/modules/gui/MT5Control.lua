@@ -37,10 +37,11 @@ function Class:initialize(options)
 	local reload_btn = iup.button{title = "Reload", image=im:getImage("refresh")}
 	local clear_btn = iup.button{title = "Clear", image=im:getImage("delete")}
 	local test_btn = iup.button{title = "Test", image=im:getImage("test")}
+	local unittest_btn = iup.button{title = "UnitTests", image=im:getImage("check")}
 
-	local line = iup.hbox { reload_btn, clear_btn, test_btn, gap=2, alignment="acenter"}
+	local line = iup.hbox { reload_btn, clear_btn, unittest_btn, test_btn, gap=2, alignment="acenter"}
 
-	local logArea = iup.multiline{expand = "YES", appendnewline="yes", formatting="yes"}
+	local logArea = iup.multiline{expand = "YES", appendnewline="no", formatting="yes"}
 
 	self:createLogSink(logArea)
 
@@ -71,10 +72,64 @@ function Class:initialize(options)
 	  end)
   end
 
+	unittest_btn.action = function()
+		return self:performUnitTests(logArea)
+	end
+
 	self:initSockets()
 	self:initTimer()
 
   self:debug("MT5 control ready.")
+end
+
+--[[
+Function: performUnitTests
+
+Method used to perform the unit tests
+]]
+function Class:performUnitTests(logArea)
+	if self._unittest_co then
+		self:warn("Unit tests are already running.")
+		return iup.DEFAULT
+	end
+
+	self._unittest_co = nil
+	function on_idle()
+		if self._unittest_co then
+			-- self:debug("Resuming unit test coroutine...")
+			coroutine.resume(self._unittest_co)
+
+			if coroutine.status(self._unittest_co) == "dead" then
+				-- self:debug("Unit test coroutine is done.")
+				self._unittest_co = nil
+			end
+		else
+			iup.SetIdle(nil)
+			self:debug("Done executing unit tests.")
+		end
+	end
+
+	local threadfn = function()
+		local status,res = pcall(function()
+			-- ensure that we reload the test files before starting:
+			unloadModules{"tests%.","telescope%."}
+			-- place the caret at the end of the logArea control:
+			logArea.scrollto = (logArea.linecount+1)..":"..1
+
+			-- Then we execute the tests:
+			require "telescope.launcher" ()
+
+			-- place the caret at the end of the logArea control:
+			logArea.scrollto = (logArea.linecount+1)..":"..1
+		end)
+		if not status then
+			self:error("In test: ",res)
+		end	
+	end
+
+	self._unittest_co = coroutine.create(threadfn)
+	iup.SetIdle(on_idle)
+	return iup.DEFAULT
 end
 
 --[[
@@ -143,7 +198,7 @@ function Class:createLogSink(target)
 
 	function LogClass:output(level,trace,msg)
 		target.addformattag = iup.user { fgcolor = levelColors[level] or "0 0 0" }
-		target.append = msg
+		target.append = msg .. '\n'
 	end
 	
 	lm:removeAllSinks()

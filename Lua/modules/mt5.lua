@@ -1,5 +1,5 @@
 
-local unloadModules = function(tt)
+unloadModules = function(tt)
   for k,v in pairs(package.loaded) do
     for _,pattern in ipairs(tt) do
       if k:find(pattern) then
