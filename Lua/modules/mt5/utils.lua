@@ -23,4 +23,13 @@ utils.compare = function(lhs,rhs)
 	return true
 end
 
+string.toHex = function(msg)
+	local hex = {}
+	for i=1,#msg do
+		table.insert(hex,bit.tohex(string.byte(msg:sub(i,i)), -2))
+	end
+	
+	return table.concat(hex)
+end
+
 return utils

@@ -1,21 +1,8 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/PortfolioElement.mqh>
+#include <nerv/enums.mqh>
 
 class nvDeal;
-
-enum MarketType
-{
-  MARKET_TYPE_UNKNOWN,
-  MARKET_TYPE_REAL,
-  MARKET_TYPE_VIRTUAL,
-};
-
-enum PositionType
-{
-  POS_NONE,
-  POS_LONG,
-  POS_SHORT,
-};
 
 /*
 Class: nvMarket
@@ -215,7 +202,15 @@ public:
   {
     // send the current balance value on the socket:
     double val = getBalance();
-    getManager().sendData("Balance updated to: "+(string)val);
+    // getManager().sendData("Balance updated to: "+(string)val);
+
+    nvBinStream msg;
+    msg << (ushort)MSGTYPE_BALANCE_VALUE;
+    msg << (uchar)getMarketType();
+    msg << getManager().getCurrentTime();
+    msg << val;
+    
+    getManager().sendData(msg);
   }
   
   /*

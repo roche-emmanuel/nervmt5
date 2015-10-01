@@ -76,6 +76,9 @@ function Class:initialize(options)
 		return self:performUnitTests(logArea)
 	end
 
+	-- Allocate a Message handler component:
+	self._handler = require "network.MessageHandler" ()
+
 	self:initSockets()
 	self:initTimer()
 
@@ -173,8 +176,14 @@ Callbeck called to handle a timer event
 function Class:onTimer()
 	-- self:debug("Executing timer callback...")	
   local msg = self._server:receive()
+  local tt
   while msg do
-  	self:debug("Received message: '",msg,"' (length=",#msg,")")
+  	tt = self._handler:readMessage(msg)
+  	if tt then
+	  	self:debug("Received message: ",tt)
+	  else
+	  	self:warn("Cannot parse message: '", msg:toHex(),"', ascii: '",msg,"'")
+	  end
   	msg = self._server:receive()
   end
 end

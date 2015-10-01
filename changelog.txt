@@ -285,3 +285,4 @@ But we need the fix for issue #29 first.
 09/28/15-23:02:14: Working on issue #43: added initial support for vstruct. Now Need to ass unit tests.
 10/01/15-12:18:06: Working on issue #39: Added support for telescope unit tests.
 10/01/15-14:17:34: Working on issue #43: added Message Handler class to support reading/writing messages on lua side.
+10/01/15-16:15:36: Working on issue #44: Sending message in proper format for balance_value change.

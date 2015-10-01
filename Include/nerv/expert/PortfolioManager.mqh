@@ -1,8 +1,10 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/math.mqh>
+#include <nerv/enums.mqh>
 #include <nerv/network/ZMQContext.mqh>
 #include <nerv/network/ZMQSocket.mqh>
+#include <nerv/network/BinStream.mqh>
 
 // Maximum number of deals that can be stored in a CurrencyTrader:
 #define TRADER_MAX_NUM_DEALS 1000
@@ -591,6 +593,18 @@ public:
     char ch1[];
     StringToCharArray(data,ch1);
     sendData(ch1);
+  }
+  
+  /*
+  Function: sendData
+  
+  Overloaded method used to send BinStream objects.
+  */
+  void sendData(const nvBinStream& msg)
+  {
+    char data[];
+    msg.getBuffer(data);
+    sendData(data);
   }
   
   

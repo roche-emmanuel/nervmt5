@@ -1,12 +1,14 @@
 local Class = createClass{name="Enums",bases={"base.Object"}};
 
 -- List of message type:
-Class.MSGTYPE_BALANCE_VALUE = 1
+Class.MSGTYPE_UNKNOWN 				= 0
+Class.MSGTYPE_BALANCE_VALUE 	= 1
 
 
 -- Type of market:
-Class.MARKET_REAL 		= 0
-Class.MARKET_VIRTUAL 	= 1
+Class.MARKET_UNKNOWN 	= 0
+Class.MARKET_REAL 		= 1
+Class.MARKET_VIRTUAL 	= 2
 
 
 --[[

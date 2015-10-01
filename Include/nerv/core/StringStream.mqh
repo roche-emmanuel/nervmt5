@@ -42,6 +42,24 @@ public:
     return GetPointer(this);
   }
 
+  nvStringStream *operator<<(short rhs)
+  {
+    _buf += (string)rhs;
+    return GetPointer(this);
+  }
+
+  nvStringStream *operator<<(ushort rhs)
+  {
+    _buf += (string)rhs;
+    return GetPointer(this);
+  }
+
+  nvStringStream *operator<<(uchar rhs)
+  {
+    _buf += (string)rhs;
+    return GetPointer(this);
+  }
+
   nvStringStream *operator<<(int rhs)
   {
     _buf += (string)rhs;

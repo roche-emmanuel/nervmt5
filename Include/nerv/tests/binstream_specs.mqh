@@ -139,6 +139,76 @@ BEGIN_TEST_CASE("Should be able to read/write a bool or char")
   ASSERT_EQUAL((int)cval,(int)rcval);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to read/write a short")
+  nvBinStream stream;
+
+  short val1 = 12345;
+  short val2 = 12346;
+
+  stream << val1 << val2;
+
+  ASSERT_EQUAL(stream.size(),4);
+
+  stream.resetPos();
+
+  short rval1, rval2;
+  stream >> rval1 >> rval2;
+  ASSERT_EQUAL(val1,rval1);
+  ASSERT_EQUAL(val2,rval2);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to read/write a ushort")
+  nvBinStream stream;
+
+  ushort val1 = 32345;
+  ushort val2 = 62346;
+
+  stream << val1 << val2;
+
+  ASSERT_EQUAL(stream.size(),4);
+
+  stream.resetPos();
+
+  ushort rval1, rval2;
+  stream >> rval1 >> rval2;
+  ASSERT_EQUAL(val1,rval1);
+  ASSERT_EQUAL(val2,rval2);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to read/write a uchar")
+  nvBinStream stream;
+
+  uchar val1 = 240;
+  uchar val2 = 255;
+
+  stream << val1 << val2;
+
+  ASSERT_EQUAL(stream.size(),2);
+
+  stream.resetPos();
+
+  uchar rval1, rval2;
+  stream >> rval1 >> rval2;
+  ASSERT_EQUAL(val1,rval1);
+  ASSERT_EQUAL(val2,rval2);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should be able to read/write a datetime")
+  nvBinStream stream;
+
+  datetime t = TimeLocal();
+
+  stream << t;
+
+  ASSERT_EQUAL(stream.size(),9);
+
+  stream.resetPos();
+
+  datetime t2;
+  stream >> t2;
+  ASSERT_EQUAL(t,t2);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

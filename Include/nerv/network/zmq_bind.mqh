@@ -4,6 +4,7 @@
 
 #import "msvcrt.dll"
   long memcpy(long dst, long src, long cnt);
+  long memcpy(const short &dst[], const short &src[], long cnt);
   long memcpy(const int &dst[], const int &src[], long cnt);
   long memcpy(const long &dst[], const long &src[], long cnt);
   long memcpy(const double &dst[], const double &src[], long cnt);
@@ -50,6 +51,11 @@ int zmq_setsockopt (long s, int option, const char &optval[], long optvallen);
 #import
 
 long getMemAddress(const char &array[])
+{
+	return memcpy(array,array,0);
+}
+
+long getMemAddress(const short &array[])
 {
 	return memcpy(array,array,0);
 }
