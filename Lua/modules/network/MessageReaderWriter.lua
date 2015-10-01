@@ -1,9 +1,9 @@
-local Class = createClass{name="MessageHandler",bases={"network.Serializer"}};
+local Class = createClass{name="MessageReaderWriter",bases={"network.Serializer"}};
 
 local enums = require "mt5.Enums"
 
 --[[
-Class: network.MessageHandler
+Class: network.MessageReaderWriter
 
 This class is used to read/write messages from MT5 app.
 
@@ -12,14 +12,14 @@ This class inherits from <network.Serializer>.
 
 --[=[
 --[[
-Constructor: MessageHandler
+Constructor: MessageReaderWriter
 
 Create a new instance of the class.
 
 Parameters:
 	 No parameter
 ]]
-function MessageHandler(options)
+function MessageReaderWriter(options)
 ]=]
 function Class:initialize(options)
 	-- list of static schemas	

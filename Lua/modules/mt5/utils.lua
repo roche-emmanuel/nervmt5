@@ -23,6 +23,34 @@ utils.compare = function(lhs,rhs)
 	return true
 end
 
+function utils.addToSet(t,obj)
+	for i=1,#t do
+		if t[i]==obj then
+			return false
+		end
+	end
+
+	t[#t+1] = obj
+	return true
+end
+
+function utils.removeFromSet(t,obj)
+	local rm = table.remove
+	for i=1,#t do
+		if t[i] == obj then
+			return rm(t,i)
+		end
+	end
+end
+
+function utils.clearTable(t)
+	local rm = table.remove
+	for i=#t,1,-1 do
+		rm(t,i)
+	end
+end
+
+
 string.toHex = function(msg)
 	local hex = {}
 	for i=1,#msg do

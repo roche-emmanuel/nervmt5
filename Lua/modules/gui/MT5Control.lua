@@ -6,10 +6,14 @@ require "imlua"
 require "imlua_process"
 require "iupluaim"
 require "iupluacontrols"
+require "iuplua_plot"
 
 local lm = require "log.LogManager"
 local im = require "gui.ImageManager"
 local zmq = require "zmq"
+local Enums = require "mt5.Enums"
+
+local evtman = require "base.EventManager"
 
 --[[
 Class: gui.MT5Control
@@ -45,7 +49,8 @@ function Class:initialize(options)
 
 	self:createLogSink(logArea)
 
-	local col = iup.vbox { line, logArea, gap=2, margin="1x1" }
+	local tabs = self:buildMainTabs()
+	local col = iup.vbox { tabs, line, logArea, gap=2, margin="1x1" }
 	dlg = iup.dialog{col; title="MT5 Control", size="400x200", icon=im:getImage("nerv")}
 	dlg:show()
 
@@ -77,12 +82,29 @@ function Class:initialize(options)
 	end
 
 	-- Allocate a Message handler component:
-	self._handler = require "network.MessageHandler" ()
+	self._msgrw = require "network.MessageReaderWriter" ()
 
 	self:initSockets()
 	self:initTimer()
 
   self:debug("MT5 control ready.")
+end
+
+--[[
+Function: buildMainTabs
+
+Method used to build the main tabs of the app
+]]
+function Class:buildMainTabs()
+	local BalancePlot = require "gui.BalancePlot"
+	self._virtualBalance = BalancePlot()
+
+	local vbPanel = self._virtualBalance:getPanel()
+	vbPanel.tabtitle = "Virtual Balance"
+	
+	local tabs = iup.tabs{vbPanel, expand="yes"}
+
+	return tabs
 end
 
 --[[
@@ -178,9 +200,10 @@ function Class:onTimer()
   local msg = self._server:receive()
   local tt
   while msg do
-  	tt = self._handler:readMessage(msg)
+  	tt = self._msgrw:readMessage(msg)
   	if tt then
-	  	self:debug("Received message: ",tt)
+	  	-- self:debug("Received message: ",tt)
+  		evtman:fireEvent("msg_" .. tt.mtype,tt)
 	  else
 	  	self:warn("Cannot parse message: '", msg:toHex(),"', ascii: '",msg,"'")
 	  end

@@ -1,7 +1,7 @@
-describe("MessageHandler behavior", function()
+describe("MessageReaderWriter behavior", function()
 
   it("Should support writing/reading balance_value messages", function()
-    local handler = require "network.MessageHandler" ()
+    local handler = require "network.MessageReaderWriter" ()
     local enums = require "mt5.Enums"
     local utils = require "mt5.utils"
 
