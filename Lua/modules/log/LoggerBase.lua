@@ -1,6 +1,7 @@
 local Class = createClass{name="LoggerBase",bases={}};
 
 local lm = require "log.LogManager"
+local serpent = require "serpent"
 
 local levels = {}
 levels.fatal = lm.SEV_FATAL
@@ -76,7 +77,8 @@ end
 function Class:writeItem(item)
 	if type(item) == "table" then
 		-- concatenate table:
-		return item.__tostring and tostring(item) or self:writeTable(item)
+		-- return item.__tostring and tostring(item) or self:writeTable(item)
+		return item.__tostring and tostring(item) or serpent.block(item,{comment = false, numformat="%.8g"})
 	else
 		-- simple concatenation:
 		return tostring(item);
@@ -93,6 +95,7 @@ function Class:write(...)
 	for i=1,num do
 		local v = select(i, ...)
 		msg = msg .. (v~=nil and self:writeItem(v) or "<nil>")
+		-- msg = msg .. (v~=nil and serpent.block(v,{comment = false, numformat="%.8g"}) or "<nil>")
 	end
 	
 	return msg;
