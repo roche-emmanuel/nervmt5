@@ -2,6 +2,8 @@ local Class = createClass{name="Serializer",bases={"base.Object"}};
 
 local vstruct = require "vstruct.init"
 
+log:debug("Using vstruct version: ",vstruct._VERSION)	
+
 --[[
 Class: network.Serializer
 
@@ -30,7 +32,18 @@ Parameters:
 function Serializer(options)
 ]=]
 function Class:initialize(options)
-	-- self:debug("Using vstruct version: ",vstruct._VERSION)	
+end
+
+--[[
+Function: registerSplice
+
+Method used to register a splice on vstruct
+]]
+function Class:registerSplice(name,schema)
+	self:check(name,"Invalid splice name")
+	self:check(schema,"Invalid splice schema")
+
+	vstruct.compile(name, table.concat(schema," "))
 end
 
 --[[

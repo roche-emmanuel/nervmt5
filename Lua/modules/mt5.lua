@@ -13,7 +13,7 @@ end
 repeat
 
   -- Clean up any previous mess:
-  unloadModules{"gui%.","log%.","base%.","mt5_config"}
+  unloadModules{"gui%.","log%.","base%.","network%.","mt5%.","mt5_config"}
   collectgarbage('collect')
 
   -- global level definition of comment methods:
