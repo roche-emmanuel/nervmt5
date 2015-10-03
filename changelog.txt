@@ -290,3 +290,4 @@ But we need the fix for issue #29 first.
 10/01/15-23:18:22: Working on issue #38: Added initial support for display of the balance evolution in lua control app.
 10/03/15-08:49:21: Working on issue #38: only updating balance graph on timer event. Renamed balance_value event to balance_updated
 10/03/15-09:36:46: Working on issue #38: Added initial support for portfolio started message. Using linger=0 by default on ZMQ sockets.
+10/03/15-09:48:21: Working on issue #38: added support for configuration of the portfolio manager endpoint.

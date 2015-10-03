@@ -170,15 +170,19 @@ BEGIN_TEST_CASE("Should send the portfolio started message on start")
 
   // can we have multiple pull socket connected ??
   nvZMQSocket server(ZMQ_PULL);
-  server.bind("tcp://*:22223");
+  server.bind("tcp://*:22222");
 
-  nvPortfolioManager man;
+  nvPortfolioManager man("tcp://localhost:22222");
 
   Sleep(5);
 
   // Now try to read the message:
   char ch[];
-  ASSERT(server.receive(ch)>0);
+  while(server.receive(ch)==0)
+  {
+  	logDEBUG("Waiting for portfolio manager start event...");
+  	Sleep(5);
+  }
 
   nvBinStream msg(ch);
 

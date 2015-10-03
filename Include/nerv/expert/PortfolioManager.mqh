@@ -98,12 +98,12 @@ public:
   /*
     Class constructor.
   */
-  nvPortfolioManager()
+  nvPortfolioManager(string endpoint="tcp://localhost:22223")
   {
     _socket = new nvZMQSocket(ZMQ_PUSH);
     
     // connect the socket:
-    _socket.connect("tcp://localhost:22223");
+    _socket.connect(endpoint);
 
     // Initiliaze state (and efficiency value):
     reset();

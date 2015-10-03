@@ -212,7 +212,7 @@ END_TEST_CASE()
 BEGIN_TEST_CASE("Should support construction from existing buffer")
   string str = "Hello world";
   char ch[];
-  StringToCharArray(str,ch);
+  StringToCharArray(str,ch,0,11);
 
 
   char chsize[];
