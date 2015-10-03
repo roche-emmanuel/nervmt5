@@ -43,6 +43,8 @@ function Class:initialize(options)
 		"time:{ &timetag }",
 		"value:f8",
 	})
+
+	self:registerSchema(enums.MSGTYPE_PORTFOLIO_STARTED,{})
 end
 
 --[[

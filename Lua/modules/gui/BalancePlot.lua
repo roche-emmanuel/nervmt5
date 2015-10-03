@@ -29,21 +29,24 @@ function Class:initialize(options)
 	self._panel = iup.vbox{self._plot,gap=2}
 	self._panel.tabtitle="Balance Plot"
 
-	-- simple demo graph:
-	self._plot:Begin(0)
-	-- self._plot:Add(0, 0)
-	-- self._plot:Add(1, 1)
-	self._index = self._plot:End()
-
-	-- self:addSample(0,0)
-	-- self:addSample(1,2)
-
 	local x = 0
 	self:on("msg_" .. Class.MSGTYPE_BALANCE_UPDATED,function(msg)
 		-- self:debug("Should handle the balance value message here")
 		self:addSample(x,msg.value)		
 		x = x+1
 		self._updatedNeeded = true
+	end)
+
+	self:on("msg_" .. Class.MSGTYPE_PORTFOLIO_STARTED,function(msg)
+		self:debug("Starting a new portfolio...")
+		-- Here we should clear the datasets:
+		if self._index then
+			self._plot.remove = self._index
+			self._index = nil
+		end
+		
+		-- self._plot.current = self._index
+		-- self._plot.ds_count = 0
 	end)
 
 	self:on(Class.EVT_TIMER, function() 
@@ -60,6 +63,13 @@ Function: addSample
 Method used to add a sample
 ]]
 function Class:addSample(x,y)
+	if(not self._index) then
+		-- Need to create a dataset:
+		self:debug("Creating new dataset...")
+		self._plot:Begin(0)
+		self._index = self._plot:End()
+	end
+
 	self._plot:AddSamples(self._index, {x}, {y}, 1)
 end
 
