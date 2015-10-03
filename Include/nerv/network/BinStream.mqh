@@ -27,6 +27,17 @@ public:
   }
 
   /*
+  Function: nvBinStream
+  
+  Construction from existing data buffer
+  */
+  nvBinStream(const char& buf[])
+  {
+    init();
+    ArrayCopy( _data, buf );
+  }
+  
+  /*
     Copy constructor
   */
   nvBinStream(const nvBinStream& rhs)
@@ -40,7 +51,7 @@ public:
   */
   void operator=(const nvBinStream& rhs)
   {
-    // TODO duplicate the data here.
+    init();
     ArrayCopy( _data, rhs._data);
     _pos = rhs._pos;
   }

@@ -4,8 +4,9 @@ local Class = createClass{name="Enums",bases={"base.Object"}};
 Class.EVT_TIMER = "timer"
 
 -- List of message type:
-Class.MSGTYPE_UNKNOWN 				  = 0
-Class.MSGTYPE_BALANCE_UPDATED 	= 1
+Class.MSGTYPE_UNKNOWN 				  	= 0
+Class.MSGTYPE_BALANCE_UPDATED 		= 1
+Class.MSGTYPE_PORTFOLIO_STARTED 	= 2
 
 
 -- Type of market:

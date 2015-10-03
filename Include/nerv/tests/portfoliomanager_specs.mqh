@@ -165,6 +165,28 @@ BEGIN_TEST_CASE("Should provide a random generator")
   ASSERT_NOT_NULL(rnd);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should send the portfolio started message on start")
+  nvZMQContext::instance().uninit();
+
+  // can we have multiple pull socket connected ??
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22223");
+
+  nvPortfolioManager man;
+
+  Sleep(5);
+
+  // Now try to read the message:
+  char ch[];
+  ASSERT(server.receive(ch)>0);
+
+  nvBinStream msg(ch);
+
+  ushort mtype;
+  msg>>mtype;
+  ASSERT_EQUAL(mtype,(ushort)MSGTYPE_PORTFOLIO_STARTED);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

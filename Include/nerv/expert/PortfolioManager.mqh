@@ -101,7 +101,6 @@ public:
   nvPortfolioManager()
   {
     _socket = new nvZMQSocket(ZMQ_PUSH);
-    _socket.setOption(ZMQ_LINGER,0);
     
     // connect the socket:
     _socket.connect("tcp://localhost:22223");
@@ -436,6 +435,7 @@ public:
   */
   void reset()
   {
+
     removeAllCurrencyTraders();
 
     // Initialize the next Trader ID;
@@ -459,6 +459,12 @@ public:
 
     // initialize the virtual balance:
     _virtualMarket.setBalance(3000.0);
+
+    // Notify that a new portfolio is started:
+    nvBinStream msg;
+    msg << (ushort)MSGTYPE_PORTFOLIO_STARTED;
+    sendData(msg);
+
   }
 
   /*

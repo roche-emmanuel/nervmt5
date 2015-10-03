@@ -93,11 +93,18 @@ END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to send/receive with a message")
   // force complete uninit:
-  nvZMQContext::instance().uninit();
+  logDEBUG("Uninitializing context") 
+  nvZMQContext::instance().uninit(); // => was sometime freezing here.
+  // so we will always set LINGER = 0 by default on sockets.
 
+  logDEBUG("Creating ZMQ client")
   nvZMQSocket client(ZMQ_PUSH);
+  logDEBUG("connecting client")
   client.connect("tcp://localhost:22222");  
+
+  logDEBUG("Creating ZMQ server")
   nvZMQSocket server(ZMQ_PULL);
+  logDEBUG("binding server")  
   server.bind("tcp://*:22222");
 
   string msg1 = "Hello world!";
@@ -106,12 +113,16 @@ BEGIN_TEST_CASE("Should be able to send/receive with a message")
   client.send(ch1);
 
   char ch[];
+
+  logDEBUG("Waiting for reception")
   while(server.receive(ch)==0)
   {
     logDEBUG("Waiting...");
     Sleep(5); // We add some sleep to ensure the underlying IO threads gets
     // the time to send the message.    
   };
+
+  logDEBUG("Message received.")
 
   int len = ArraySize( ch );
   ASSERT_EQUAL(len,13);

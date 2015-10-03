@@ -90,6 +90,9 @@ public:
     // note that this method will throw an error in case the socket cannot
     // be created.
     _socket = nvZMQContext::instance().createSocket(type);
+
+    // Set linger to zero by default:
+    setOption(ZMQ_LINGER,0);
   }
   
   /*

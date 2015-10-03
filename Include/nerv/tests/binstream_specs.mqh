@@ -209,6 +209,29 @@ BEGIN_TEST_CASE("Should be able to read/write a datetime")
   ASSERT_EQUAL(t,t2);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should support construction from existing buffer")
+  string str = "Hello world";
+  char ch[];
+  StringToCharArray(str,ch);
+
+
+  char chsize[];
+  ArrayResize( chsize, 15 );
+  chsize[0]=11;
+  chsize[1]=0;
+  chsize[2]=0;
+  chsize[3]=0;
+
+  ArrayCopy( chsize, ch, 4);
+  ASSERT_EQUAL(ArraySize( chsize ),15);
+  
+  nvBinStream stream(chsize);
+
+  string val;
+  stream >> val;
+  ASSERT_EQUAL(val,str);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
