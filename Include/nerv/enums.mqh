@@ -3,7 +3,7 @@
 enum MessageType
 {
   MSGTYPE_UNKNOWN,
-  MSGTYPE_BALANCE_VALUE,
+  MSGTYPE_BALANCE_UPDATED,
 };
 
 enum MarketType

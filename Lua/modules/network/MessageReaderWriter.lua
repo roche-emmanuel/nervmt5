@@ -38,7 +38,7 @@ function Class:initialize(options)
 	})
 
 	-- register some the default schemas:
-	self:registerSchema(enums.MSGTYPE_BALANCE_VALUE,{
+	self:registerSchema(enums.MSGTYPE_BALANCE_UPDATED,{
 		"marketType:u1", -- market type should be either REAL or VIRTUAL for now
 		"time:{ &timetag }",
 		"value:f8",

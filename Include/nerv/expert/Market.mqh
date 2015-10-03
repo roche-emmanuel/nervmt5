@@ -205,7 +205,7 @@ public:
     // getManager().sendData("Balance updated to: "+(string)val);
 
     nvBinStream msg;
-    msg << (ushort)MSGTYPE_BALANCE_VALUE;
+    msg << (ushort)MSGTYPE_BALANCE_UPDATED;
     msg << (uchar)getMarketType();
     msg << getManager().getCurrentTime();
     msg << val;

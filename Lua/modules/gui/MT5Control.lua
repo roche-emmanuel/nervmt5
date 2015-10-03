@@ -209,6 +209,9 @@ function Class:onTimer()
 	  end
   	msg = self._server:receive()
   end
+
+  -- When done with processing the messages we notify the onTimer event
+  evtman:fireEvent(Enums.EVT_TIMER)
 end
 
 --[[

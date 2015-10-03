@@ -288,3 +288,4 @@ But we need the fix for issue #29 first.
 10/01/15-16:15:36: Working on issue #44: Sending message in proper format for balance_value change.
 10/01/15-16:22:06: Working on issue #44: using serpent to log table content.
 10/01/15-23:18:22: Working on issue #38: Added initial support for display of the balance evolution in lua control app.
+10/03/15-08:49:21: Working on issue #38: only updating balance graph on timer event. Renamed balance_value event to balance_updated

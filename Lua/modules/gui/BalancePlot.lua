@@ -39,10 +39,18 @@ function Class:initialize(options)
 	-- self:addSample(1,2)
 
 	local x = 0
-	self:on("msg_" .. Class.MSGTYPE_BALANCE_VALUE,function(msg)
+	self:on("msg_" .. Class.MSGTYPE_BALANCE_UPDATED,function(msg)
 		-- self:debug("Should handle the balance value message here")
 		self:addSample(x,msg.value)		
 		x = x+1
+		self._updatedNeeded = true
+	end)
+
+	self:on(Class.EVT_TIMER, function() 
+		if self._updatedNeeded then
+			self._plot.redraw="yes"
+			self._updatedNeeded = false
+		end
 	end)
 end
 
@@ -53,7 +61,6 @@ Method used to add a sample
 ]]
 function Class:addSample(x,y)
 	self._plot:AddSamples(self._index, {x}, {y}, 1)
-	self._plot.redraw="yes"
 end
 
 --[[

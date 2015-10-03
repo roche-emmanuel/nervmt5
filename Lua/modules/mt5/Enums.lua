@@ -1,8 +1,11 @@
 local Class = createClass{name="Enums",bases={"base.Object"}};
 
+-- List of genering events:
+Class.EVT_TIMER = "timer"
+
 -- List of message type:
-Class.MSGTYPE_UNKNOWN 				= 0
-Class.MSGTYPE_BALANCE_VALUE 	= 1
+Class.MSGTYPE_UNKNOWN 				  = 0
+Class.MSGTYPE_BALANCE_UPDATED 	= 1
 
 
 -- Type of market:
