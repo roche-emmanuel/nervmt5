@@ -293,3 +293,4 @@ But we need the fix for issue #29 first.
 10/03/15-09:48:21: Working on issue #38: added support for configuration of the portfolio manager endpoint.
 10/03/15-23:20:18: Working on issue #38: Cleaning graph when receiving portfolio started event.
 10/09/15-16:03:57: Working on issue #45: sending message when updated trader weight.
+10/09/15-21:28:44: Fixed bug in currency trader utility computation.

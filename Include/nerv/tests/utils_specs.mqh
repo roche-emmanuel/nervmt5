@@ -85,6 +85,28 @@ BEGIN_TEST_CASE("Should be able to check if a symbol is valid")
   REQUIRE_EQUAL(nvIsSymbolValid("EURUSD"),true);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should properly test for empty arrays")
+  double arr[];
+  ArrayResize( arr, 0 );
+  SimpleRNG rng;
+  rng.SetSeedFromSystemTime();
+
+
+  ASSERT_EQUAL(nvIsEmpty(arr),true);
+
+  double val = rng.GetUniform();
+  nvAppendArrayElement(arr,val,10);
+  ASSERT_EQUAL(nvIsEmpty(arr),false);
+  ASSERT_EQUAL(ArraySize( arr ),1);
+
+  for(int i=0;i<20;++i) {
+    val = rng.GetUniform();
+    nvAppendArrayElement(arr,val,10);
+  }
+
+  ASSERT_EQUAL(nvIsEmpty(arr),false);
+  ASSERT_EQUAL(ArraySize( arr ),10);
+END_TEST_CASE()
 
 END_TEST_SUITE()
 

@@ -672,7 +672,7 @@ public:
 
     // We use the current server time as reference, and we compute the starting point of the window
     // from that:
-    datetime stopTime = TimeCurrent();
+    datetime stopTime = man.getCurrentTime();
     datetime startTime = stopTime-duration;
 
     // We now iterate in the deal history, and we compute the utility using only the deals that finished in that time
