@@ -1,6 +1,7 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/math.mqh>
+#include <nerv/math/Bootstrapper.mqh>
 #include <nerv/enums.mqh>
 #include <nerv/network/ZMQContext.mqh>
 #include <nerv/network/ZMQSocket.mqh>
@@ -291,7 +292,7 @@ public:
   void addProfitSample(double nominalProfit, double utility)
   {
     // logDEBUG("Adding profit sample: nominalProfit="<<nominalProfit<<", utility="<<utility);
-    
+
     nvAppendArrayElement(_dealUtilities,utility,EFFICIENCY_STATS_NUM_DEALS);
 
     nvAppendArrayElement(_dealProfits,nominalProfit,EFFICIENCY_STATS_NUM_DEALS);
