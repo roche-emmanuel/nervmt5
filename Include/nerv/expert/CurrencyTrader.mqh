@@ -319,7 +319,16 @@ public:
   void setWeight(double val)
   {
     CHECK(val>=0.0 && val<=1.0,"Invalid weight value: "<<val)
-    _weight = val;
+    if(val!=_weight) {
+      _weight = val;
+
+      // Also send the weight update message:
+      nvBinStream msg;
+      msg << (ushort)MSGTYPE_TRADER_WEIGHT_UPDATED;
+      msg << getSymbol();
+      msg << val;
+      getManager().sendData(msg);
+    }
   }
 
   /*

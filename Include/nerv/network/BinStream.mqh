@@ -180,7 +180,7 @@ public:
     return THIS;
   }  
 
-  nvBinStream *operator<<(const string &val)
+  nvBinStream *operator<<(string val)
   {
     int len = StringLen( val );
     this << len; // write the length.
@@ -191,6 +191,9 @@ public:
     // Copy the string data:
     ArrayCopy( _data, ch, _pos, 0, len );
 
+    // Advance the position:
+    _pos += len;
+    
     return THIS;
   }
 

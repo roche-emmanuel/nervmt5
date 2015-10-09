@@ -55,7 +55,7 @@ BEGIN_TEST_CASE("Should be able to connect a socket")
   nvZMQContext::instance().uninit();
 
   nvZMQSocket socket(ZMQ_PAIR);
-  socket.connect("tcp://localhost:22222");
+  socket.connect("tcp://localhost:22220");
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to bind a socket")

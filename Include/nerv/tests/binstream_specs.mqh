@@ -1,6 +1,7 @@
 
 #include <nerv/unit/Testing.mqh>
 #include <nerv/network/BinStream.mqh>
+#include <nerv/enums.mqh>
 
 BEGIN_TEST_PACKAGE(binstream_specs)
 
@@ -230,6 +231,34 @@ BEGIN_TEST_CASE("Should support construction from existing buffer")
   string val;
   stream >> val;
   ASSERT_EQUAL(val,str);
+END_TEST_CASE()
+
+
+BEGIN_TEST_CASE("Should be able to read/write a weight update message")
+
+  string symbol = "EURUSD";
+  double value = 0.5;
+
+  nvBinStream msg;
+  msg << (ushort)MSGTYPE_TRADER_WEIGHT_UPDATED;
+  ASSERT_EQUAL(msg.size(),2);
+  msg << symbol;
+  ASSERT_EQUAL(msg.size(),12);
+  msg << value;
+  ASSERT_EQUAL(msg.size(),20);
+
+  msg.resetPos();
+
+  ushort mtype;
+  string sym;
+  double val;
+
+  // msg>>mtype>>sym;
+  msg>>mtype>>sym>>val;
+
+  ASSERT_EQUAL(mtype,(ushort)MSGTYPE_TRADER_WEIGHT_UPDATED);
+  ASSERT_EQUAL(sym,"EURUSD");
+  ASSERT_EQUAL(val,0.5);
 END_TEST_CASE()
 
 END_TEST_SUITE()

@@ -54,7 +54,7 @@ BEGIN_TEST_CASE("Should connect to external server")
   nvSocket::initialize();
   {
 	  nvSocket socket;
-	  bool res = socket.connect("127.0.0.1",22222);
+	  bool res = socket.connect("127.0.0.1",22220);
 	  ASSERT_EQUAL(res,true);
 
 	  // Send a socket message:
