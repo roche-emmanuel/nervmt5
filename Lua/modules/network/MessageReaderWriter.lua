@@ -45,6 +45,11 @@ function Class:initialize(options)
 	})
 
 	self:registerSchema(enums.MSGTYPE_PORTFOLIO_STARTED,{})
+
+	self:registerSchema(enums.MSGTYPE_TRADER_WEIGHT_UPDATED,{
+		"symbol:c4",
+		"value:f8"	
+	})
 end
 
 --[[
