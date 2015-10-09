@@ -326,6 +326,7 @@ public:
       nvBinStream msg;
       msg << (ushort)MSGTYPE_TRADER_WEIGHT_UPDATED;
       msg << getSymbol();
+      msg << getManager().getCurrentTime();
       msg << val;
       getManager().sendData(msg);
     }

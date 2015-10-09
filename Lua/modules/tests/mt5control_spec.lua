@@ -55,6 +55,7 @@ describe("MT5Control behavior", function()
     local tt = {
       mtype = enums.MSGTYPE_TRADER_WEIGHT_UPDATED,
       symbol = "EURUSD",
+      time = { year=2015, month=3, day=19, hours=12, mins=1, secs=2, msecs=345},
       value = 0.123,
     }
 

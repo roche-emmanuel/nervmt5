@@ -515,16 +515,17 @@ BEGIN_TEST_CASE("Should send the weight update message on update")
       Sleep(5);
     }
 
-    // The message length should be 2 + 4 + 6 + 8:
-    ASSERT_EQUAL(ArraySize( ch ), 20);
+    // The message length should be 2 + 4 + 6 + 8 + 9:
+    ASSERT_EQUAL(ArraySize( ch ), 29);
 
     nvBinStream msg(ch);
 
     ushort mtype;
     string sym;
+    datetime dt;
     double val;
 
-    msg>>mtype>>sym>>val;
+    msg>>mtype>>sym>>dt>>val;
     ASSERT_EQUAL(mtype,(ushort)MSGTYPE_TRADER_WEIGHT_UPDATED);
     ASSERT_EQUAL(sym,"EURUSD");
     ASSERT_EQUAL(val,1.0);
@@ -542,16 +543,17 @@ BEGIN_TEST_CASE("Should send the weight update message on update")
       Sleep(5);
     }
 
-    // The message length should be 2 + 4 + 6 + 8:
-    ASSERT_EQUAL(ArraySize( ch ), 20);
+    // The message length should be 2 + 4 + 6 + 8 + 9:
+    ASSERT_EQUAL(ArraySize( ch ), 29);
 
     nvBinStream msg(ch);
 
     ushort mtype;
     string sym;
     double val;
+    datetime dt;
 
-    msg>>mtype>>sym>>val;
+    msg>>mtype>>sym>>dt>>val;
     ASSERT_EQUAL(mtype,(ushort)MSGTYPE_TRADER_WEIGHT_UPDATED);
     ASSERT_EQUAL(sym,"EURUSD");
     ASSERT_EQUAL(val,0.5);

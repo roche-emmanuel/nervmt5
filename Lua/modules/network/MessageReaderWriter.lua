@@ -48,6 +48,7 @@ function Class:initialize(options)
 
 	self:registerSchema(enums.MSGTYPE_TRADER_WEIGHT_UPDATED,{
 		"symbol:c4",
+		"time:{ &timetag }",
 		"value:f8"	
 	})
 end
