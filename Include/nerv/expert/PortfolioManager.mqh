@@ -275,9 +275,17 @@ public:
   
   Method called to update the complete state of this Portfolio Manager
   */
-  void update()
+  void update(datetime dt)
   {
-    logDEBUG(TimeLocal()<<": Updating Portfolio Manager.")
+    setCurrentTime(dt);
+    // logDEBUG(TimeLocal()<<": Updating Portfolio Manager at time "<<dt);
+    
+    // update all the currency traders:
+    int num = ArraySize( _traders );
+    for(int i=0;i<num;++i)
+    {
+      _traders[i].update();
+    }
   }
 
   /*
