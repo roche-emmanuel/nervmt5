@@ -32,7 +32,7 @@ BEGIN_TEST_CASE("Should detect the account currency properly")
   ASSERT_EQUAL(rman.getAccountCurrency(),"EUR");
 END_TEST_CASE()
 
-BEGIN_TEST_CASE("Should be able to retrieve a balanace value")
+BEGIN_TEST_CASE("Should be able to retrieve a balance value")
   nvPortfolioManager man;
   nvRiskManager* rman = man.getRiskManager();
 
@@ -41,11 +41,27 @@ BEGIN_TEST_CASE("Should be able to retrieve a balanace value")
 
   // Check the balance value in USD:
   MqlTick latest_price;
-  SymbolInfoTick("EURUSD",latest_price);
-  ASSERT_EQUAL(rman.getBalanceValue("USD"),balance*latest_price.bid);
+  double bid;
+  
+  if(SymbolInfoTick("EURUSD",latest_price)) {
+    bid = latest_price.bid;
+  }
+  else {
+    // previous call might fail:
+    // we rely on the price manager in that case:
+    bid = man.getPriceManager().getBidPrice("EURUSD");
+  }
+  ASSERT_EQUAL(rman.getBalanceValue("USD"),balance*bid);
 
-  SymbolInfoTick("EURJPY",latest_price);
-  ASSERT_EQUAL(rman.getBalanceValue("JPY"),balance*latest_price.bid);
+  if(SymbolInfoTick("EURJPY",latest_price)) {
+    bid = latest_price.bid;
+  }
+  else {
+    // previous call might fail:
+    // we rely on the price manager in that case:
+    bid = man.getPriceManager().getBidPrice("EURJPY");
+  }
+  ASSERT_EQUAL(rman.getBalanceValue("JPY"),balance*bid);
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to evaluate a lot size")

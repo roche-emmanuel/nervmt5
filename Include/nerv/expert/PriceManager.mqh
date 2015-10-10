@@ -59,20 +59,25 @@ public:
     {
       // Use the latest tick data:
       MqlTick last_tick;
-      CHECK_RET(SymbolInfoTick(symbol,last_tick),false,"Cannot retrieve the latest tick");
-      return last_tick.bid;
+      // Note that the following code may fail if we are on the week end,
+      // And connected to a server, and we didn't receive anything yet:
+      if(SymbolInfoTick(symbol,last_tick)) {
+        return last_tick.bid;
+      }
+      else {
+        logWARN("Cannot retrieve the latest tick from server")
+      }
     }
-    else {
-      // Use the bar history:
 
-      MqlRates rates[];
-      CHECK_RET(CopyRates(symbol,PERIOD_M1,time,1,rates)==1,false,"Cannot copy the rates at time: "<<time);
+    // Fallback implementation:
+    // Use the bar history:
+    MqlRates rates[];
+    CHECK_RET(CopyRates(symbol,PERIOD_M1,time,1,rates)==1,false,"Cannot copy the rates at time: "<<time);
 
-      // For now we just return the typical price during that minute:
-      // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
-      double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
-      return price;      
-    }
+    // For now we just return the typical price during that minute:
+    // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
+    double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+    return price;      
   }
   
   /*
@@ -92,19 +97,25 @@ public:
     {
       // Use the latest tick data:
       MqlTick last_tick;
-      CHECK_RET(SymbolInfoTick(symbol,last_tick),false,"Cannot retrieve the latest tick");
-      return last_tick.ask;
+      // Note that the following code may fail if we are on the week end,
+      // And connected to a server, and we didn't receive anything yet:
+      if(SymbolInfoTick(symbol,last_tick)) {
+        return last_tick.ask;
+      }
+      else {
+        logWARN("Cannot retrieve the latest tick from server")
+      }
     }
-    else {
-      // Use the bar history:
-      MqlRates rates[];
-      CHECK_RET(CopyRates(symbol,PERIOD_M1,time,1,rates)==1,false,"Cannot copy the rates at time: "<<time);
 
-      // For now we just return the typical price during that minute:
-      // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
-      double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
-      return price+rates[0].spread*nvGetPointSize(symbol);      
-    }
+    // Fallback implementation:
+    // Use the bar history:
+    MqlRates rates[];
+    CHECK_RET(CopyRates(symbol,PERIOD_M1,time,1,rates)==1,false,"Cannot copy the rates at time: "<<time);
+
+    // For now we just return the typical price during that minute:
+    // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
+    double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+    return price+rates[0].spread*nvGetPointSize(symbol);      
   }
   
   /*

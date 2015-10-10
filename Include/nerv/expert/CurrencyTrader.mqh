@@ -101,6 +101,9 @@ public:
     CHECK(_symbol=="","Symbol already assigned.")
     CHECK(nvIsSymbolValid(symbol),"Invalid symbol detected: "<<symbol);
     _symbol = symbol;
+
+    // Ensure that the symbol is selected in the market watch window:
+    SymbolSelect(symbol,true);
   }
   
   /*
@@ -447,7 +450,7 @@ public:
     }
 
     num = ArraySize( negPoints );
-    logDEBUG("Computing estimated max lost with "<<num<<" samples.");
+    // logDEBUG("Computing estimated max lost with "<<num<<" samples.");
 
     // if we don't have enough samples then we just return an initialization value:
     if(num<TRADER_MIN_NUM_SAMPLES)
@@ -479,7 +482,7 @@ public:
     // TODO: we should add support for computing the quantiles of the normal distribution
     // So that we should still use the provided confidence level argument for this last step.
     double max_lost = max_mean + 2*max_dev;
-    logDEBUG("Computed estimated max lost value of "<<max_lost<<" with confidence level "<< confidenceLevel);
+    // logDEBUG("Computed estimated max lost value of "<<max_lost<<" with confidence level "<< confidenceLevel);
 
     return max_lost;
   }
