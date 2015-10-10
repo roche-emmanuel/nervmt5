@@ -51,6 +51,12 @@ function Class:initialize(options)
 		"time:{ &timetag }",
 		"value:f8"	
 	})
+
+	self:registerSchema(enums.MSGTYPE_TRADER_UTILITY_UPDATED,{
+		"symbol:c4",
+		"time:{ &timetag }",
+		"value:f8"	
+	})
 end
 
 --[[

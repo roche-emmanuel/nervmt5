@@ -683,6 +683,15 @@ public:
     // frame:
     _utility = computeProfitUtility(startTime,stopTime);
 
+    // Send message to notify utility is updated:
+    nvBinStream msg;
+    msg << (ushort)MSGTYPE_TRADER_UTILITY_UPDATED;
+    msg << getSymbol();
+    msg << getManager().getCurrentTime();
+    msg << _utility;
+    
+    getManager().sendData(msg);
+
     // Once the utility value is updated,
     // we should request a weight update from the portfolio manager:
     man.updateWeights();

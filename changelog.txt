@@ -298,3 +298,4 @@ But we need the fix for issue #29 first.
 10/09/15-23:42:55: Working on issue #45: Added support to display the trader weight evolution on the MT5 Control App.
 10/10/15-00:24:37: Working on issue #46: implemented simple long run for portforlio test.
 10/10/15-11:32:22: Working on issue #46: gracefully handling some error in symbol tick requests.
+10/10/15-11:45:00: Working on issue #46: added support for display of the trader utility values.

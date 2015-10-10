@@ -97,7 +97,6 @@ Method used to build the main tabs of the app
 ]]
 function Class:buildMainTabs()
 	local plot = require "gui.BalancePlot" ()
-
 	local vbPanel = plot:getPanel()
 	vbPanel.tabtitle = "Virtual Balance"
 
@@ -105,7 +104,11 @@ function Class:buildMainTabs()
 	local weightPanel = plot:getPanel()
 	weightPanel.tabtitle = "Trader weights"
 
-	local tabs = iup.tabs{vbPanel, weightPanel, expand="yes"}
+	local plot = require "gui.TraderUtilityPlot" ()
+	local utilityPanel = plot:getPanel()
+	utilityPanel.tabtitle = "Trader utilities"
+
+	local tabs = iup.tabs{vbPanel, weightPanel, utilityPanel, expand="yes"}
 
 	return tabs
 end

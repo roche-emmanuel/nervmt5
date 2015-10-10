@@ -560,6 +560,87 @@ BEGIN_TEST_CASE("Should send the weight update message on update")
   }
 
 END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should send the utility update message on update")
+  nvZMQContext::instance().uninit();
+
+  // can we have multiple pull socket connected ??
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22230");
+
+  nvPortfolioManager man("tcp://localhost:22230");
+
+  // First we will receive the portfolio started message.
+  // And we should discard that.
+  char ch[];
+  while(server.receive(ch)==0)
+  {
+    logDEBUG("Waiting for portfolio manager start event...");
+    Sleep(5);
+  }
+
+  // This message should only contain the message type:
+  ASSERT_EQUAL(ArraySize( ch ),2);
+
+
+  // add a currency trader:
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+
+  {
+    // When the currency trader is added its weight is updated,
+    // Since we have only one trader the weight will be set to 1.0.
+    while(server.receive(ch)==0)
+    {
+      logDEBUG("Waiting for trader weight update event...");
+      Sleep(5);
+    }
+
+    // The message length should be 2 + 4 + 6 + 8 + 9:
+    ASSERT_EQUAL(ArraySize( ch ), 29);
+
+    nvBinStream msg(ch);
+
+    ushort mtype;
+    string sym;
+    datetime dt;
+    double val;
+
+    msg>>mtype>>sym>>dt>>val;
+    ASSERT_EQUAL(mtype,(ushort)MSGTYPE_TRADER_WEIGHT_UPDATED);
+    ASSERT_EQUAL(sym,"EURUSD");
+    ASSERT_EQUAL(val,1.0);
+  }
+
+  // Manually set the weight for this trader:
+  ct.updateUtility();
+
+  {
+    // When the currency trader is added its weight is updated,
+    // Since we have only one trader the weight will be set to 1.0.
+    while(server.receive(ch)==0)
+    {
+      logDEBUG("Waiting for trader weight update event...");
+      Sleep(5);
+    }
+
+    // The message length should be 2 + 4 + 6 + 8 + 9:
+    ASSERT_EQUAL(ArraySize( ch ), 29);
+
+    nvBinStream msg(ch);
+
+    ushort mtype;
+    string sym;
+    double val;
+    datetime dt;
+
+    msg>>mtype>>sym>>dt>>val;
+    ASSERT_EQUAL(mtype,(ushort)MSGTYPE_TRADER_UTILITY_UPDATED);
+    ASSERT_EQUAL(sym,"EURUSD");
+    ASSERT_EQUAL(val,0.0);
+  }
+
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
