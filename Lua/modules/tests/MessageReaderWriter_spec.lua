@@ -8,7 +8,7 @@ describe("MessageReaderWriter behavior", function()
     local tt = {
       mtype = enums.MSGTYPE_BALANCE_UPDATED,
       marketType = enums.MARKET_REAL,
-      time = { year=2015, month=3, day=19, hours=12, mins=1, secs=2, msecs=345},
+      time = { year=2015, month=3, day=19, hour=12, min=1, sec=2, msec=345},
       value = 3000.23,
     }
 

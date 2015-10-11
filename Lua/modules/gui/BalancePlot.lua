@@ -20,11 +20,11 @@ Parameters:
 function BalancePlot(options)
 ]=]
 function Class:initialize(options)
-	local x = 0
+	-- local x = 0
 	self:on("msg_" .. Class.MSGTYPE_BALANCE_UPDATED,function(msg)
 		-- self:debug("Should handle the balance value message here")
-		self:addSample(x,msg.value,"Balance")		
-		x = x+1
+		self:addTimedSample(msg.time,msg.value,"Balance")		
+		-- x = x+1
 		self._updatedNeeded = true
 	end)
 end

@@ -424,7 +424,7 @@ public:
       }
     }
 
-    logDEBUG(TimeLocal()<<": Updated CurrencyTrader.")
+    // logDEBUG(TimeLocal()<<": Updated CurrencyTrader at portfolio time: "<<ctime)
   }
 
   /*

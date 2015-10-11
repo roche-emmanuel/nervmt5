@@ -31,10 +31,10 @@ function Class:initialize(options)
 		"year:u2", 
 		"month:u1",
 		"day:u1",
-		"hours:u1",
-		"mins:u1",
-		"secs:u1",
-		"msecs:u2",
+		"hour:u1",
+		"min:u1",
+		"sec:u1",
+		"msec:u2",
 	})
 
 	-- register some the default schemas:

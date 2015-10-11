@@ -52,6 +52,23 @@ Remove all the datasets
 function Class:clearAll()
 	self._plot.clear = "yes"
 	self._indexMap = {}
+	self._timeOffset = nil
+end
+
+--[[
+Function: addTimedSample
+
+Method to add a timed sample into the plot
+]]
+function Class:addTimedSample(timetag,y,id)
+	-- convert the timetag into a time value:
+	local x = os.time(timetag);
+	if not self._timeOffset then
+		self._timeOffset = x
+	end
+	x = x - self._timeOffset
+	-- self:debug("Adding sample at time value: ",x)
+	self:addSample(x,y,id)
 end
 
 --[[
