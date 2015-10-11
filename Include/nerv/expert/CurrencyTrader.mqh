@@ -236,19 +236,21 @@ public:
   Append an agent to the list of agent contained in this currency trader
   Can be either an entry agent or an exit agent.
   */
-  void addTradingAgent(nvTradingAgent* agent, AgentCapabilities caps)
+  void addTradingAgent(nvTradingAgent* agent)
   {
     CHECK(agent!=NULL,"Invalid trading agent.")
-    if(caps==TRADE_AGENT_ENTRY)
+    AgentCapabilities caps = agent.getCapabilities();
+
+    if(caps & TRADE_AGENT_ENTRY)
     {
-      CHECK(agent.getCapabilities() & TRADE_AGENT_ENTRY,"Invalid trading agent caps.");
+      // CHECK(agent.getCapabilities() & TRADE_AGENT_ENTRY,"Invalid trading agent caps.");
       nvAppendArrayElement(_entryAgents,agent);
       ArrayResize( _entryDecisions, ArraySize( _entryAgents ) );
       return;
     }
-    if(caps==TRADE_AGENT_EXIT)
+    if(caps & TRADE_AGENT_EXIT)
     {
-      CHECK(agent.getCapabilities() & TRADE_AGENT_EXIT,"Invalid trading agent caps.");
+      // CHECK(agent.getCapabilities() & TRADE_AGENT_EXIT,"Invalid trading agent caps.");
       nvAppendArrayElement(_exitAgents,agent);
       ArrayResize( _exitDecisions, ArraySize( _exitAgents ) );
       return;
@@ -368,7 +370,7 @@ public:
   /*
   Function: update
   
-  Method called to update the complete state of this Portfolio Manager
+  Method called to update the complete state of this CurrencyTrader
   */
   void update()
   {

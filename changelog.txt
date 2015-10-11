@@ -301,3 +301,4 @@ But we need the fix for issue #29 first.
 10/10/15-11:45:00: Working on issue #46: added support for display of the trader utility values.
 10/10/15-16:42:36: Working on issue #47: Added portfolio test with integrated position handling decisions.
 10/11/15-09:13:38: Working on issue #48: using the proper time values on the x axis for the MT5 Control app plots.
+10/11/15-18:01:42: Working on issue #50: updated TradingAgent to provide its own capabilities.
