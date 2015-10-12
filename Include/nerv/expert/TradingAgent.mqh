@@ -12,6 +12,7 @@ enum AgentCapabilities
 {
   TRADE_AGENT_ENTRY = 1,
   TRADE_AGENT_EXIT = 2,
+  TRADE_AGENT_ENTRY_EXIT = 3,
 };
 
 /*
@@ -38,10 +39,21 @@ protected:
   // The period used inside this agent:
   ENUM_TIMEFRAMES _period;
 
+  // Symbol name:
+  string _symbol;
 
   // Number of lag period that should be applied on this agent when computing its decision
   // given in number of periods.
   int _lag;
+
+  // flag to specify if this agent is already initialized:
+  bool _initialized;
+
+  // Previous time this agent was updated:
+  datetime _prevTime;
+
+  // Previous time a bar was detected for this agent.
+  datetime _prevBarTime;
 
 public:
   /*
@@ -57,6 +69,13 @@ public:
     _agentType = TRADE_AGENT_UNKNOWN;
     _agentCapabilities = (AgentCapabilities)0; // No support by default.
     _trader = trader;
+    _symbol = _trader.getSymbol();
+    _initialized = false;
+    _lag = 0;
+    _period = PERIOD_M1;
+    _prevTime = 0;
+    _prevBarTime = 0;
+    
     randomizeLag(AGENT_MAX_LAG);
     randomizePeriod();
   }
@@ -116,6 +135,16 @@ public:
   }
   
   /*
+  Function: setPeriod
+  
+  Set the period to use for this agent
+  */
+  void setPeriod(ENUM_TIMEFRAMES period)
+  {
+    _period = period;
+  }
+  
+  /*
   Function: getLag
   
   Retrieve the current lag value for this agent
@@ -126,14 +155,33 @@ public:
   }
   
   /*
+  Function: setLag
+  
+  Assign the lag value for this trader in number of periods
+  */
+  void setLag(int lag)
+  {
+    _lag = lag;
+  }
+  
+  /*
   Function: getEntryDecision
   
   Method called to retrieve the entry decision that this agent would take on its own.
   */
   virtual double getEntryDecision(datetime time)
   {
+    if(!_initialized) {
+      initialize();
+      _initialized = true;
+    }
+
+    datetime rtime = time - _lag * nvGetPeriodDuration(_period);
+
+    update(rtime);
+
     // return the computed value taking the lag into account:
-    return computeEntryDecision(time - _lag * nvGetPeriodDuration(_period));
+    return computeEntryDecision(rtime);
   }
 
   /*
@@ -143,10 +191,69 @@ public:
   */
   double getExitDecision(datetime time)
   {
+    if(!_initialized) {
+      initialize();
+      _initialized = true;
+    }
+
+    datetime rtime = time - _lag * nvGetPeriodDuration(_period);
+    
+    update(rtime);
+
     // return the computed value taking the lag into account:
-    return computeExitDecision(time - _lag * nvGetPeriodDuration(_period));
+    return computeExitDecision(rtime);
   }  
 
+  /*
+  Function: update
+  
+  Method used to update the state of the trader.
+  */
+  virtual void update(datetime time)
+  {
+    CHECK(time>=_prevTime,"Going back in time ?! "<<_prevTime<<" > "<<time);
+    if(_prevTime==time) {
+      // Nothing to update.
+      return;
+    }
+
+    _prevTime = time;
+
+    datetime New_Time[1];
+
+    // copying the last bar time to the element New_Time[0]
+    int copied=CopyTime(_symbol,_period,time,1,New_Time);
+    CHECK(copied==1,"Invalid result for CopyTime operation: "<<copied);
+
+    if(_prevBarTime!=New_Time[0]) // if old time isn't equal to new bar time
+    {
+      _prevBarTime=New_Time[0];            // saving bar time  
+      handleBar();    
+    }
+
+    handleUpdate();
+  }
+  
+  /*
+  Function: handleBar
+  
+  Method used to handle the receiption of a new bar for the trader period.
+  */
+  virtual void handleBar()
+  {
+    // No op.
+  }
+  
+  /*
+  Function: handleUpdate
+  
+  Method used to handle the receiption of an update request
+  */
+  virtual void handleUpdate()
+  {
+    // No op.
+  }
+  
   /*
   Function: computeEntryDecision
   
@@ -221,5 +328,14 @@ public:
     return NULL;
   }
   
-
+  /*
+  Function: initialize
+  
+  Method called to initialize this trader on due time
+  */
+  virtual void initialize()
+  {
+    // No op.
+  }
+  
 };

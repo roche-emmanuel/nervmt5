@@ -22,6 +22,7 @@
 #include <nerv/tests/pricemanager_specs.mqh>
 #include <nerv/tests/zmq_specs.mqh>
 #include <nerv/tests/binstream_specs.mqh>
+#include <nerv/tests/indicatorbase_specs.mqh>
 
 BEGIN_TEST_SESSION("Expert_Results")
 
@@ -46,5 +47,6 @@ LOAD_TEST_PACKAGE(realmarket_specs)
 LOAD_TEST_PACKAGE(pricemanager_specs)
 LOAD_TEST_PACKAGE(zmq_specs)
 LOAD_TEST_PACKAGE(binstream_specs)
+LOAD_TEST_PACKAGE(indicatorbase_specs)
 
 END_TEST_SESSION()

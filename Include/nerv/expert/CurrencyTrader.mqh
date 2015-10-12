@@ -241,14 +241,14 @@ public:
     CHECK(agent!=NULL,"Invalid trading agent.")
     AgentCapabilities caps = agent.getCapabilities();
 
-    if(caps & TRADE_AGENT_ENTRY)
+    if((caps & TRADE_AGENT_ENTRY)!=0)
     {
       // CHECK(agent.getCapabilities() & TRADE_AGENT_ENTRY,"Invalid trading agent caps.");
       nvAppendArrayElement(_entryAgents,agent);
       ArrayResize( _entryDecisions, ArraySize( _entryAgents ) );
       return;
     }
-    if(caps & TRADE_AGENT_EXIT)
+    if((caps & TRADE_AGENT_EXIT)!=0)
     {
       // CHECK(agent.getCapabilities() & TRADE_AGENT_EXIT,"Invalid trading agent caps.");
       nvAppendArrayElement(_exitAgents,agent);
