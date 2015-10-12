@@ -157,22 +157,22 @@ public:
     return true;
     // TODO: we could also add a signal from the chinkou line here    
   }
-  
+
   /*
-  Function: collectData
+  Function: handleBar
   
-  Method used to retrieve the current relevant data for decision evaluation
+  Method used to handle the receiption of an update request
   */
-  void collectData()
+  virtual void handleBar()
   {
     int num = 2;
-    CHECK(CopyRates(_symbol,_period,1,30,_rates)==30,"Cannot copy the latest rates");
-    CHECK(CopyBuffer(_ichiHandle,0,1,num,_tenkanVal)==num,"Cannot copy Ichimoku buffer 0");
-    CHECK(CopyBuffer(_ichiHandle,1,1,num,_kijunVal)==num,"Cannot copy Ichimoku buffer 1");
-    CHECK(CopyBuffer(_ichiHandle,2,1,4,_senkouAVal)==4,"Cannot copy Ichimoku buffer 2");
-    CHECK(CopyBuffer(_ichiHandle,3,1,4,_senkouBVal)==4,"Cannot copy Ichimoku buffer 3");
-    CHECK(CopyBuffer(_ichiHandle,4,1,30,_chinkouVal)==30,"Cannot copy Ichimoku buffer 4");
 
+    CHECK(CopyRates(_symbol,_period,_currentTime,num,_rates)==num,"Cannot copy the latest rates");
+    CHECK(CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal)==num,"Cannot copy Ichimoku buffer 0");
+    CHECK(CopyBuffer(_ichiHandle,1,_currentTime,num,_kijunVal)==num,"Cannot copy Ichimoku buffer 1");
+    CHECK(CopyBuffer(_ichiHandle,2,_currentTime,4,_senkouAVal)==4,"Cannot copy Ichimoku buffer 2");
+    CHECK(CopyBuffer(_ichiHandle,3,_currentTime,4,_senkouBVal)==4,"Cannot copy Ichimoku buffer 3");
+    CHECK(CopyBuffer(_ichiHandle,4,_currentTime,30,_chinkouVal)==30,"Cannot copy Ichimoku buffer 4");
   }
   
   /*
@@ -181,7 +181,7 @@ public:
   Method called to compute the entry decision taking into account the lag of this agent.
   This method should be reimplemented by derived classes that can provide entry decision.
   */
-  virtual double computeEntryDecision(datetime time)
+  virtual double computeEntryDecision()
   {
     // Entry is only called when we are not in a position, so we should have no position
     // here:
@@ -205,10 +205,21 @@ public:
   Method called to compute the exit decision taking into account the lag of this agent.
   This method should be reimplemented by derived classes that can provide exit decision. 
   */
-  virtual double computeExitDecision(datetime time)
+  virtual double computeExitDecision()
   {
-    // TODO: Provide implementation
-    THROW("No implementation");
+    PositionType pos = _trader.getPositionType();
+
+    if( (_tenkanVal[0]-_kijunVal[0])*(_tenkanVal[1]-_kijunVal[1]) <= 0.0)
+    {
+      logDEBUG(_currentTime<<": Closing position due to tenkan <-> kijun cross.");
+      return pos==POS_LONG ? -1.0 : 1.0;
+    }
+    else if ( (_rates[0].close - _kijunVal[0]) * (_rates[1].close - _kijunVal[1]) < 0.0)
+    {
+      logDEBUG(_currentTime<<": Closing position due to price <-> kijun cross.")
+      return pos==POS_LONG ? -1.0 : 1.0;
+    }
+   
     return 0.0;
   }
 };

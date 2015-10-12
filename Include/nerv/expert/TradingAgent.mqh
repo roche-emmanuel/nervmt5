@@ -51,10 +51,10 @@ protected:
   bool _initialized;
 
   // Previous time this agent was updated:
-  datetime _prevTime;
+  datetime _currentTime;
 
   // Previous time a bar was detected for this agent.
-  datetime _prevBarTime;
+  datetime _currentBarTime;
 
   // List of indicators for this agent:
   nvIndicatorBase* _indicators[];
@@ -77,8 +77,8 @@ public:
     _initialized = false;
     _lag = 0;
     _period = PERIOD_M1;
-    _prevTime = 0;
-    _prevBarTime = 0;
+    _currentTime = 0;
+    _currentBarTime = 0;
     
     randomizeLag(AGENT_MAX_LAG);
     randomizePeriod();
@@ -197,7 +197,7 @@ public:
     update(rtime);
 
     // return the computed value taking the lag into account:
-    return computeEntryDecision(rtime);
+    return computeEntryDecision();
   }
 
   /*
@@ -217,7 +217,7 @@ public:
     update(rtime);
 
     // return the computed value taking the lag into account:
-    return computeExitDecision(rtime);
+    return computeExitDecision();
   }  
 
   /*
@@ -227,13 +227,13 @@ public:
   */
   virtual void update(datetime time)
   {
-    CHECK(time>=_prevTime,"Going back in time ?! "<<_prevTime<<" > "<<time);
-    if(_prevTime==time) {
+    CHECK(time>=_currentTime,"Going back in time ?! "<<_currentTime<<" > "<<time);
+    if(_currentTime==time) {
       // Nothing to update.
       return;
     }
 
-    _prevTime = time;
+    _currentTime = time;
 
     // Compute the values of the indicators at that time:
     int num = ArraySize( _indicators );
@@ -247,9 +247,9 @@ public:
     int copied=CopyTime(_symbol,_period,time,1,New_Time);
     CHECK(copied==1,"Invalid result for CopyTime operation: "<<copied);
 
-    if(_prevBarTime!=New_Time[0]) // if old time isn't equal to new bar time
+    if(_currentBarTime!=New_Time[0]) // if old time isn't equal to new bar time
     {
-      _prevBarTime=New_Time[0];            // saving bar time  
+      _currentBarTime=New_Time[0];            // saving bar time  
       handleBar();    
     }
 
@@ -282,7 +282,7 @@ public:
   Method called to compute the entry decision taking into account the lag of this agent.
   This method should be reimplemented by derived classes that can provide entry decision.
   */
-  virtual double computeEntryDecision(datetime time)
+  virtual double computeEntryDecision()
   {
     // TODO: Provide implementation
     THROW("No implementation");
@@ -295,7 +295,7 @@ public:
   Method called to compute the exit decision taking into account the lag of this agent.
   This method should be reimplemented by derived classes that can provide exit decision. 
   */
-  virtual double computeExitDecision(datetime time)
+  virtual double computeExitDecision()
   {
     // TODO: Provide implementation
     THROW("No implementation");
