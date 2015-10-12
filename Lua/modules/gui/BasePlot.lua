@@ -30,6 +30,9 @@ function Class:initialize(options)
 	self._panel = iup.vbox{self._plot,gap=2}
 
 	self._plot.legend = "yes"
+	self._plot.axs_yautomin = "no" 
+	self._plot.axs_yautomax = "no" 
+
 	self._indexMap = {}
 
 	self:on("msg_" .. Class.MSGTYPE_PORTFOLIO_STARTED,function(msg)
@@ -53,6 +56,8 @@ function Class:clearAll()
 	self._plot.clear = "yes"
 	self._indexMap = {}
 	self._timeOffset = nil
+	self._ymin = nil
+	self._ymax = nil
 end
 
 --[[
@@ -69,6 +74,33 @@ function Class:addTimedSample(timetag,y,id)
 	x = x - self._timeOffset
 	-- self:debug("Adding sample at time value: ",x)
 	self:addSample(x,y,id)
+end
+
+--[[
+Function: updateYRange
+
+Method called to update the range of the display on the y axis
+]]
+function Class:updateYRange(mini,maxi)
+	if self._ymin~=mini or self._ymax~=maxi then
+		self._ymin = mini
+		self._ymax = maxi
+
+		if self._ymin == self._ymax then
+			self._plot.axs_ymin = self._ymin - 3.0
+			self._plot.axs_ymax = self._ymax + 3.0
+		else
+			local range = self._ymax - self._ymin
+			range = math.max(range,3.0)
+
+			mini = self._ymin - range*0.05
+			maxi = self._ymax + range*0.05
+
+			self._plot.axs_ymin = mini
+			self._plot.axs_ymax = maxi
+			self:debug("Updating display range to: [",mini,", ",maxi,"]")
+		end
+	end
 end
 
 --[[
@@ -94,6 +126,10 @@ function Class:addSample(x,y,id)
 		self._plot.current = index
 		self._plot.ds_name = id
 	end
+
+	local ymin = self._ymin and math.min(self._ymin,y) or y
+	local ymax = self._ymax and math.max(self._ymax,y) or y
+	self:updateYRange(ymin,ymax)
 
 	self._plot:AddSamples(index, {x}, {y}, 1)
 end
