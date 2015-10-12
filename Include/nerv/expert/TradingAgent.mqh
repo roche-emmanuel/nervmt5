@@ -1,4 +1,5 @@
 #include <nerv/core.mqh>
+#include <nerv/expert/IndicatorBase.mqh>
 
 class nvCurrencyTrader;
 
@@ -55,6 +56,9 @@ protected:
   // Previous time a bar was detected for this agent.
   datetime _prevBarTime;
 
+  // List of indicators for this agent:
+  nvIndicatorBase* _indicators[];
+
 public:
   /*
     Class constructor.
@@ -101,9 +105,21 @@ public:
   */
   ~nvTradingAgent()
   {
-    // No op.
+    // Release the allocated indicators:
+    nvReleaseObjects(_indicators);
   }
 
+  /*
+  Function: addIndicator
+  
+  Method used to register an indicator on this Agent
+  */
+  void addIndicator(nvIndicatorBase* indicator)
+  {
+    CHECK(indicator,"Invalid indicator object.");
+    nvAppendArrayObject(_indicators,indicator);
+  }
+  
   /*
   Function: getCapabilities
   
@@ -219,6 +235,12 @@ public:
 
     _prevTime = time;
 
+    // Compute the values of the indicators at that time:
+    int num = ArraySize( _indicators );
+    for(int i=0;i<num;++i) {
+      _indicators[i].compute(time);
+    }
+
     datetime New_Time[1];
 
     // copying the last bar time to the element New_Time[0]
@@ -231,7 +253,7 @@ public:
       handleBar();    
     }
 
-    handleUpdate();
+    doUpdate();
   }
   
   /*
@@ -245,11 +267,11 @@ public:
   }
   
   /*
-  Function: handleUpdate
+  Function: doUpdate
   
   Method used to handle the receiption of an update request
   */
-  virtual void handleUpdate()
+  virtual void doUpdate()
   {
     // No op.
   }

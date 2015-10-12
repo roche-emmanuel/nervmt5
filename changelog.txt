@@ -304,3 +304,4 @@ But we need the fix for issue #29 first.
 10/11/15-18:01:42: Working on issue #50: updated TradingAgent to provide its own capabilities.
 10/12/15-09:23:25: Working on issue #50: added initial base class for indicator.
 10/12/15-14:48:43: Working on issue #5: added test for prepend to array util function.
+10/12/15-17:27:07: Working on issue #50: fixed issue in computation of ichimoku span A value.
