@@ -307,3 +307,4 @@ But we need the fix for issue #29 first.
 10/12/15-17:27:07: Working on issue #50: fixed issue in computation of ichimoku span A value.
 10/12/15-18:59:57: Working on issue #50: done testing the ichimoku indicator implementation.
 10/12/15-21:23:50: Working on issue #50: Prepared ichimoku agent implementation.
+10/12/15-23:43:50: Working on issue #50: It seems we are now always calling the update of the agents as expected.

@@ -26,9 +26,9 @@ public:
   nvIchimokuAgent(nvCurrencyTrader* trader) : nvTradingAgent(trader)
   {
     _agentType = TRADE_AGENT_ICHIMOKU;
-    _agentCapabilities = TRADE_AGENT_ENTRY_EXIT; // No support by default.
+    _agentCapabilities = TRADE_AGENT_ENTRY_EXIT;
     _ichiHandle = 0;
-    randomize();
+    // randomize();
   }
 
   /*
@@ -173,6 +173,8 @@ public:
     CHECK(CopyBuffer(_ichiHandle,2,_currentTime,4,_senkouAVal)==4,"Cannot copy Ichimoku buffer 2");
     CHECK(CopyBuffer(_ichiHandle,3,_currentTime,4,_senkouBVal)==4,"Cannot copy Ichimoku buffer 3");
     CHECK(CopyBuffer(_ichiHandle,4,_currentTime,30,_chinkouVal)==30,"Cannot copy Ichimoku buffer 4");
+    
+    // logDEBUG(_currentTime << ": tenkanVal[0]="<<_tenkanVal[0]<<", tenkanVal[1]="<<_tenkanVal[1]);
   }
   
   /*
@@ -211,12 +213,12 @@ public:
 
     if( (_tenkanVal[0]-_kijunVal[0])*(_tenkanVal[1]-_kijunVal[1]) <= 0.0)
     {
-      logDEBUG(_currentTime<<": Closing position due to tenkan <-> kijun cross.");
+      logDEBUG(_currentTime<<": Suggesting position close due to tenkan <-> kijun cross.");
       return pos==POS_LONG ? -1.0 : 1.0;
     }
     else if ( (_rates[0].close - _kijunVal[0]) * (_rates[1].close - _kijunVal[1]) < 0.0)
     {
-      logDEBUG(_currentTime<<": Closing position due to price <-> kijun cross.")
+      logDEBUG(_currentTime<<": Suggesting position close due to price <-> kijun cross.")
       return pos==POS_LONG ? -1.0 : 1.0;
     }
    

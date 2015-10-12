@@ -80,8 +80,8 @@ public:
     _currentTime = 0;
     _currentBarTime = 0;
     
-    randomizeLag(AGENT_MAX_LAG);
-    randomizePeriod();
+    // randomizeLag(AGENT_MAX_LAG);
+    // randomizePeriod();
   }
 
   /*
@@ -230,9 +230,11 @@ public:
     CHECK(time>=_currentTime,"Going back in time ?! "<<_currentTime<<" > "<<time);
     if(_currentTime==time) {
       // Nothing to update.
+      logDEBUG(_symbol <<": Discarding update call at current time "<<time);
       return;
     }
 
+    // logDEBUG(_symbol <<": Updating agent at time "<<time);
     _currentTime = time;
 
     // Compute the values of the indicators at that time:
@@ -250,6 +252,7 @@ public:
     if(_currentBarTime!=New_Time[0]) // if old time isn't equal to new bar time
     {
       _currentBarTime=New_Time[0];            // saving bar time  
+      // logDEBUG(_symbol <<": Calling TradingAgent:handleBar() for time "<<_currentBarTime);
       handleBar();    
     }
 

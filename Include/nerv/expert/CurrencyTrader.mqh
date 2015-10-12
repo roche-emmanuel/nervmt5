@@ -246,17 +246,16 @@ public:
       // CHECK(agent.getCapabilities() & TRADE_AGENT_ENTRY,"Invalid trading agent caps.");
       nvAppendArrayElement(_entryAgents,agent);
       ArrayResize( _entryDecisions, ArraySize( _entryAgents ) );
-      return;
     }
+    
     if((caps & TRADE_AGENT_EXIT)!=0)
     {
       // CHECK(agent.getCapabilities() & TRADE_AGENT_EXIT,"Invalid trading agent caps.");
       nvAppendArrayElement(_exitAgents,agent);
       ArrayResize( _exitDecisions, ArraySize( _exitAgents ) );
-      return;
     }
     
-    THROW("Unsupported agent caps: "<<(int)caps)
+    // THROW("Unsupported agent caps: "<<(int)caps)
   }
   
   /*
@@ -378,6 +377,8 @@ public:
     nvPortfolioManager* man = getManager();
     datetime ctime = man.getCurrentTime();
 
+    // logDEBUG(_symbol <<": Performing update cycle.")
+
     // Now check if we are inside a position or not:
     if(hasOpenPosition())
     {
@@ -414,16 +415,6 @@ public:
       double decision = _entryDecisionComposer.evaluate(_entryDecisions);
 
       openPosition(decision);
-
-      if(decision>0.0)
-      {
-        // TODO: here we should enter a LONG position.
-
-      }
-      if(decision<0.0)
-      {
-        // TODO: here we should enter a SHORT position.
-      }
     }
 
     // logDEBUG(TimeLocal()<<": Updated CurrencyTrader at portfolio time: "<<ctime)
