@@ -25,11 +25,30 @@ void nvAppendArrayElement(T &array[], T& val, int maxsize = -1)
     ArrayResize( array, num+1 );
     array[num] = val;
   }
-  else
-  {
+  else {
     // T old = array[0];
     CHECK(ArrayCopy( array, array, 0, 1, num-1 )==num-1,"Invalid result for array copy operation");
     array[num-1] = val;
+  }
+}
+
+// Generic method to prepent a content to an array:
+// Take an optional max size argument, will prevent the array from
+// getting bigger that the specified size in that case.
+template<typename T>
+void nvPrependArrayElement(T &array[], T& val, int maxsize = -1)
+{
+  int num = ArraySize( array );
+  if(maxsize < 0 || num <maxsize)
+  {
+    ArrayResize( array, num+1 );
+    CHECK(ArrayCopy( array, array, 1, 0, num )==num,"Invalid result for array copy operation");
+    array[0] = val;
+  }
+  else {
+    // T old = array[0];
+    CHECK(ArrayCopy( array, array, 1, 0, num-1 )==num-1,"Invalid result for array copy operation");
+    array[0] = val;
   }
 }
 
@@ -47,6 +66,25 @@ void nvAppendArrayObject(T &array[], T& val, int maxsize = -1)
     T old = array[0];
     CHECK(ArrayCopy( array, array, 0, 1, num-1 )==num-1,"Invalid result for array copy operation");
     array[num-1] = val;
+    RELEASE_PTR(old)
+  }
+}
+
+template<typename T>
+void nvPrependArrayObject(T &array[], T& val, int maxsize = -1)
+{
+  int num = ArraySize( array );
+  if(maxsize < 0 || num <maxsize)
+  {
+    ArrayResize( array, num+1 );
+    CHECK(ArrayCopy( array, array, 1, 0, num )==num,"Invalid result for array copy operation");
+    array[0] = val;
+  }
+  else
+  {
+    T old = array[num-1];
+    CHECK(ArrayCopy( array, array, 1, 0, num-1 )==num-1,"Invalid result for array copy operation");
+    array[0] = val;
     RELEASE_PTR(old)
   }
 }

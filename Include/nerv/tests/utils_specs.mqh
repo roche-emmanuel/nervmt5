@@ -108,6 +108,31 @@ BEGIN_TEST_CASE("Should properly test for empty arrays")
   ASSERT_EQUAL(ArraySize( arr ),10);
 END_TEST_CASE()
 
+
+BEGIN_TEST_CASE("Should properly prepend numbers")
+  double arr[];
+  ArrayResize( arr, 0 );
+
+  double val;
+  val=1;
+  nvPrependArrayElement(arr,val,4);
+  val=2;
+  nvPrependArrayElement(arr,val,4);
+  val=3;
+  nvPrependArrayElement(arr,val,4);
+  ASSERT_EQUAL(ArraySize( arr ),3);
+  val=4;
+  nvPrependArrayElement(arr,val,4);
+  val=5;
+  nvPrependArrayElement(arr,val,4);
+  ASSERT_EQUAL(ArraySize( arr ),4);
+
+  ASSERT_EQUAL(arr[0],5);
+  ASSERT_EQUAL(arr[1],4);
+  ASSERT_EQUAL(arr[2],3);
+  ASSERT_EQUAL(arr[3],2);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

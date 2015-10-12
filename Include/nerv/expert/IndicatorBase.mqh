@@ -17,6 +17,10 @@ protected:
   // Symbol name:
   string _symbol;
 
+  // History size:
+  // specify the size of the history we want to keep:
+  int _historySize;
+
 public:
   /*
     Class constructor.
@@ -28,6 +32,7 @@ public:
     _trader = trader;
     _symbol = _trader.getSymbol();
     _period = period;
+    _historySize = 1;
   }
 
   /*
@@ -65,12 +70,22 @@ public:
   }
 
   /*
+  Function: setHistorySize
+  
+  Specify the size that should be used for the history of this indicator:
+  */
+  void setHistorySize(int size)
+  {
+    _historySize = size;
+  }
+  
+  /*
   Function: compute
   
   Method used to compute the indicator value at a given time.
   This is the main method that should be overriden by derived classes.
   */
-  void compute(datetime time)
+  virtual void compute(datetime time)
   {
     // No op.
   }
