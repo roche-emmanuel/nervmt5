@@ -43,7 +43,7 @@ public:
     _tenkanSize = 9;
     _kijunSize = 26;
     _senkouSize = 52;
-    _maxNumBar = 52;
+    _maxNumBar = 52+26;
   }
 
   /*
@@ -81,7 +81,7 @@ public:
     _tenkanSize = tenkan;
     _kijunSize = kijun;
     _senkouSize = senkou;
-    _maxNumBar = MathMax(_tenkanSize,MathMax(_kijunSize,_senkouSize));
+    _maxNumBar = MathMax(_tenkanSize,MathMax(_kijunSize,_senkouSize))+_kijunSize;
   }
   
   double Highest(const MqlRates& array[], int range, int offset = 0)
@@ -145,8 +145,8 @@ public:
 
     setBuffer(ICHI_SPAN_A,(tenkanVal+kijunVal)*0.5);
 
-    high = Highest(_rates,_senkouSize);
-    low = Lowest(_rates,_senkouSize);
+    high = Highest(_rates,_senkouSize,offset);
+    low = Lowest(_rates,_senkouSize,offset);
     setBuffer(ICHI_SPAN_B,(high+low)*0.5);
   }
   

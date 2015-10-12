@@ -89,7 +89,7 @@ public:
   void setHistorySize(uint size)
   {
     CHECK(ArraySize( _buffers )==0,"Changing history size after buffers allocation is not permitted.");
-    _historySize = size;
+    _historySize = size+1;
   }
   
   /*
@@ -119,6 +119,25 @@ public:
 
     CHECK_RET(pos < (uint)ArraySize(_buffers[index].data),0.0,"Invalid buffer position");
     return _buffers[index].data[pos];
+  }
+  
+  /*
+  Function: getBuffer
+  
+  Method used to retrieve a buffer value with proper out of range handling
+  */
+  bool getBuffer(uint index, uint pos, double& value)
+  {
+    if((uint)ArraySize( _buffers )<=index) {
+      return false;
+    }
+
+    if((uint)ArraySize(_buffers[index].data) <= pos) {
+      return false;
+    }
+
+    value =_buffers[index].data[pos];
+    return true;
   }
   
   /*
@@ -185,6 +204,7 @@ public:
     if(_prevBarTime!=New_Time[0]) // if old time isn't equal to new bar time
     {
       _prevBarTime=New_Time[0];            // saving bar time  
+      // logDEBUG("Saving buffers at time "<<_prevBarTime);
       saveBuffers();
     }
 
