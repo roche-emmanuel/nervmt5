@@ -98,7 +98,7 @@ function Class:updateYRange(mini,maxi)
 
 			self._plot.axs_ymin = mini
 			self._plot.axs_ymax = maxi
-			self:debug("Updating display range to: [",mini,", ",maxi,"]")
+			-- self:debug("Updating display range to: [",mini,", ",maxi,"]")
 		end
 	end
 end
