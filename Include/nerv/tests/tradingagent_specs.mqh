@@ -2,6 +2,7 @@
 #include <nerv/unit/Testing.mqh>
 #include <nerv/expert/TradingAgent.mqh>
 #include <nerv/expert/agent/IchimokuAgent.mqh>
+#include <nerv/expert/agent/IchimokuAgentB.mqh>
 
 BEGIN_TEST_PACKAGE(tradingagent_specs)
 
@@ -121,6 +122,20 @@ BEGIN_TEST_CASE("Should be able to create an ichimoku agent")
   ct.removeTradingAgent(GetPointer(agent));
 END_TEST_CASE()
 
+
+BEGIN_TEST_CASE("Should be able to create an ichimoku B agent")
+  nvPortfolioManager man;
+  nvCurrencyTrader* ct = man.addCurrencyTrader("EURUSD");
+  nvIchimokuAgentB agent(ct);
+    
+  // We should be able to add this agent without issue to the trader:
+  ct.addTradingAgent(GetPointer(agent));
+
+  ASSERT_EQUAL((int)agent.getAgentType(),(int)TRADE_AGENT_ICHIMOKU);
+
+  // Then we should be able to remove this agent:
+  ct.removeTradingAgent(GetPointer(agent));
+END_TEST_CASE()
 
 END_TEST_SUITE()
 

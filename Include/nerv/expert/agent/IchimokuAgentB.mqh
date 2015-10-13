@@ -1,40 +1,41 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/TradingAgent.mqh>
+#include <nerv/expert/indicators/Ichimoku.mqh>
 
 /*
-Class: nvIchimokuAgent
+Class: nvIchimokuAgentB
 
-Class used as a base class to represent a trading agent in a given
-currency trader.
+alternative ichimoku agent implementation using our version of the ichimoku indicator.
 */
-class nvIchimokuAgent : public nvTradingAgent
+class nvIchimokuAgentB : public nvTradingAgent
 {
 
 protected:
-  int _ichiHandle;
+  nviIchimoku* _ichiHandle;
+
   double _tenkanVal[];
   double _kijunVal[];
   double _senkouAVal[];
   double _senkouBVal[];
-  double _chinkouVal[];
+  // double _chinkouVal[];
   MqlRates _rates[];
 
 public:
   /*
     Class constructor.
   */
-  nvIchimokuAgent(nvCurrencyTrader* trader) : nvTradingAgent(trader)
+  nvIchimokuAgentB(nvCurrencyTrader* trader) : nvTradingAgent(trader)
   {
     _agentType = TRADE_AGENT_ICHIMOKU;
     _agentCapabilities = TRADE_AGENT_ENTRY_EXIT;
-    _ichiHandle = 0;
+    _ichiHandle = NULL;
     // randomize();
   }
 
   /*
     Copy constructor
   */
-  nvIchimokuAgent(const nvIchimokuAgent& rhs) : nvTradingAgent(rhs)
+  nvIchimokuAgentB(const nvIchimokuAgentB& rhs) : nvTradingAgent(rhs)
   {
     this = rhs;
   }
@@ -42,7 +43,7 @@ public:
   /*
     assignment operator
   */
-  void operator=(const nvIchimokuAgent& rhs)
+  void operator=(const nvIchimokuAgentB& rhs)
   {
     THROW("No copy assignment.")
   }
@@ -50,11 +51,9 @@ public:
   /*
     Class destructor.
   */
-  ~nvIchimokuAgent()
+  ~nvIchimokuAgentB()
   {
-    if(_ichiHandle>0) {
-      IndicatorRelease(_ichiHandle);
-    }
+    // The ichiHandle with be release by the parent class.
   }
  
   /*
@@ -76,7 +75,7 @@ public:
   virtual nvTradingAgent* clone()
   {
     // We should not be able to clone this base class by default:
-    nvTradingAgent* agent = new nvIchimokuAgent(_trader);
+    nvTradingAgent* agent = new nvIchimokuAgentB(_trader);
     return agent;
   }
   
@@ -88,16 +87,16 @@ public:
   virtual void initialize()
   {
     // At this point we can initialize the agent ressources:
-    _ichiHandle=iIchimoku(_symbol,_period,9,26,52);
-    CHECK(_ichiHandle>0,"Invalid Ichimoku handle");
+    _ichiHandle = new nviIchimoku(_trader,_period);
+    _ichiHandle.setParameters(9,26,52);
+    addIndicator(_ichiHandle);
 
     ArraySetAsSeries(_tenkanVal,true);
     ArraySetAsSeries(_kijunVal,true);
     ArraySetAsSeries(_senkouAVal,true);
     ArraySetAsSeries(_senkouBVal,true);
-    ArraySetAsSeries(_chinkouVal,true);
+    // ArraySetAsSeries(_chinkouVal,true);
     ArraySetAsSeries(_rates,true);
-
   }
 
   /*
@@ -180,14 +179,14 @@ public:
     int num = 1;
 
     CHECK(CopyRates(_symbol,_period,_currentTime,num,_rates)==num,"Cannot copy the latest rates");
-    logDEBUG(_currentTime<<": "<<_symbol<<" Retrieving ichimoku data from handle: "<<_ichiHandle);
+    // logDEBUG(_currentTime<<": "<<_symbol<<" Retrieving ichimoku data from handle: "<<_ichiHandle);
 
-    CHECK(CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal)==num,"Cannot copy Ichimoku buffer 0");
-    CHECK(CopyBuffer(_ichiHandle,1,_currentTime,num,_kijunVal)==num,"Cannot copy Ichimoku buffer 1");
-    CHECK(CopyBuffer(_ichiHandle,2,_currentTime,4,_senkouAVal)==4,"Cannot copy Ichimoku buffer 2");
-    CHECK(CopyBuffer(_ichiHandle,3,_currentTime,4,_senkouBVal)==4,"Cannot copy Ichimoku buffer 3");
-    CHECK(CopyBuffer(_ichiHandle,4,_currentTime,30,_chinkouVal)==30,"Cannot copy Ichimoku buffer 4");
-    
+    _tenkanVal[0] = _ichiHandle.getBuffer(ICHI_TENKAN);
+    _kijunVal[0] = _ichiHandle.getBuffer(ICHI_KIJUN);
+    _senkouAVal[0] = _ichiHandle.getBuffer(ICHI_SPAN_A);
+    _senkouBVal[0] = _ichiHandle.getBuffer(ICHI_SPAN_B);
+    // _chinkouVal[0] = ??? // Not set for the moment.
+
     // logDEBUG(_currentTime << ": tenkanVal[0]="<<_tenkanVal[0]<<", tenkanVal[1]="<<_tenkanVal[1]);
   }
   

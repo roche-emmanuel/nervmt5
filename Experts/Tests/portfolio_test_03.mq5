@@ -21,7 +21,7 @@ void OnStart()
   // datetime time = D'2015.01.05 00:00';
   // datetime time = D'2013.01.05 00:00';
   // datetime time = D'2012.01.05 00:00';
-  datetime time = D'2011.01.05 00:00';
+  datetime time = D'2010.01.01 00:00';
 
   // Note that we must update the portfolio initial time **before**
   // adding the currency traders, otherwise, the first weight updated message
@@ -51,7 +51,8 @@ void OnStart()
     ct.addTradingAgent(GetPointer(ichi));
   }
 
-  int numDays=365*4;
+  int numDays=365;
+  // int numDays=365*4;
   // int numDays = 31*8;
   int nsecs = 86400*numDays;
   int nmins = 26*60*numDays;

@@ -312,3 +312,4 @@ But we need the fix for issue #29 first.
 10/13/15-14:33:22: Working on issue #50: removed debug message when changing plot range.
 10/13/15-14:53:21: Working on issue #50: added support for mean decision composer.
 10/13/15-17:02:49: Working on issue #50: currently producing extremely good results with 4 symbols (probably a bug).
+10/13/15-22:29:33: Working on issue #51: added implementation for IchimokuAgentB

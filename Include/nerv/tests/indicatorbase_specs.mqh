@@ -86,6 +86,15 @@ BEGIN_TEST_CASE("Ichimoku indicator should produce the same result as the offici
 
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to retrieve data far in the past from Ichimoku indicator")
+  datetime time = D'2010.01.01 00:00';
+
+  int handle=iIchimoku("EURUSD",PERIOD_M1,9,26,52);
+  ASSERT(handle>0);
+  double vals[];
+  ASSERT_EQUAL(CopyBuffer(handle,0,time,2,vals),2);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
