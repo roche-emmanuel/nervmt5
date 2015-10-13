@@ -29,11 +29,16 @@ void OnStart()
   int nsym = 4;
   string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
 
+  nvDecisionComposerFactory* factory = man.getDecisionComposerFactory();
+
   for(int j=0;j<nsym;++j)
   {
     nvCurrencyTrader* ct = man.addCurrencyTrader(symbols[j]);
     // We have to stay on the virtual market only for the moment:
     ct.setMarketType(MARKET_TYPE_VIRTUAL);
+
+    ct.setEntryDecisionComposer(factory.createEntryComposer(ct,DECISION_COMPOSER_MEAN));
+    ct.setExitDecisionComposer(factory.createExitComposer(ct,DECISION_COMPOSER_MEAN));
 
     nvIchimokuAgent* ichi = new nvIchimokuAgent(ct);
     ichi.setPeriod(PERIOD_H1);

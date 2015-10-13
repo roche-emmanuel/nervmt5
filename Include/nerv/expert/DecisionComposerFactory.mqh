@@ -2,6 +2,9 @@
 #include <nerv/expert/DecisionComposer.mqh>
 #include <nerv/expert/PortfolioElement.mqh>
 
+#define DECISION_COMPOSER_RANDOM 0
+#define DECISION_COMPOSER_MEAN 1
+
 /*
 Class: nvDecisionComposerFactory
 
@@ -89,8 +92,10 @@ public:
 
     switch(index)
     {
-    case 0:
+    case DECISION_COMPOSER_RANDOM:
       result = new nvRandomDecisionComposer(); break;
+    case DECISION_COMPOSER_MEAN:
+      result = new nvMeanDecisionComposer(); break;
     default:
       break; 
     }
@@ -133,8 +138,10 @@ public:
     nvDecisionComposer* result = NULL;
     switch(index)
     {
-    case 0:
+    case DECISION_COMPOSER_RANDOM:
       result = new nvRandomDecisionComposer(); break;
+    case DECISION_COMPOSER_MEAN:
+      result = new nvMeanDecisionComposer(); break;
     default:
       break;
     }

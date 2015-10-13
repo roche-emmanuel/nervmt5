@@ -98,3 +98,31 @@ public:
     return _signal;
   }
 };
+
+// Mean decision composer: will compute a simple mean of its inputs:
+class nvMeanDecisionComposer : public nvDecisionComposer
+{
+public:
+  nvMeanDecisionComposer() {}
+
+  /*
+  Function: evaluate
+  
+  This implementation will compute the simple mean of the inputs
+  */
+  virtual double evaluate(double &inputs[])
+  {
+    int num = ArraySize( inputs );
+    if(num==0) {
+      return 0.0; // nothing to compute.
+    }
+
+    double mean = 0.0;
+    for(int i=0;i<num;++i) {
+      mean += inputs[i];
+    }
+
+    mean /= (double)num;
+    return mean;
+  }
+};

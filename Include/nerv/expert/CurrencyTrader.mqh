@@ -92,6 +92,30 @@ public:
   }
 
   /*
+  Function: setEntryDecisionComposer
+  
+  Function description
+  */
+  void setEntryDecisionComposer(nvDecisionComposer* comp)
+  {
+    CHECK(comp,"Invalid decision composer");
+    RELEASE_PTR(_entryDecisionComposer);
+    _entryDecisionComposer = comp;
+  }
+  
+  /*
+  Function: setExitDecisionComposer
+  
+  Assign an exit decision composer
+  */
+  void setExitDecisionComposer(nvDecisionComposer* comp)
+  {
+    CHECK(comp,"Invalid decision composer");
+    RELEASE_PTR(_exitDecisionComposer);
+    _exitDecisionComposer = comp;    
+  }
+  
+  /*
   Function: setSymbol
   
   Assign the symbol of this currency trader. Can only be called once.
@@ -121,7 +145,7 @@ public:
 
     // Build the decision composers here:
     nvDecisionComposerFactory* factory = getManager().getDecisionComposerFactory();
-    
+      
     _entryDecisionComposer = factory.createEntryComposer(THIS);
     CHECK(_entryDecisionComposer!=NULL,"Cannot create entry decision composer.");
 
