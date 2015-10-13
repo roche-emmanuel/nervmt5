@@ -18,7 +18,10 @@ void OnStart()
   // Initial start time:
   // Note: we should not start on the 1st of January:
   // Because there is no trading at that time!
-  datetime time = D'2015.01.05 00:00';
+  // datetime time = D'2015.01.05 00:00';
+  // datetime time = D'2013.01.05 00:00';
+  // datetime time = D'2012.01.05 00:00';
+  datetime time = D'2011.01.05 00:00';
 
   // Note that we must update the portfolio initial time **before**
   // adding the currency traders, otherwise, the first weight updated message
@@ -28,6 +31,8 @@ void OnStart()
   // Add some currency traders:
   int nsym = 4;
   string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
+  // int nsym = 1;
+  // string symbols[] = {"EURUSD"};
 
   nvDecisionComposerFactory* factory = man.getDecisionComposerFactory();
 
@@ -46,7 +51,8 @@ void OnStart()
     ct.addTradingAgent(GetPointer(ichi));
   }
 
-  int numDays = 31*2;
+  int numDays=365*4;
+  // int numDays = 31*8;
   int nsecs = 86400*numDays;
   int nmins = 26*60*numDays;
   for(int i=0;i<nmins;++i) {

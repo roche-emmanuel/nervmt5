@@ -416,6 +416,10 @@ public:
       // submit the agents point of views to the exit decision composer:
       double decision = _exitDecisionComposer.evaluate(_exitDecisions);
 
+      if(decision!=0.0) {
+        logDEBUG(_symbol<<": "<<ctime<<" Computed exit decision: "<<decision<<", current position: "<<(int)getPositionType());
+      }
+
       if(getPositionType()==POS_LONG && decision<0.0)
       {
         // We should close the position.
@@ -437,6 +441,10 @@ public:
 
       // submit the agents point of views to the entry decision composer:
       double decision = _entryDecisionComposer.evaluate(_entryDecisions);
+
+      if(decision!=0.0) {
+        logDEBUG(_symbol<<": "<<ctime<<" Opening position with decision: "<<decision);
+      }
 
       openPosition(decision);
     }

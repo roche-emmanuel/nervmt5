@@ -125,6 +125,12 @@ public:
       return false;
     }
 
+    // Do not buy if the price is not above this limit (?)
+    if(_rates[0].close <= _tenkanVal[0])
+    {
+      return false;
+    }
+
     return true;
     // TODO: we could also add a signal from the chinkou line here    
   }
@@ -154,18 +160,24 @@ public:
       return false;
     }
 
+    // Do not sell if the price is not under this limit (?)
+    if(_rates[0].close >= _tenkanVal[0])
+    {
+      return false;
+    }
+
     return true;
     // TODO: we could also add a signal from the chinkou line here    
   }
 
   /*
-  Function: handleBar
+  Function: doUpdate
   
   Method used to handle the receiption of an update request
   */
-  virtual void handleBar()
+  virtual void doUpdate()
   {
-    int num = 2;
+    int num = 1;
 
     CHECK(CopyRates(_symbol,_period,_currentTime,num,_rates)==num,"Cannot copy the latest rates");
     CHECK(CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal)==num,"Cannot copy Ichimoku buffer 0");
@@ -190,10 +202,24 @@ public:
     CHECK_RET(_trader.hasOpenPosition()==false,0.0,"Should not have an open position here");
 
     if(checkBuyConditions()) {
+      logDEBUG("producing buy signal with: "
+        << " close="<<_rates[0].close 
+        << ", tenkan="<<_tenkanVal[0]
+        << ", kijun="<<_kijunVal[0]
+        << ", spanA="<<_senkouAVal[0]
+        << ", spanB="<<_senkouBVal[0]
+        )
       return 1.0; // produce a buy signal.
     }
 
     if(checkSellConditions()) {
+      logDEBUG("producing sell signal with: "
+        << " close="<<_rates[0].close 
+        << ", tenkan="<<_tenkanVal[0]
+        << ", kijun="<<_kijunVal[0]
+        << ", spanA="<<_senkouAVal[0]
+        << ", spanB="<<_senkouBVal[0]
+        )
       return -1.0; // produce a sell signal
     }
 
@@ -211,14 +237,28 @@ public:
   {
     PositionType pos = _trader.getPositionType();
 
-    if( (_tenkanVal[0]-_kijunVal[0])*(_tenkanVal[1]-_kijunVal[1]) <= 0.0)
+    if( (pos==POS_LONG && _tenkanVal[0]<_kijunVal[0]) || (pos==POS_SHORT && _tenkanVal[0]>_kijunVal[0]) )
     {
       logDEBUG(_currentTime<<": Suggesting position close due to tenkan <-> kijun cross.");
+      logDEBUG("Closing with: "
+      << " close="<<_rates[0].close 
+      << ", tenkan="<<_tenkanVal[0]
+      << ", kijun="<<_kijunVal[0]
+      << ", spanA="<<_senkouAVal[0]
+      << ", spanB="<<_senkouBVal[0]
+      )
       return pos==POS_LONG ? -1.0 : 1.0;
     }
-    else if ( (_rates[0].close - _kijunVal[0]) * (_rates[1].close - _kijunVal[1]) < 0.0)
+    else if ( (pos==POS_LONG && _rates[0].close<_kijunVal[0]) || (pos==POS_SHORT && _rates[0].close>_kijunVal[0]) )  //(_rates[0].close - _kijunVal[0]) * (_rates[1].close - _kijunVal[1]) < 0.0)
     {
       logDEBUG(_currentTime<<": Suggesting position close due to price <-> kijun cross.")
+      logDEBUG("Closing with: "
+      << " close="<<_rates[0].close 
+      << ", tenkan="<<_tenkanVal[0]
+      << ", kijun="<<_kijunVal[0]
+      << ", spanA="<<_senkouAVal[0]
+      << ", spanB="<<_senkouBVal[0]
+      )
       return pos==POS_LONG ? -1.0 : 1.0;
     }
    

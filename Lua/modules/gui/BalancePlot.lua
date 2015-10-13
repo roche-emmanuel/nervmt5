@@ -25,6 +25,7 @@ function Class:initialize(options)
 		-- self:debug("Should handle the balance value message here")
 		self:addTimedSample(msg.time,msg.value,"Balance")		
 		-- x = x+1
+		self:debug("Received balance value: ", msg.value)
 		self._updatedNeeded = true
 	end)
 end
