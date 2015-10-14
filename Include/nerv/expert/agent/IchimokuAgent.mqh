@@ -180,7 +180,7 @@ public:
     int num = 1;
 
     CHECK(CopyRates(_symbol,_period,_currentTime,num,_rates)==num,"Cannot copy the latest rates");
-    logDEBUG(_currentTime<<": "<<_symbol<<" Retrieving ichimoku data from handle: "<<_ichiHandle);
+    // logDEBUG(_currentTime<<": "<<_symbol<<" Retrieving ichimoku data from handle: "<<_ichiHandle);
 
     CHECK(CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal)==num,"Cannot copy Ichimoku buffer 0");
     CHECK(CopyBuffer(_ichiHandle,1,_currentTime,num,_kijunVal)==num,"Cannot copy Ichimoku buffer 1");

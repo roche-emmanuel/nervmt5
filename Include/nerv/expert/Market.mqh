@@ -48,7 +48,8 @@ public:
   */
   ~nvMarket()
   {
-    // No op.
+    // release the current deals if any:
+    nvReleaseObjects(_currentDeals);
   }
 
   /*

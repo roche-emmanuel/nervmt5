@@ -365,3 +365,16 @@ bool nvIsSymbolValid(string symbol)
 
   return false;
 }
+
+// Method used to retrieve the current bar time for a given symbol, period and time
+datetime nvGetBarTime(string symbol, ENUM_TIMEFRAMES period, datetime time)
+{
+  datetime barTime[1];
+
+  // copying the last bar time to the element barTime[0]
+  if(CopyTime(symbol,period,time,1,barTime)!=1) {
+    THROW("Cannot copy bar time.");
+  }
+  
+  return barTime[0];
+}

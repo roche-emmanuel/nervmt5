@@ -237,17 +237,17 @@ public:
     // logDEBUG(_symbol <<": Updating agent at time "<<time);
     _currentTime = time;
 
-    // Compute the values of the indicators at that time:
-    int num = ArraySize( _indicators );
-    for(int i=0;i<num;++i) {
-      _indicators[i].compute(time);
-    }
-
     datetime New_Time[1];
 
     // copying the last bar time to the element New_Time[0]
     int copied=CopyTime(_symbol,_period,time,1,New_Time);
     CHECK(copied==1,"Invalid result for CopyTime operation: "<<copied);
+
+    // Compute the values of the indicators at that time:
+    int num = ArraySize( _indicators );
+    for(int i=0;i<num;++i) {
+      _indicators[i].compute(time, New_Time[0]);
+    }
 
     if(_currentBarTime!=New_Time[0]) // if old time isn't equal to new bar time
     {

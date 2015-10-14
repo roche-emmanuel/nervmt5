@@ -219,6 +219,12 @@ BEGIN_TEST_CASE("Should retrieve rates as expected")
   }
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should return the expected value when computing modulos")
+  int val = (-1)%7;
+  // ASSERT_EQUAL(val,6);
+  ASSERT_EQUAL(val,-1); // This is not the result we expected.
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

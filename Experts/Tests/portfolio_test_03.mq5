@@ -3,6 +3,7 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/PortfolioManager.mqh>
 #include <nerv/expert/agent/IchimokuAgent.mqh>
+#include <nerv/expert/agent/IchimokuAgentB.mqh>
 
 void OnStart()
 {
@@ -46,14 +47,16 @@ void OnStart()
     ct.setExitDecisionComposer(factory.createExitComposer(ct,DECISION_COMPOSER_MEAN));
 
     nvIchimokuAgent* ichi = new nvIchimokuAgent(ct);
+    //nvIchimokuAgentB* ichi = new nvIchimokuAgentB(ct);
     ichi.setPeriod(PERIOD_H1);
 
     ct.addTradingAgent(GetPointer(ichi));
   }
 
-  int numDays=365;
+  uint startTick = GetTickCount();
+  int numDays=20;
   // int numDays=365*4;
-  // int numDays = 31*8;
+  // int numDays = 31*4;
   int nsecs = 86400*numDays;
   int nmins = 26*60*numDays;
   for(int i=0;i<nmins;++i) {
@@ -61,5 +64,7 @@ void OnStart()
     man.update(time+i*60);
   }
 
-  logDEBUG("Done executing portfolio test.");
+  uint endTick = GetTickCount();
+  double elapsed = (double)(endTick-startTick)/1000.0;
+  logDEBUG("Done executing portfolio test in "<< elapsed <<" seconds");
 }

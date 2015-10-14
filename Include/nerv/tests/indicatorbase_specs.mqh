@@ -43,7 +43,7 @@ BEGIN_TEST_CASE("Ichimoku indicator should produce the same result as the offici
   for(int i=0;i<num;++i) {
     ctime = stime + i*30;
 
-    ichi.compute(ctime);
+    ichi.compute(ctime,ctime);
 
     ASSERT_EQUAL(CopyBuffer(handle,0,ctime,1,vals),1);
     ASSERT_EQUAL(ichi.getBuffer(ICHI_TENKAN),vals[0]);

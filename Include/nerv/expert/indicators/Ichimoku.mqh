@@ -1,5 +1,6 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/IndicatorBase.mqh>
+#include <nerv/core/CyclicBuffer.mqh>
 
 // Buffer indices used in this indicator:
 #define ICHI_TENKAN 0
@@ -24,26 +25,23 @@ protected:
   
   MqlRates _rates[];
 
+  nvCyclicBuffer _tenkanHigh;
+  nvCyclicBuffer _tenkanLow;
+
+  // Last update time:
+  datetime _lastUpdateTime;
+
 public:
   /*
     Class constructor.
   */
   nviIchimoku(nvCurrencyTrader* trader, ENUM_TIMEFRAMES period=PERIOD_M1)
     : nvIndicatorBase(trader,period)
-  {
-    CHECK(trader,"Invalid parent trader.");
-
-    _trader = trader;
-    _symbol = _trader.getSymbol();
-    _period = period;
-    
+  { 
     ArraySetAsSeries(_rates,true);
 
-    // Defaoult parameter values:
-    _tenkanSize = 9;
-    _kijunSize = 26;
-    _senkouSize = 52;
-    _maxNumBar = 52+26;
+    // Default parameter values:
+    setParameters(9,26,52);
   }
 
   /*
@@ -82,8 +80,21 @@ public:
     _kijunSize = kijun;
     _senkouSize = senkou;
     _maxNumBar = MathMax(_tenkanSize,MathMax(_kijunSize,_senkouSize))+_kijunSize;
+    reset();
   }
   
+  /*
+  Function: reset
+  
+  method called to reset the previously computed data in this indicator 
+  */
+  void reset()
+  {
+    _lastUpdateTime = 0;
+    _tenkanHigh.resize(_tenkanSize);
+    _tenkanLow.resize(_tenkanSize);
+  }
+
   double Highest(const MqlRates& array[], int range, int offset = 0)
   {
     double res=0;
@@ -117,7 +128,51 @@ public:
   */
   virtual void doCompute(datetime time)
   {
-    // Retrieve all the rates that we need to perform the computation:
+    // check how we compare to the last update time:
+    // if(time < _lastUpdateTime) {
+    //   reset();
+    // }
+
+    // MqlRates src[];
+
+    // if(_lastUpdateTime==0) {
+    //   // we need to cache all the data:
+    //   // So we retrieve the current bar time:
+    //   _lastUpdateTime = nvGetBarTime(_symbol,_period,time);
+
+    //   // Retrieve all the rates that we might need to init the buffers:
+    //   CHECK(CopyRates(_symbol,_period,time,_maxNumBar,src)==_maxNumBar,"Cannot copy rates.");
+
+    //   int offset = _maxNumBar-_tenkanSize;
+    //   for(int i=0;i<_tenkanSize;++i) {
+    //     _tenkanHigh.push_back(src[i+offset].high);
+    //     _tenkanLow.push_back(src[i+offset].low);
+    //   }
+
+    //   // for(int i=0;i<_kijunSize;++i) {
+    //   //   _kijunHigh.push_back(_rates[i].high);
+    //   //   _kijunLow.push_back(_rates[i].low);
+    //   // }
+
+    // }
+
+    // // Check how many bar have elapsed since the last update:
+    // int num = (int)MathFloor( (time - _lastUpdateTime)/(double)_periodDuration );
+
+    // _lastUpdateTime  += num*_periodDuration;
+
+    // // retrieve this number of bars to inject them
+    // // (plus one for the current one)
+    // CHECK(CopyRates(_symbol,_period,time,num+1,src)==num+1,"Cannot copy rates.");
+    // for(int i=0;i<num;++i) {
+    //   _tenkanHigh.push_back(src[i].high);
+    //   _tenkanLow.push_back(src[i].low);
+    // }
+
+    // _tenkanHigh.set_back(src[num].high);
+    // _tenkanLow.set_back(src[num].low);
+
+
     CHECK(CopyRates(_symbol,_period,time,_maxNumBar,_rates)==_maxNumBar,"Cannot copy rates.");
 
     double high, low, tenkanVal, kijunVal;

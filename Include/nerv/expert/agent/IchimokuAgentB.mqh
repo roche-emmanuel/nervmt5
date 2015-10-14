@@ -97,6 +97,12 @@ public:
     ArraySetAsSeries(_senkouBVal,true);
     // ArraySetAsSeries(_chinkouVal,true);
     ArraySetAsSeries(_rates,true);
+    
+    // We should allocate those arrays here:
+    ArrayResize( _tenkanVal, 1 );
+    ArrayResize( _kijunVal, 1 );
+    ArrayResize( _senkouAVal, 1 );
+    ArrayResize( _senkouBVal, 1 );
   }
 
   /*

@@ -18,6 +18,8 @@ protected:
   // The period used inside this agent:
   ENUM_TIMEFRAMES _period;
 
+  int _periodDuration;
+
   // Symbol name:
   string _symbol;
 
@@ -42,6 +44,7 @@ public:
     _trader = trader;
     _symbol = _trader.getSymbol();
     _period = period;
+    _periodDuration = nvGetPeriodDuration(_period);
     _historySize = 1;
     _prevBarTime = 0;
     ArrayResize( _buffers, 0 );
@@ -192,18 +195,11 @@ public:
   Method used to compute the indicator value at a given time.
   This is the main method that should be overriden by derived classes.
   */
-  virtual void compute(datetime time)
+  virtual void compute(datetime time, datetime barTime)
   {
-    // Check if we need to write a new bar value:
-    datetime New_Time[1];
-
-    // copying the last bar time to the element New_Time[0]
-    int copied=CopyTime(_symbol,_period,time,1,New_Time);
-    CHECK(copied==1,"Invalid result for CopyTime operation: "<<copied);
-
-    if(_prevBarTime!=New_Time[0]) // if old time isn't equal to new bar time
+    if(_prevBarTime!=barTime) // if old time isn't equal to new bar time
     {
-      _prevBarTime=New_Time[0];            // saving bar time  
+      _prevBarTime=barTime;            // saving bar time  
       // logDEBUG("Saving buffers at time "<<_prevBarTime);
       saveBuffers();
     }
