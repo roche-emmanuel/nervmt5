@@ -225,6 +225,43 @@ BEGIN_TEST_CASE("Should return the expected value when computing modulos")
   ASSERT_EQUAL(val,-1); // This is not the result we expected.
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to align rates array as expected")
+  int maxNumBar = 52+29;
+
+  datetime time = D'2015.01.02 00:00';
+
+  MqlRates cachedRates[];
+  MqlRates rates[];
+
+  string symbol = "EURUSD";
+  ENUM_TIMEFRAMES period = PERIOD_M1;
+
+  datetime lastUpdateTime = nvGetBarTime(symbol,period,time);
+
+  // At that time we need to cache as much data as we can!
+  datetime ctime = TimeCurrent(); // retrieve the latest time available from the server;
+
+  // Check how many bars we could cache:
+  int dur = nvGetPeriodDuration(period);
+  int num = (int)MathFloor((ctime - lastUpdateTime)/(double)dur);
+
+  // num = MathMin(99999-maxNumBar,num);
+  // num = 1000; // Doesn't work for too big value of num !!
+  num = 100; // Doesn't work for too big value of num !!
+  datetime lastTime = lastUpdateTime + num*dur;
+  
+  num += maxNumBar;
+  logDEBUG("Caching "<<num<<" bar for ichimoku indicator");
+  ASSERT_EQUAL(CopyRates(symbol,period,lastTime,num,cachedRates),num);
+
+  ASSERT_EQUAL(CopyRates(symbol,period,time,maxNumBar,rates),maxNumBar);
+  
+  for(int i=0;i<maxNumBar;++i) {
+    ASSERT_EQUAL(rates[i].close,cachedRates[i].close);
+  }
+
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

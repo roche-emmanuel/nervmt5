@@ -314,3 +314,4 @@ But we need the fix for issue #29 first.
 10/13/15-17:02:49: Working on issue #50: currently producing extremely good results with 4 symbols (probably a bug).
 10/13/15-22:29:33: Working on issue #51: added implementation for IchimokuAgentB
 10/14/15-15:54:18: Working on issue #51: trying to optimize Ichimoku indicator.
+10/14/15-17:28:22: Working on issue #51: trying to optimize the ichimoku indicator but this is a nightmare... checking if we could not simply use the legacy indicator in a different way first.

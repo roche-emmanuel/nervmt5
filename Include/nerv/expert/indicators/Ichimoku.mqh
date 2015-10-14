@@ -1,6 +1,7 @@
 #include <nerv/core.mqh>
 #include <nerv/expert/IndicatorBase.mqh>
 #include <nerv/core/CyclicBuffer.mqh>
+#include <nerv/expert/PriceManager.mqh>
 
 // Buffer indices used in this indicator:
 #define ICHI_TENKAN 0
@@ -24,6 +25,7 @@ protected:
   int _maxNumBar;
   
   MqlRates _rates[];
+  MqlRates _cachedRates[];
 
   nvCyclicBuffer _tenkanHigh;
   nvCyclicBuffer _tenkanLow;
@@ -133,60 +135,49 @@ public:
     //   reset();
     // }
 
-    // MqlRates src[];
-
+    // if(time - _lastUpdateTime < _periodDuration) {
+    //   return; // nothing to update.
+    // }
+    
     // if(_lastUpdateTime==0) {
-    //   // we need to cache all the data:
-    //   // So we retrieve the current bar time:
     //   _lastUpdateTime = nvGetBarTime(_symbol,_period,time);
+    //   // At that time we need to cache as much data as we can!
+    //   datetime ctime = TimeCurrent(); // retrieve the latest time available from the server;
 
-    //   // Retrieve all the rates that we might need to init the buffers:
-    //   CHECK(CopyRates(_symbol,_period,time,_maxNumBar,src)==_maxNumBar,"Cannot copy rates.");
-
-    //   int offset = _maxNumBar-_tenkanSize;
-    //   for(int i=0;i<_tenkanSize;++i) {
-    //     _tenkanHigh.push_back(src[i+offset].high);
-    //     _tenkanLow.push_back(src[i+offset].low);
-    //   }
-
-    //   // for(int i=0;i<_kijunSize;++i) {
-    //   //   _kijunHigh.push_back(_rates[i].high);
-    //   //   _kijunLow.push_back(_rates[i].low);
-    //   // }
-
+    //   // Check how many bars we could cache:
+    //   int num = (int)MathFloor((ctime - _lastUpdateTime)/(double)_periodDuration);
+    //   num = MathMin(99999-_maxNumBar,num);
+    //   datetime lastTime = _lastUpdateTime + num*_periodDuration;
+      
+    //   num += _maxNumBar;
+    //   logDEBUG("Caching "<<num<<" bar for ichimoku indicator");
+    //   CHECK(CopyRates(_symbol,_period,lastTime,num,_cachedRates)==num,"Cannot copy rates.");
     // }
 
-    // // Check how many bar have elapsed since the last update:
-    // int num = (int)MathFloor( (time - _lastUpdateTime)/(double)_periodDuration );
-
-    // _lastUpdateTime  += num*_periodDuration;
-
-    // // retrieve this number of bars to inject them
-    // // (plus one for the current one)
-    // CHECK(CopyRates(_symbol,_period,time,num+1,src)==num+1,"Cannot copy rates.");
-    // for(int i=0;i<num;++i) {
-    //   _tenkanHigh.push_back(src[i].high);
-    //   _tenkanLow.push_back(src[i].low);
-    // }
-
-    // _tenkanHigh.set_back(src[num].high);
-    // _tenkanLow.set_back(src[num].low);
-
+    // // Compute the offset we want to use for this cycle:
+    // int index = (int)MathFloor( (time - _lastUpdateTime) / (double)_periodDuration );
 
     CHECK(CopyRates(_symbol,_period,time,_maxNumBar,_rates)==_maxNumBar,"Cannot copy rates.");
 
+    // _lastUpdateTime = _rates[0].time;
+    // logDEBUG("Updating Ichimoku indicator at time "<<time<< ". Last update set to: "<<_lastUpdateTime<<", period="<<EnumToString(_period));
+  
     double high, low, tenkanVal, kijunVal;
     int offset;
 
     setBuffer(ICHI_CHINKOU,_rates[0].close);
+    // setBuffer(ICHI_CHINKOU,_cachedRates[index+_maxNumBar-1].close);
+    // setBuffer(ICHI_CHINKOU,0.0);
     
     high = Highest(_rates,_tenkanSize);
     low = Lowest(_rates,_tenkanSize);
     setBuffer(ICHI_TENKAN,(high+low)*0.5);
+    // setBuffer(ICHI_TENKAN,0.0);
 
     high = Highest(_rates,_kijunSize);
     low = Lowest(_rates,_kijunSize);
     setBuffer(ICHI_KIJUN,(high+low)*0.5);
+    // setBuffer(ICHI_KIJUN,0.0);
 
     // There should be a plot shift of kijunSize applied for the span A
     offset = _kijunSize;
@@ -199,10 +190,12 @@ public:
     kijunVal = (high+low)*0.5;
 
     setBuffer(ICHI_SPAN_A,(tenkanVal+kijunVal)*0.5);
+    // setBuffer(ICHI_SPAN_A,0.0);
 
     high = Highest(_rates,_senkouSize,offset);
     low = Lowest(_rates,_senkouSize,offset);
     setBuffer(ICHI_SPAN_B,(high+low)*0.5);
+    // setBuffer(ICHI_SPAN_B,0.0);
   }
   
 
