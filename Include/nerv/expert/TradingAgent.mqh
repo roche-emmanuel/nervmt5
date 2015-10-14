@@ -230,7 +230,7 @@ public:
     CHECK(time>=_currentTime,"Going back in time ?! "<<_currentTime<<" > "<<time);
     if(_currentTime==time) {
       // Nothing to update.
-      logDEBUG(_symbol <<": Discarding update call at current time "<<time);
+      // logDEBUG(_symbol <<": Discarding update call at current time "<<time);
       return;
     }
 

@@ -120,8 +120,13 @@ public:
     // The worst lost we will achieve in the quote currency is:
     // VaR = lost = lotsize*contract_size*num_point
     // thus we need lotsize = VaR/(contract_size*numPoints) = VaR / (point_value * numPoints)
-    double lotsize = VaR/(nvGetPointValue(symbol)*numLostPoints);
+    // Also: we should prevent the lost point value to go too low !!
+    double lotsize = VaR/(nvGetPointValue(symbol)*MathMax(numLostPoints,1.0));
     
+    logDEBUG("Normalizing lotsize="<<lotsize<<", with lostPoints="<<numLostPoints<<", VaR="<<VaR
+      <<", balance="<<balance<<", quoteCurrency="<<quoteCurrency<<", confidence="<<confidence
+      <<", weight="<<traderWeight<<", riskLevel="<<_riskLevel);
+
     // finally we should normalize the lot size:
     return nvNormalizeLotSize(lotsize,symbol);
   }

@@ -100,6 +100,8 @@ public:
 
     deal.open();
 
+    logDEBUG("Opening deal with lotSize="<<deal.getLotSize());
+    
     // Perform the actual opening of the position:
     if(doOpenPosition(deal))
     {

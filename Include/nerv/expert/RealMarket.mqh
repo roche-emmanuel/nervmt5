@@ -66,7 +66,8 @@ public:
 
     double price = closing ? deal.getExitPrice() : deal.getEntryPrice();
 
-    double sl = closing ? 0.0 : deal.getStopLossPrice();  
+    // double sl = closing ? 0.0 : deal.getStopLossPrice();  
+    double sl = 0.0; // not using the stop loss for the moment.
     double lot = deal.getLotSize();
     double tp = 0.0;
 
@@ -80,7 +81,7 @@ public:
     mrequest.symbol = symbol;                         // currency pair
     mrequest.volume = NormalizeDouble(lot,2);         // number of lots to trade
     mrequest.magic = deal.getCurrencyTrader().getID();// Order Magic Number
-    mrequest.type = deal.getOrderType();              // Buy Order
+    mrequest.type = otype;                            // Buy/Sell Order
     mrequest.type_filling = ORDER_FILLING_FOK;        // Order execution type
     mrequest.deviation=10;                            // Deviation from current price
 

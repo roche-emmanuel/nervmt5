@@ -182,7 +182,14 @@ public:
     CHECK(CopyRates(_symbol,_period,_currentTime,num,_rates)==num,"Cannot copy the latest rates");
     // logDEBUG(_currentTime<<": "<<_symbol<<" Retrieving ichimoku data from handle: "<<_ichiHandle);
 
-    CHECK(CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal)==num,"Cannot copy Ichimoku buffer 0");
+    int count = CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal);
+    while(count<0) {
+      logDEBUG("Waiting to get ichimoku data...");
+      Sleep(100);
+      count = CopyBuffer(_ichiHandle,0,_currentTime,num,_tenkanVal);
+    }
+
+    CHECK(count==num,"Cannot copy Ichimoku buffer 0");
     CHECK(CopyBuffer(_ichiHandle,1,_currentTime,num,_kijunVal)==num,"Cannot copy Ichimoku buffer 1");
     CHECK(CopyBuffer(_ichiHandle,2,_currentTime,4,_senkouAVal)==4,"Cannot copy Ichimoku buffer 2");
     CHECK(CopyBuffer(_ichiHandle,3,_currentTime,4,_senkouBVal)==4,"Cannot copy Ichimoku buffer 3");

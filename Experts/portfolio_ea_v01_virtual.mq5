@@ -19,12 +19,19 @@ nvPortfolioManager* portfolio = NULL;
 // Initialization method:
 int OnInit()
 {
-  datetime time = D'2010.01.01 00:00';
+  // datetime time = D'2010.01.01 00:00';
 
-  int handle=iIchimoku("EURUSD",PERIOD_M1,9,26,52);
-  CHECK_RET(handle>0,0,"Invalid ichimoku handle.");
-  double vals[];
-  CHECK_RET(CopyBuffer(handle,0,time,2,vals)==2,0,"Cannot copy buffer");
+  // int handle=iIchimoku("EURUSD",PERIOD_M1,9,26,52);
+  // CHECK_RET(handle>0,0,"Invalid ichimoku handle.");
+  // double vals[];
+  // int num = CopyBuffer(handle,0,time,2,vals);
+  // while(num<0) {
+  //  logDEBUG("Waiting to get data...");
+  //  Sleep(10);
+  //  num = CopyBuffer(handle,0,time,2,vals);
+  // } 
+  
+  // CHECK_RET(num==2,0,"Cannot copy buffer");
 
   logDEBUG("Initializing Nerv MultiCurrencyExpert.")
 
@@ -49,7 +56,8 @@ int OnInit()
   {
     nvCurrencyTrader* ct = portfolio.addCurrencyTrader(symbols[j]);
     // We have to stay on the virtual market only for the moment:
-    ct.setMarketType(MARKET_TYPE_REAL);
+    // ct.setMarketType(MARKET_TYPE_REAL);
+    ct.setMarketType(MARKET_TYPE_VIRTUAL);
 
     ct.setEntryDecisionComposer(factory.createEntryComposer(ct,DECISION_COMPOSER_MEAN));
     ct.setExitDecisionComposer(factory.createExitComposer(ct,DECISION_COMPOSER_MEAN));

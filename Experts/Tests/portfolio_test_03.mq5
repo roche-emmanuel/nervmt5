@@ -46,8 +46,8 @@ void OnStart()
     ct.setEntryDecisionComposer(factory.createEntryComposer(ct,DECISION_COMPOSER_MEAN));
     ct.setExitDecisionComposer(factory.createExitComposer(ct,DECISION_COMPOSER_MEAN));
 
-    //nvIchimokuAgent* ichi = new nvIchimokuAgent(ct);
-    nvIchimokuAgentB* ichi = new nvIchimokuAgentB(ct);
+    nvIchimokuAgent* ichi = new nvIchimokuAgent(ct);
+    //nvIchimokuAgentB* ichi = new nvIchimokuAgentB(ct);
     ichi.setPeriod(PERIOD_H1);
 
     ct.addTradingAgent(GetPointer(ichi));
