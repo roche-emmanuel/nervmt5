@@ -219,6 +219,78 @@ public:
   }
   
   /*
+  Function: getCurrentEquity
+  
+  Retrieve the current equity value in this deal
+  */
+  double getCurrentEquity(string currency = "")
+  {
+    CHECK_RET(_trader,0,"Invalid trader for deal");
+    nvPriceManager* pm = _trader.getManager().getPriceManager();
+
+    if(currency=="")
+      currency = nvGetAccountCurrency();
+
+    double npoints = 0.0;
+
+    if(getOrderType()==ORDER_TYPE_BUY) {
+      // When we buy, the entry price is the ask price,
+      // then we are interested in the current bid price:
+      npoints = (pm.getBidPrice(_symbol) - getEntryPrice())/nvGetPointSize(_symbol);
+    }
+    else if(getOrderType()==ORDER_TYPE_SELL) {
+      npoints = (getEntryPrice() - pm.getAskPrice(_symbol))/nvGetPointSize(_symbol);
+    }
+    else {
+      THROW("Unsupported order type: "<<(int)getOrderType());
+    }
+
+    double value = nvGetPointValue(_symbol,getLotSize())*npoints;
+
+    // value is given in the quote currency:
+    string quote = nvGetQuoteCurrency(_symbol);
+    return pm.convertPrice(value,quote,currency);
+  }
+  
+  /*
+  Function: getUsedMargin
+  
+  Retrieve the margin used to open this position:
+  */
+  double getUsedMargin(string currency = "")
+  {
+    CHECK_RET(_trader,0,"Invalid trader for deal");
+    nvPriceManager* pm = _trader.getManager().getPriceManager();
+
+    if(currency=="")
+      currency = nvGetAccountCurrency();
+    
+    if(getOrderType()==ORDER_TYPE_BUY) {
+      // This is the value in the base currency:
+      double value = nvGetContractValue(_symbol,getLotSize());
+
+      // Value in the quote currency:
+      value *= getEntryPrice();
+  
+      // value is given in the quote currency:
+      string quote = nvGetQuoteCurrency(_symbol);
+      return pm.convertPrice(value,quote,currency,getEntryTime());
+    }        
+    else if(getOrderType()==ORDER_TYPE_SELL) {
+      // This is the value in the base currency:
+      double value = nvGetContractValue(_symbol,getLotSize());
+
+      string base = nvGetBaseCurrency(_symbol);
+      return pm.convertPrice(value,base,currency,getEntryTime());
+    }
+    else {
+      THROW("Unsupported order type: "<<(int)getOrderType());
+    }
+
+    return 0.0;
+  }
+  
+  /*
   Function: getNominalProfit
   
 

@@ -543,7 +543,7 @@ public:
     double lostPoints = computeEstimatedMaxLost(0.95);
 
     // Estimate the lot size that we should used for this trade:
-    double lotSize = computeLotSize(lostPoints,MathAbs(confidence));
+    double lotSize = computeLotSize(lostPoints,confidence);
     
     if(lotSize==0.0)
     {

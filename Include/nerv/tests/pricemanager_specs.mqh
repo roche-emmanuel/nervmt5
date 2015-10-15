@@ -129,6 +129,19 @@ BEGIN_TEST_CASE("Should support converting prices at current server time")
   ASSERT_EQUAL(p2,price/ask);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should decrease value each time it is converted")
+  nvPortfolioManager man;
+  nvPriceManager* pman = man.getPriceManager();
+
+  double p1 = 10000.0;
+  double p2 = pman.convertPrice(p1,"EUR","USD");
+  double p3 = pman.convertPrice(p2,"USD","EUR");
+  double p4 = pman.convertPrice(p3,"EUR","USD");
+
+  ASSERT_LT(p3,p1);
+  ASSERT_LT(p4,p2);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

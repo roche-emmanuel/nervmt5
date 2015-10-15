@@ -22,6 +22,7 @@ void OnStart()
   // datetime time = D'2015.01.05 00:00';
   // datetime time = D'2013.01.05 00:00';
   datetime time = D'2012.01.01 00:00';
+  // datetime time = D'2011.01.01 00:00';
   // datetime time = D'2010.01.01 00:00'; // dataset is not complete ?
 
   // Note that we must update the portfolio initial time **before**
@@ -54,7 +55,7 @@ void OnStart()
   }
 
   uint startTick = GetTickCount();
-  int numDays=31*2;
+  int numDays=365;
   // int numDays=365*4;
   // int numDays = 31*4;
   int nsecs = 86400*numDays;
@@ -67,4 +68,8 @@ void OnStart()
   uint endTick = GetTickCount();
   double elapsed = (double)(endTick-startTick)/1000.0;
   logDEBUG("Done executing portfolio test in "<< elapsed <<" seconds");
+
+  int npos = man.getMarket(MARKET_TYPE_VIRTUAL).getPositiveDealCount();
+  int nneg = man.getMarket(MARKET_TYPE_VIRTUAL).getNegativeDealCount();
+  logDEBUG("Positive deals: "<<npos<<", negative deals: "<<nneg);
 }

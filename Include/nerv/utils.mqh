@@ -122,10 +122,16 @@ string nvGetBaseCurrency(string symbol)
 // Note that the point value is given in the quote currency.
 double nvGetPointValue(string symbol, double lot = 1.0)
 {
-	// We need to check what is the contract size for this symbol:
-	double csize = SymbolInfoDouble(symbol,SYMBOL_TRADE_CONTRACT_SIZE);
 	double point = SymbolInfoDouble(symbol,SYMBOL_POINT);
-	return lot*csize*point;
+	return nvGetContractValue(symbol,lot)*point;
+}
+
+// Retrieve a contract value in the margin currency:
+double nvGetContractValue(string symbol, double lot)
+{
+  // We need to check what is the contract size for this symbol:
+  double csize = SymbolInfoDouble(symbol,SYMBOL_TRADE_CONTRACT_SIZE);
+  return lot*csize;
 }
 
 // Retrieve the point size for a given symbol:
@@ -349,6 +355,11 @@ bool nvIsEmpty(T &array[])
 string nvGetAccountCurrency()
 {
   return AccountInfoString(ACCOUNT_CURRENCY);
+}
+
+double nvGetAccountLeverage()
+{
+  return (double)AccountInfoInteger(ACCOUNT_LEVERAGE);
 }
 
 // Check if a given symbol is valid:

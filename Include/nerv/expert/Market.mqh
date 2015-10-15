@@ -18,6 +18,10 @@ protected:
   // Currently opened positions:
   nvDeal* _currentDeals[];
 
+  // Positive and negative deals count:
+  int _positiveDeals;
+  int _negativeDeals;
+
 public:
   /*
     Class constructor.
@@ -25,6 +29,8 @@ public:
   nvMarket()
   {
     _marketType = MARKET_TYPE_UNKNOWN;
+    _positiveDeals = 0;
+    _negativeDeals = 0;
   }
 
   /*
@@ -52,6 +58,26 @@ public:
     nvReleaseObjects(_currentDeals);
   }
 
+  /*
+  Function: getPositiveDealCount
+  
+  Retrieve the number of positive deals
+  */
+  int getPositiveDealCount()
+  {
+    return _positiveDeals;
+  }
+  
+  /*
+  Function: getNegativeDealCount
+  
+  Retrieve the number of negative deals
+  */
+  int getNegativeDealCount()
+  {
+    return _negativeDeals;
+  }
+  
   /*
   Function: getMarketType
   
@@ -196,6 +222,45 @@ public:
   }
 
   /*
+  Function: getEquity
+  
+  Method used to compute the current equity on this market, based on the current
+  balance value + the open position values in a given quote currency
+  */
+  virtual double getEquity(string currency = "")
+  {
+    if(currency=="")
+      currency = nvGetAccountCurrency();
+
+    double value = 0.0;
+    int num = ArraySize( _currentDeals );
+    for(int i=0;i<num;++i) {
+      value += _currentDeals[i].getCurrentEquity(currency);
+    }
+
+    return getBalance(currency)+value;
+  }
+  
+  /*
+  Function: getUsedMargin
+  
+  Retrieve the current used margin in a given currency
+  */
+  double getUsedMargin(string currency = "")
+  {
+    if(currency=="")
+      currency = nvGetAccountCurrency();
+
+    double value = 0.0;
+    int num = ArraySize( _currentDeals );
+    for(int i=0;i<num;++i) {
+      value += _currentDeals[i].getUsedMargin(currency);
+    }
+    
+    return value/nvGetAccountLeverage();   
+  }
+  
+  /*
   Function: acknowledgeDeal
   
   Method called by the currency traders to notify its market that a deal 
@@ -214,6 +279,14 @@ public:
     msg << val;
     
     getManager().sendData(msg);
+
+    // Count the number of deals:
+    if(deal.getProfit()>0.0) {
+      _positiveDeals++;
+    }
+    else {
+      _negativeDeals++;
+    }
   }
   
   /*

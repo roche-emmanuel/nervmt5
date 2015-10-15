@@ -127,6 +127,51 @@ public:
       <<", balance="<<balance<<", quoteCurrency="<<quoteCurrency<<", confidence="<<confidence
       <<", weight="<<traderWeight<<", riskLevel="<<_riskLevel);
 
+    // Now we need to check if this deal will not trigger a margin call error:
+    int mode = (int)AccountInfoInteger(ACCOUNT_MARGIN_SO_MODE);
+    CHECK_RET(mode==(int)ACCOUNT_STOPOUT_MODE_PERCENT,0.0,"Invalid margin mode: "<<mode);
+    
+    // Now check what would be the margin call value:
+    double marginCall = AccountInfoDouble(ACCOUNT_MARGIN_SO_CALL);
+    double marginStopOut = AccountInfoDouble(ACCOUNT_MARGIN_SO_SO);
+    double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+    double leverage = (double)AccountInfoInteger(ACCOUNT_LEVERAGE);
+    double currentMargin = AccountInfoDouble(ACCOUNT_MARGIN);
+
+    // logDEBUG("Margin call level: "<<marginCall<<", margin stop out: "<<marginStopOut);
+
+    // Get the current equity level (in account currency!)
+    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+
+    // Check what quantity of the base currency we are considering here:
+    double dealMargin = nvGetContractValue(symbol,lotsize);
+
+    nvPriceManager* pm = getManager().getPriceManager();
+
+    // Now we need to compute how much margin this deal would take us:
+    // This will depend of the order type we plan to use:
+    if(confidence>0.0) {
+      // We are buying the base currency of the symbol by selling the quote currency
+      // so we must have the quote currency value of what we buy.
+      // The quote currency value is simply the dealValue multiplied by the current ask price:
+      dealMargin *= pm.getAskPrice(symbol);
+
+      // So dealValue is now the margin for this deal but expressed in the quote currency.
+      // We should convert that into our account currency:
+      dealMargin = pm.convertPrice(dealMargin,nvGetQuoteCurrency(symbol),nvGetAccountCurrency());
+    }
+    else {
+      // We are selling the base currency of the symbol to buy the quote
+      // So dealValue is what we are going to pay, so the margin for this deal, but still expressed in base currency
+      // We need to convert this in our account currency:
+      dealMargin = pm.convertPrice(dealMargin,nvGetBaseCurrency(symbol),nvGetAccountCurrency());
+    }
+
+    // apply the leverage on the margin:
+    dealMargin /= leverage;
+
+
+
     // finally we should normalize the lot size:
     return nvNormalizeLotSize(lotsize,symbol);
   }

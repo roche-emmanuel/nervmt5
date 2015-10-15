@@ -317,3 +317,4 @@ But we need the fix for issue #29 first.
 10/14/15-17:28:22: Working on issue #51: trying to optimize the ichimoku indicator but this is a nightmare... checking if we could not simply use the legacy indicator in a different way first.
 10/14/15-20:58:45: Working on issue #51: create real/virtual version of portfolio expert 01 to compare the results.é
 
+10/15/15-21:34:15: Working on issue #52: trying to figure out how to compute margin and equity before deal.
