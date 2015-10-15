@@ -151,11 +151,52 @@ public:
       double ask = getAskPrice(symbol2,time);
 
       // we want to buy the "base" currency here so we have to divide by the ask price in that case:
-      return price /= ask; // ask is bigger than bid, so we get the smallest value out of it.
+      return price / ask; // ask is bigger than bid, so we get the smallest value out of it.
     }
     
     THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
     return 0.0;  
+  }
+  
+  /*
+  Function: convertPriceInv
+  
+  Inverse method for price convertion. This method will tell us how many unit of the 
+  source currency we should sell to get the specified quantity in the dest currency. 
+  */
+  double convertPriceInv(double price, string srcCurrency, string destCurrency, datetime time = 0)
+  {
+    if(srcCurrency==destCurrency)
+      return price;
+
+    if(time==0) {
+      time = getManager().getCurrentTime();
+    }
+
+    // If the currencies are not the same, we have to do the convertion:
+    string symbol1 = srcCurrency+destCurrency;
+    string symbol2 = destCurrency+srcCurrency;
+
+    if(nvIsSymbolValid(symbol1))
+    {
+      // Then we retrieve the current symbol1 value:
+      double bid = getBidPrice(symbol1,time);
+
+      // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
+      // And thus ise the bid price:
+      return  price / bid;
+    }
+    else if(nvIsSymbolValid(symbol2))
+    {
+      // Then we retrieve the current symbol2 value:
+      double ask = getAskPrice(symbol2,time);
+
+      // we want to buy the "base" currency here so we have to divide by the ask price in that case:
+      return price * ask; // ask is bigger than bid, so we get the smallest value out of it.
+    }
+
+    THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
+    return 0.0;      
   }
   
 };

@@ -101,6 +101,106 @@ public:
   }
   
   /*
+  Function: computeBuyDetails
+  
+  Method used to compute what should be the margin/equity value after
+  a given buy deal is entered. Note that we do not enter the deal just yet
+  here.
+  */
+  void computeBuyDetails(string symbol, double lot, double& margin, double& equity)
+  {
+    nvPriceManager* pm = getManager().getPriceManager();
+
+    string baseCur = nvGetBaseCurrency(symbol);
+    string quoteCur = nvGetQuoteCurrency(symbol);
+    string accCur = nvGetAccountCurrency();
+    double leverage = (double)AccountInfoInteger(ACCOUNT_LEVERAGE);
+
+    // Check what quantity of the base currency we are considering here:
+    double baseVal = nvGetContractValue(symbol,lot);
+
+    // Compute how much of the quote currency we need to buy this quantity of the base:
+    double quoteVal = pm.convertPriceInv(baseVal,quoteCur,baseCur);
+
+    // check the previous computation:
+    double inv = pm.convertPrice(quoteVal,quoteCur,baseCur);
+    CHECK(MathAbs(inv-baseVal)<1e-6,"Mismatch in computed values: "<<baseVal<<"!="<<inv);
+
+    // Compute what quantity of the account currency we need to buy the previous quoteVal:
+    // Don't forget to take the leverage into account:
+    margin = pm.convertPriceInv(quoteVal,accCur,quoteCur)/leverage;
+
+    // Now compute the immediate equity value of this position once opened:
+    // we have baseVal, that we should convert back to quote currency:
+    double quoteVal2 = pm.convertPrice(baseVal,baseCur,quoteCur);
+
+    // From this value, we should refund what initially borrowed to place the deal:
+    // but note that this profit value is still expressed in te quote currency.
+    double profit = quoteVal2 - quoteVal;
+
+    // So finaly, we need to convert this into our account currency...
+    // If the profit is positive, then we convert back normally:
+    if(profit>0.0) {
+      equity = pm.convertPrice(profit,quoteCur,accCur);
+    }
+    else {
+      // If the profit is negative then this rather means that we should convert from our account
+      // currency to the quote currency to complete the refund:
+      // We need to get "profit" in quote, by buying it from acc.
+      // |profit| = pm.convertPrice(|equity|,accCur,quoteCur)
+      equity = - pm.convertPriceInv(-profit,accCur,quoteCur);
+    }
+  }
+  
+  /*
+  Function: computeSellDetails
+  
+  Method used to compute what should be the margin/equity value after
+  a given sell deal is entered. Note that we do not enter the deal just yet
+  here.
+  */
+  void computeSellDetails(string symbol, double lot, double& margin, double& equity)
+  {
+    nvPriceManager* pm = getManager().getPriceManager();
+
+    string baseCur = nvGetBaseCurrency(symbol);
+    string quoteCur = nvGetQuoteCurrency(symbol);
+    string accCur = nvGetAccountCurrency();
+    double leverage = (double)AccountInfoInteger(ACCOUNT_LEVERAGE);
+
+    // Check what quantity of the base currency we are considering here:
+    double baseVal = nvGetContractValue(symbol,lot);
+
+    // Compute how much of the quote currency we get when selling this quantity of the base:
+    double quoteVal = pm.convertPrice(baseVal,baseCur,quoteCur);
+
+    // Compute what quantity of the account currency we need to buy the previous baseVal:
+    // Don't forget to take the leverage into account:
+    margin = pm.convertPriceInv(baseVal,accCur,baseCur)/leverage;
+
+    // Now compute the immediate equity value of this position once opened:
+    // we have quoteVal, that we should convert back to base currency:
+    double baseVal2 = pm.convertPrice(quoteVal,quoteCur,baseCur);
+
+    // From this value, we should refund what initially borrowed to place the deal:
+    // but note that this profit value is still expressed in the base currency.
+    double profit = baseVal2 - baseVal;
+
+    // So finaly, we need to convert this into our account currency...
+    // If the profit is positive, then we convert back normally:
+    if(profit>0.0) {
+      equity = pm.convertPrice(profit,baseCur,accCur);
+    }
+    else {
+      // If the profit is negative then this rather means that we should convert from our account
+      // currency to the quote currency to complete the refund:
+      // We need to get "profit" in base, by buying it from acc.
+      // |profit| = pm.convertPrice(|equity|,accCur,baseCur)
+      equity = - pm.convertPriceInv(-profit,accCur,baseCur);
+    }
+  }
+
+  /*
   Function: evaluateLotSize
   
   Main method of this class used to evaluate the lot size that should be used for a potential trade.
@@ -135,7 +235,6 @@ public:
     double marginCall = AccountInfoDouble(ACCOUNT_MARGIN_SO_CALL);
     double marginStopOut = AccountInfoDouble(ACCOUNT_MARGIN_SO_SO);
     double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
-    double leverage = (double)AccountInfoInteger(ACCOUNT_LEVERAGE);
     double currentMargin = AccountInfoDouble(ACCOUNT_MARGIN);
 
     // logDEBUG("Margin call level: "<<marginCall<<", margin stop out: "<<marginStopOut);
@@ -143,37 +242,27 @@ public:
     // Get the current equity level (in account currency!)
     double equity = AccountInfoDouble(ACCOUNT_EQUITY);
 
-    // Check what quantity of the base currency we are considering here:
-    double dealMargin = nvGetContractValue(symbol,lotsize);
+    lotsize = nvNormalizeLotSize(lotsize,symbol);
 
-    nvPriceManager* pm = getManager().getPriceManager();
-
-    // Now we need to compute how much margin this deal would take us:
-    // This will depend of the order type we plan to use:
+    // Compute the modification on the margin and equity we would get from this deal when applied:
+    double dealMargin = 0.0;
+    double dealEquity = 0.0;
     if(confidence>0.0) {
-      // We are buying the base currency of the symbol by selling the quote currency
-      // so we must have the quote currency value of what we buy.
-      // The quote currency value is simply the dealValue multiplied by the current ask price:
-      dealMargin *= pm.getAskPrice(symbol);
-
-      // So dealValue is now the margin for this deal but expressed in the quote currency.
-      // We should convert that into our account currency:
-      dealMargin = pm.convertPrice(dealMargin,nvGetQuoteCurrency(symbol),nvGetAccountCurrency());
+      computeBuyDetails(symbol,lotsize,dealMargin,dealEquity);
     }
     else {
-      // We are selling the base currency of the symbol to buy the quote
-      // So dealValue is what we are going to pay, so the margin for this deal, but still expressed in base currency
-      // We need to convert this in our account currency:
-      dealMargin = pm.convertPrice(dealMargin,nvGetBaseCurrency(symbol),nvGetAccountCurrency());
+      computeSellDetails(symbol,lotsize,dealMargin,dealEquity);
+    }    
+
+    // Compute the new margin level:
+    double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
+
+    if(lotsize>0 && marginLevel<=marginCall) {
+      logDEBUG("Detected margin call conditions: "<<marginLevel<<"<="<<marginCall);
     }
 
-    // apply the leverage on the margin:
-    dealMargin /= leverage;
-
-
-
     // finally we should normalize the lot size:
-    return nvNormalizeLotSize(lotsize,symbol);
+    return lotsize;
   }
   
 };

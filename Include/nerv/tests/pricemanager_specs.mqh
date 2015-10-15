@@ -142,6 +142,17 @@ BEGIN_TEST_CASE("Should decrease value each time it is converted")
   ASSERT_LT(p4,p2);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to invert price conversions")
+  nvPortfolioManager man;
+  nvPriceManager* pman = man.getPriceManager();
+
+  double p1 = 10000.0;
+  double p2 = pman.convertPrice(p1,"EUR","USD");
+  double p3 = pman.convertPriceInv(p2,"EUR","USD");
+
+  ASSERT_EQUAL(p1,p3);
+END_TEST_CASE()
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()
