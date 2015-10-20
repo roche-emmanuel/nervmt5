@@ -48,7 +48,8 @@ int OnInit()
   // int nsym = 4;
   // string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
   int nsym = 1;
-  string symbols[] = {"EURUSD"};
+  // string symbols[] = {"EURUSD"};
+  string symbols[] = {"GBPJPY"};
 
   nvDecisionComposerFactory* factory = portfolio.getDecisionComposerFactory();
 
@@ -80,6 +81,11 @@ void OnDeinit(const int reason)
 {
   logDEBUG("Uninitializing Nerv MultiCurrencyExpert.")
   EventKillTimer();
+  
+  int npos = portfolio.getMarket(MARKET_TYPE_VIRTUAL).getPositiveDealCount();
+  int nneg = portfolio.getMarket(MARKET_TYPE_VIRTUAL).getNegativeDealCount();
+  logDEBUG("Positive deals: "<<npos<<", negative deals: "<<nneg);
+    
   RELEASE_PTR(portfolio);
 }
 

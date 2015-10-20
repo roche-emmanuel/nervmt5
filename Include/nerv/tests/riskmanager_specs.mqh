@@ -76,6 +76,9 @@ BEGIN_TEST_CASE("Should be able to evaluate a lot size")
 
 	rman.setRiskLevel(0.03);
 	double lot = rman.evaluateLotSize(market,"EURJPY",30.0,0.5,0.8);
+  // Todo: should use the maxlot size here.
+  // double maxlot = rman.computeMaxLotSize(symbol,confidence);
+
 	ASSERT_EQUAL(lot,MathFloor(mylot/0.01)*0.01);
 
   balance = market.getBalance("CAD");

@@ -319,3 +319,4 @@ But we need the fix for issue #29 first.
 
 10/15/15-21:34:15: Working on issue #52: trying to figure out how to compute margin and equity before deal.
 10/15/15-23:17:38: Working on issue #52: Added initial support for margin level computation in risk manager.
+10/20/15-22:21:16: Working on issue #52: Trying to add proper profit computation in Deal class.

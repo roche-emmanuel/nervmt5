@@ -159,7 +159,6 @@ public:
     nvPriceManager* pman = getManager().getPriceManager();
     
     double price = 0.0;
-    double point = nvGetPointSize(deal.getSymbol());
 
     if(deal.getOrderType()==ORDER_TYPE_SELL)
     {
@@ -272,6 +271,10 @@ public:
     double val = getBalance();
     // getManager().sendData("Balance updated to: "+(string)val);
 
+    logDEBUG("New balance value: "<<val<<", deal value: "<<deal.getProfit()<<", lotSize:"<<deal.getLotSize());
+    logDEBUG("Deal entry price: "<<deal.getEntryPrice()<<" at "<<deal.getEntryTime());
+    logDEBUG("Deal exit price: "<<deal.getExitPrice()<<" at "<<deal.getExitTime());
+    
     nvBinStream msg;
     msg << (ushort)MSGTYPE_BALANCE_UPDATED;
     msg << (uchar)getMarketType();

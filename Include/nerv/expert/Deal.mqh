@@ -413,6 +413,136 @@ public:
   }
   
   /*
+  Function: computeBuyProfit
+  
+  Method used to compute the profit on this deal in case it was a buy order
+  */
+  void computeBuyProfit()
+  {
+    CHECK(_orderType==ORDER_TYPE_BUY,"Incorrect order type");
+
+    nvPriceManager* pm = _trader.getManager().getPriceManager();
+
+    string baseCur = nvGetBaseCurrency(_symbol);
+    string quoteCur = nvGetQuoteCurrency(_symbol);
+    string accCur = nvGetAccountCurrency();
+
+    // Check what quantity of the base currency we are considering here:
+    double baseVal = nvGetContractValue(_symbol,_lotSize);
+
+    // Compute how much of the quote currency we need to buy this quantity of the base:
+    double quoteVal = pm.convertPriceInv(baseVal,quoteCur,baseCur,_entryTime);
+
+    // check the previous computation:
+    double inv = pm.convertPrice(quoteVal,quoteCur,baseCur,_entryTime);
+    CHECK(MathAbs(inv-baseVal)<1e-6,"Mismatch in computed values: "<<baseVal<<"!="<<inv);
+
+    // Compute what quantity of the account currency we need to buy the previous quoteVal:
+    // Don't forget to take the leverage into account:
+    // margin = pm.convertPriceInv(quoteVal,accCur,quoteCur)/leverage;
+
+
+    // // So now at exit time, we need to convert all the base value into our account currency:
+    // double totalAccount = pm.convertPrice(baseVal,baseCur,accCur,_exitTime);
+
+    // // Once this is done, we need to remove what is needed to refund the money we borrowed in the quote currency:
+    // // Thus:
+    // // quoteRefund = pm.convertPrice(accountRefund,accCur,quoteCur,_exitTime)
+    // double accountRefund = pm.convertPriceInv(quoteVal,accCur,quoteCur,_exitTime);
+
+    // // Then the profit is what is left in the account currency:
+    // _profit = totalAccount - accountRefund;
+
+    double cprofit = 0.0;
+    CHECK(OrderCalcProfit(_orderType,_symbol,_lotSize,_entryPrice,_exitPrice,cprofit),"Cannot compute profit");
+    logDEBUG("Computed buy profit is: "<<cprofit);
+
+
+    // Now compute the immediate equity value of this position once opened:
+    // we have baseVal, that we should convert back to quote currency:
+    double quoteVal2 = pm.convertPrice(baseVal,baseCur,quoteCur,_exitTime);
+
+    // From this value, we should refund what initially borrowed to place the deal:
+    // but note that this profit value is still expressed in te quote currency.
+    double profit = quoteVal2 - quoteVal;
+
+    // So finaly, we need to convert this into our account currency...
+    // If the profit is positive, then we convert back normally:
+    if(profit>0.0) {
+      _profit = pm.convertPrice(profit,quoteCur,accCur,_exitTime);
+    }
+    else {
+      // If the profit is negative then this rather means that we should convert from our account
+      // currency to the quote currency to complete the refund:
+      // We need to get "profit" in quote, by buying it from acc.
+      // |profit| = pm.convertPrice(|equity|,accCur,quoteCur)
+      _profit = - pm.convertPriceInv(-profit,accCur,quoteCur,_exitTime);
+    }
+
+  }
+
+  /*
+  Function: computeSellProfit
+  
+  Method used to compute the profit on this deal in case it was a sell order
+  */
+  void computeSellProfit()
+  {
+    nvPriceManager* pm = _trader.getManager().getPriceManager();
+
+    string baseCur = nvGetBaseCurrency(_symbol);
+    string quoteCur = nvGetQuoteCurrency(_symbol);
+    string accCur = nvGetAccountCurrency();
+
+    // Check what quantity of the base currency we are considering here:
+    double baseVal = nvGetContractValue(_symbol,_lotSize);
+
+    // Compute how much of the quote currency we get when selling this quantity of the base:
+    double quoteVal = pm.convertPrice(baseVal,baseCur,quoteCur,_entryTime);
+
+    // Compute what quantity of the account currency we need to buy the previous baseVal:
+    // Don't forget to take the leverage into account:
+    // margin = pm.convertPriceInv(baseVal,accCur,baseCur)/leverage;
+
+    // // So now at exit time, we need to convert all the quote value into our account currency:
+    // double totalAccount = pm.convertPrice(quoteVal,quoteCur,accCur,_exitTime);
+
+    // // Once this is done, we need to remove what is needed to refund the money we borrowed in the base currency:
+    // // Thus:
+    // // quoteRefund = pm.convertPrice(accountRefund,accCur,quoteCur,_exitTime)
+    // double accountRefund = pm.convertPriceInv(baseVal,accCur,baseCur,_exitTime);
+
+    // // Then the profit is what is left in the account currency:
+    // _profit = totalAccount - accountRefund;
+
+    double cprofit = 0.0;
+    CHECK(OrderCalcProfit(_orderType,_symbol,_lotSize,_entryPrice,_exitPrice,cprofit),"Cannot compute profit");
+    logDEBUG("Computed sell profit is: "<<cprofit);
+
+    // Now compute the immediate equity value of this position once opened:
+    // we have quoteVal, that we should convert back to base currency:
+    double baseVal2 = pm.convertPrice(quoteVal,quoteCur,baseCur,_exitTime);
+
+    // From this value, we should refund what initially borrowed to place the deal:
+    // but note that this profit value is still expressed in the base currency.
+    double profit = baseVal2 - baseVal;
+
+    // So finaly, we need to convert this into our account currency...
+    // If the profit is positive, then we convert back normally:
+    if(profit>0.0) {
+      _profit = pm.convertPrice(profit,baseCur,accCur,_exitTime);
+    }
+    else {
+      // If the profit is negative then this rather means that we should convert from our account
+      // currency to the quote currency to complete the refund:
+      // We need to get "profit" in base, by buying it from acc.
+      // |profit| = pm.convertPrice(|equity|,accCur,baseCur)
+      _profit = - pm.convertPriceInv(-profit,accCur,baseCur,_exitTime);
+    }   
+  }
+
+  
+  /*
   Function: close
   
   Method called to finalize a deal when it is completed.
@@ -433,12 +563,18 @@ public:
 
     // We can also compute our profit value here:
     // First we compute the profit in the quote currency:
-    double profit = nvGetPointValue(_symbol,_lotSize)*_numPoints;
+    // double profit = nvGetPointValue(_symbol,_lotSize)*_numPoints;
 
-    // Then we report it in the balance currency:
-    profit = _trader.getManager().getPriceManager().convertPrice(profit,nvGetQuoteCurrency(_symbol),nvGetAccountCurrency(),_exitTime);
+    // // Then we report it in the balance currency:
+    // profit = _trader.getManager().getPriceManager().convertPrice(profit,nvGetQuoteCurrency(_symbol),nvGetAccountCurrency(),_exitTime);
 
-    setProfit(profit);  
+    // setProfit(profit); 
+    if(_orderType==ORDER_TYPE_BUY) {
+      computeBuyProfit();
+    } 
+    else {
+      computeSellProfit();
+    }
   }
   
   /*

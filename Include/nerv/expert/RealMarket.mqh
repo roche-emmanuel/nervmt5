@@ -83,7 +83,7 @@ public:
     mrequest.magic = deal.getCurrencyTrader().getID();// Order Magic Number
     mrequest.type = otype;                            // Buy/Sell Order
     mrequest.type_filling = ORDER_FILLING_FOK;        // Order execution type
-    mrequest.deviation=10;                            // Deviation from current price
+    mrequest.deviation=0;                            // Deviation from current price
 
     // TODO: Check that the tp is valid in case of buy ?
 

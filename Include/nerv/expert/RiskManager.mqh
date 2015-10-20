@@ -201,6 +201,46 @@ public:
   }
 
   /*
+  Function: computeMaxLotSize
+  
+  Compute the max lot size, to enter a given deal on a given symbol
+  considering the current margin and equity values and the broker margin call 
+  level.
+  */
+  double computeMaxLotSize(string symbol, double confidence)
+  {
+    // Now we need to check if this deal will not trigger a margin call error:
+    int mode = (int)AccountInfoInteger(ACCOUNT_MARGIN_SO_MODE);
+    CHECK_RET(mode==(int)ACCOUNT_STOPOUT_MODE_PERCENT,0.0,"Invalid margin mode: "<<mode);
+    
+    // Now check what would be the margin call value:
+    double marginCall = AccountInfoDouble(ACCOUNT_MARGIN_SO_CALL)/100.0;
+    // double marginStopOut = AccountInfoDouble(ACCOUNT_MARGIN_SO_SO);
+    // double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+    double margin = AccountInfoDouble(ACCOUNT_MARGIN);
+  
+    // Get the current equity level (in account currency!)
+    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+  
+    // Compute the modification on the margin and equity we would get from this deal when applied:
+    double dealMargin = 0.0;
+    double dealEquity = 0.0;
+    if(confidence>0.0) {
+      computeBuyDetails(symbol,1.0,dealMargin,dealEquity);
+    }
+    else {
+      computeSellDetails(symbol,1.0,dealMargin,dealEquity);
+    }    
+    
+    // We can now solve for the lot value with:
+    // marginCall = (equity + dealEquity * lot)/(margin + dealMargin * lot)
+    double v1 = marginCall*margin - equity;
+    double v2 = dealEquity - marginCall*dealMargin;
+    double maxlot = v1/v2;
+    return maxlot;
+  }
+  
+  /*
   Function: evaluateLotSize
   
   Main method of this class used to evaluate the lot size that should be used for a potential trade.
@@ -227,41 +267,26 @@ public:
       <<", balance="<<balance<<", quoteCurrency="<<quoteCurrency<<", confidence="<<confidence
       <<", weight="<<traderWeight<<", riskLevel="<<_riskLevel);
 
-    // Now we need to check if this deal will not trigger a margin call error:
-    int mode = (int)AccountInfoInteger(ACCOUNT_MARGIN_SO_MODE);
-    CHECK_RET(mode==(int)ACCOUNT_STOPOUT_MODE_PERCENT,0.0,"Invalid margin mode: "<<mode);
-    
-    // Now check what would be the margin call value:
-    double marginCall = AccountInfoDouble(ACCOUNT_MARGIN_SO_CALL);
-    double marginStopOut = AccountInfoDouble(ACCOUNT_MARGIN_SO_SO);
-    double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
-    double currentMargin = AccountInfoDouble(ACCOUNT_MARGIN);
-
     // logDEBUG("Margin call level: "<<marginCall<<", margin stop out: "<<marginStopOut);
 
-    // Get the current equity level (in account currency!)
-    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+    double maxlot = computeMaxLotSize(symbol,confidence);
 
-    lotsize = nvNormalizeLotSize(lotsize,symbol);
 
-    // Compute the modification on the margin and equity we would get from this deal when applied:
-    double dealMargin = 0.0;
-    double dealEquity = 0.0;
-    if(confidence>0.0) {
-      computeBuyDetails(symbol,lotsize,dealMargin,dealEquity);
-    }
-    else {
-      computeSellDetails(symbol,lotsize,dealMargin,dealEquity);
-    }    
+    // We should not allow the trader to enter a deal with too big lot size,
+    // otherwise, we could soon not be able to trade anymore.
+    // So we should also apply the risk level trader weight and confidence level on this max lot size:
+    lotsize = MathMin(lotsize, maxlot*_riskLevel*traderWeight*MathAbs(confidence));
 
     // Compute the new margin level:
-    double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
+    // double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
 
-    if(lotsize>0 && marginLevel<=marginCall) {
-      logDEBUG("Detected margin call conditions: "<<marginLevel<<"<="<<marginCall);
-    }
+    // if(lotsize>maxlot) { //0 && marginLevel<=marginCall
+    //   logDEBUG("Detected margin call conditions: "<<lotsize<<">="<<maxlot);
+    // }
 
     // finally we should normalize the lot size:
+    lotsize = nvNormalizeLotSize(lotsize,symbol);
+
     return lotsize;
   }
   

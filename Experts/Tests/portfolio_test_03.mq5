@@ -31,10 +31,10 @@ void OnStart()
   man.setCurrentTime(time);
 
   // Add some currency traders:
-  int nsym = 4;
-  string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
-  // int nsym = 1;
-  // string symbols[] = {"EURUSD"};
+  //int nsym = 4;
+  //string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
+  int nsym = 1;
+  string symbols[] = {"EURUSD"};
 
   nvDecisionComposerFactory* factory = man.getDecisionComposerFactory();
 
@@ -55,7 +55,8 @@ void OnStart()
   }
 
   uint startTick = GetTickCount();
-  int numDays=365;
+  // int numDays=365;
+  int numDays=31;
   // int numDays=365*4;
   // int numDays = 31*4;
   int nsecs = 86400*numDays;
