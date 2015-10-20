@@ -88,13 +88,18 @@ BEGIN_TEST_CASE("Should support converting prices at any time")
 
     // Retrieve the rate at that time:
     ASSERT_EQUAL(CopyRates(symbol1,PERIOD_M1,ctime,1,rates),1);
+    int nsec = (int)(ctime - rates[0].time);
 
-    double bid = (rates[0].high+rates[0].low+rates[0].close)/3.0;
+    // double bid = (rates[0].high+rates[0].low+rates[0].close)/3.0;
+    double bid = nsec < 30 ? rates[0].open : rates[0].close; //(rates[0].high+rates[0].low+rates[0].close)/3.0;
 
     ASSERT_EQUAL(p1,price*bid);
 
     ASSERT_EQUAL(CopyRates(symbol2,PERIOD_M1,ctime,1,rates),1);
-    bid = (rates[0].high+rates[0].low+rates[0].close)/3.0;
+
+    nsec = (int)(ctime - rates[0].time);
+    bid = nsec < 30 ? rates[0].open : rates[0].close; //(rates[0].high+rates[0].low+rates[0].close)/3.0;
+
     double ask = (bid+rates[0].spread*nvGetPointSize(symbol2));
     ASSERT_EQUAL(p2,price/ask);
   }
@@ -151,6 +156,21 @@ BEGIN_TEST_CASE("Should be able to invert price conversions")
   double p3 = pman.convertPriceInv(p2,"EUR","USD");
 
   ASSERT_EQUAL(p1,p3);
+END_TEST_CASE()
+
+BEGIN_TEST_CASE("Should produce the expected price conversion at a given time")
+  nvPortfolioManager man;
+  nvPriceManager* pm = man.getPriceManager();
+
+  string symbol = "EURUSD";
+
+  datetime ctime = D'2012.01.03 08:14:01';
+  double ask = pm.getAskPrice(symbol,ctime);
+  ASSERT_EQUAL(ask,1.29988);
+
+  ctime = D'2012.01.04 04:02:01';
+  double bid = pm.getBidPrice(symbol,ctime);
+  ASSERT_EQUAL(bid,1.30233);
 END_TEST_CASE()
 
 END_TEST_SUITE()

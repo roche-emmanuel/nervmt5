@@ -427,15 +427,32 @@ public:
     string quoteCur = nvGetQuoteCurrency(_symbol);
     string accCur = nvGetAccountCurrency();
 
+    logDEBUG("Entering buy profit method")
+
     // Check what quantity of the base currency we are considering here:
     double baseVal = nvGetContractValue(_symbol,_lotSize);
+    logDEBUG("baseVal=" << baseVal)
 
     // Compute how much of the quote currency we need to buy this quantity of the base:
     double quoteVal = pm.convertPriceInv(baseVal,quoteCur,baseCur,_entryTime);
+    logDEBUG("quoteVal=" << quoteVal)
 
-    // check the previous computation:
-    double inv = pm.convertPrice(quoteVal,quoteCur,baseCur,_entryTime);
-    CHECK(MathAbs(inv-baseVal)<1e-6,"Mismatch in computed values: "<<baseVal<<"!="<<inv);
+    // Now compute the value of this position once opened:
+    // we have baseVal, that we should convert back to quote currency at exit time
+    double quoteVal2 = pm.convertPrice(baseVal,baseCur,quoteCur,_exitTime);
+    logDEBUG("quoteVal2=" << quoteVal2)
+
+    // Our profit in the quote currency is thus:
+    double quoteProfit = quoteVal2 - quoteVal;
+    logDEBUG("quoteProfit=" << quoteProfit)
+
+    // Convert this profit into our account:
+    _profit = pm.convertPrice(quoteProfit,quoteCur,accCur,_exitTime);
+    logDEBUG("profit=" << _profit)
+
+    // // Compute the initial value that we had to pay from our balance:
+    // double Xold = pm.convertPriceInv(quoteVal,accCur,quoteCur,_entryTime);
+    // logDEBUG("Xold=" << Xold)
 
     // Compute what quantity of the account currency we need to buy the previous quoteVal:
     // Don't forget to take the leverage into account:
@@ -458,26 +475,29 @@ public:
     logDEBUG("Computed buy profit is: "<<cprofit);
 
 
-    // Now compute the immediate equity value of this position once opened:
-    // we have baseVal, that we should convert back to quote currency:
-    double quoteVal2 = pm.convertPrice(baseVal,baseCur,quoteCur,_exitTime);
+    // // Now compute the new value we have in the account currency:
+    // double Xnew = pm.convertPrice(quoteVal2,quoteCur,accCur,_exitTime);
+    // logDEBUG("Xnew=" << Xnew)
 
-    // From this value, we should refund what initially borrowed to place the deal:
-    // but note that this profit value is still expressed in te quote currency.
-    double profit = quoteVal2 - quoteVal;
+    // // finally compute the profit:
+    // _profit = Xnew - Xold;
 
-    // So finaly, we need to convert this into our account currency...
-    // If the profit is positive, then we convert back normally:
-    if(profit>0.0) {
-      _profit = pm.convertPrice(profit,quoteCur,accCur,_exitTime);
-    }
-    else {
-      // If the profit is negative then this rather means that we should convert from our account
-      // currency to the quote currency to complete the refund:
-      // We need to get "profit" in quote, by buying it from acc.
-      // |profit| = pm.convertPrice(|equity|,accCur,quoteCur)
-      _profit = - pm.convertPriceInv(-profit,accCur,quoteCur,_exitTime);
-    }
+    // // From this value, we should refund what initially borrowed to place the deal:
+    // // but note that this profit value is still expressed in te quote currency.
+    // double profit = quoteVal2 - quoteVal;
+
+    // // So finaly, we need to convert this into our account currency...
+    // // If the profit is positive, then we convert back normally:
+    // if(profit>0.0) {
+    //   _profit = pm.convertPrice(profit,quoteCur,accCur,_exitTime);
+    // }
+    // else {
+    //   // If the profit is negative then this rather means that we should convert from our account
+    //   // currency to the quote currency to complete the refund:
+    //   // We need to get "profit" in quote, by buying it from acc.
+    //   // |profit| = pm.convertPrice(|equity|,accCur,quoteCur)
+    //   _profit = - pm.convertPriceInv(-profit,accCur,quoteCur,_exitTime);
+    // }
 
   }
 
@@ -497,9 +517,24 @@ public:
     // Check what quantity of the base currency we are considering here:
     double baseVal = nvGetContractValue(_symbol,_lotSize);
 
+    // // First we have to compute how much we take from our current balance, to buy what 
+    // // we need in the base currency:
+    // // baseVal = convertPrice(X,Acc,Base):
+    // double Xold = pm.convertPriceInv(baseVal,accCur,baseCur,_entryTime);
+
     // Compute how much of the quote currency we get when selling this quantity of the base:
     double quoteVal = pm.convertPrice(baseVal,baseCur,quoteCur,_entryTime);
 
+    // Now compute the value we get back when rebuying the base
+    // we have quoteVal, that we should convert back to base currency:
+    double baseVal2 = pm.convertPrice(quoteVal,quoteCur,baseCur,_exitTime);
+
+    double baseProfit = baseVal2 - baseVal;
+
+    // Convert this profit into our account:
+    _profit = pm.convertPrice(baseProfit,baseCur,accCur,_exitTime);
+    logDEBUG("profit=" << _profit)
+    
     // Compute what quantity of the account currency we need to buy the previous baseVal:
     // Don't forget to take the leverage into account:
     // margin = pm.convertPriceInv(baseVal,accCur,baseCur)/leverage;
@@ -519,26 +554,29 @@ public:
     CHECK(OrderCalcProfit(_orderType,_symbol,_lotSize,_entryPrice,_exitPrice,cprofit),"Cannot compute profit");
     logDEBUG("Computed sell profit is: "<<cprofit);
 
-    // Now compute the immediate equity value of this position once opened:
-    // we have quoteVal, that we should convert back to base currency:
-    double baseVal2 = pm.convertPrice(quoteVal,quoteCur,baseCur,_exitTime);
 
-    // From this value, we should refund what initially borrowed to place the deal:
-    // but note that this profit value is still expressed in the base currency.
-    double profit = baseVal2 - baseVal;
+    // // We further convert this value back into our account currency:
+    // double Xnew = pm.convertPrice(baseVal2,baseCur,accCur,_exitTime);
 
-    // So finaly, we need to convert this into our account currency...
-    // If the profit is positive, then we convert back normally:
-    if(profit>0.0) {
-      _profit = pm.convertPrice(profit,baseCur,accCur,_exitTime);
-    }
-    else {
-      // If the profit is negative then this rather means that we should convert from our account
-      // currency to the quote currency to complete the refund:
-      // We need to get "profit" in base, by buying it from acc.
-      // |profit| = pm.convertPrice(|equity|,accCur,baseCur)
-      _profit = - pm.convertPriceInv(-profit,accCur,baseCur,_exitTime);
-    }   
+    // // Finally, our profit is what we have left:
+    // _profit = Xnew - Xold;
+
+    // // From this value, we should refund what initially borrowed to place the deal:
+    // // but note that this profit value is still expressed in the base currency.
+    // double profit = baseVal2 - baseVal;
+
+    // // So finaly, we need to convert this into our account currency...
+    // // If the profit is positive, then we convert back normally:
+    // if(profit>0.0) {
+    //   _profit = pm.convertPrice(profit,baseCur,accCur,_exitTime);
+    // }
+    // else {
+    //   // If the profit is negative then this rather means that we should convert from our account
+    //   // currency to the quote currency to complete the refund:
+    //   // We need to get "profit" in base, by buying it from acc.
+    //   // |profit| = pm.convertPrice(|equity|,accCur,baseCur)
+    //   _profit = - pm.convertPriceInv(-profit,accCur,baseCur,_exitTime);
+    // }   
   }
 
   

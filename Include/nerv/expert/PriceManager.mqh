@@ -76,7 +76,9 @@ public:
 
     // For now we just return the typical price during that minute:
     // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
-    double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+    // double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+
+    double price = (time - rates[0].time) < 30 ? rates[0].open : rates[0].close;
     return price;      
   }
   
@@ -114,7 +116,11 @@ public:
 
     // For now we just return the typical price during that minute:
     // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
-    double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+    // double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+
+    // Instead of returning a typical price we can return the open price if we are close enough to the opening of the bar:
+    // This is a valid approximation as long as we keep working with a resolution of 1 minute:
+    double price = (time - rates[0].time) < 30 ? rates[0].open : rates[0].close;
     return price+rates[0].spread*nvGetPointSize(symbol);      
   }
   
