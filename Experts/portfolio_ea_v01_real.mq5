@@ -69,6 +69,9 @@ int OnInit()
     ct.addTradingAgent(GetPointer(ichi));
   }
   
+  // Ensure that we always use the same seed here:
+  portfolio.getRandomGenerator().SetSeed(123);
+
   portfolio.update(TimeCurrent());
   
   // Initialize the timer:

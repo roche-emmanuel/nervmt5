@@ -125,6 +125,51 @@ public:
   }
   
   /*
+  Function: convertPriceFlat
+  
+  Perform a flat price conversion using only the bid price.
+  */
+  double convertPriceFlat(double price, string srcCurrency, string destCurrency, datetime time = 0)
+  {
+    int srcDigits = 2;
+    if(srcCurrency=="JPY") {
+      srcDigits = 0;
+    }
+
+    // Convert the input price given the number of digit precision:
+    price = NormalizeDouble( price, srcDigits );
+
+    if(srcCurrency==destCurrency)
+      return price;
+    
+    if(time==0) {
+      time = getManager().getCurrentTime();
+    }
+
+    int destDigits = 2;
+    if(destCurrency=="JPY") {
+      destDigits = 0;
+    }
+
+    string symbol1 = srcCurrency+destCurrency;
+    string symbol2 = destCurrency+srcCurrency;
+
+    if(nvIsSymbolValid(symbol1))
+    {
+      // Then we retrieve the current symbol1 value:
+      return NormalizeDouble(price*getBidPrice(symbol1,time),destDigits);
+    }
+    else if(nvIsSymbolValid(symbol2))
+    {
+      // Then we retrieve the current symbol2 value:
+      return NormalizeDouble(price/getBidPrice(symbol2,time),destDigits);
+    }
+    
+    THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
+    return 0.0;     
+  }
+  
+  /*
   Function: convertPrice
   
   Method called to convert prices between currencies
@@ -162,7 +207,7 @@ public:
 
       // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
       // And thus ise the bid price:
-      return  NormalizeDouble(price * bid, destDigits);
+      return NormalizeDouble(price * bid, destDigits);
     }
     else if(nvIsSymbolValid(symbol2))
     {

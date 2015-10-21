@@ -176,6 +176,17 @@ BEGIN_TEST_CASE("Should produce the expected price conversion at a given time")
   ctime = D'2012.01.04 04:02:01';
   double bid = pm.getBidPrice(symbol,ctime);
   ASSERT_EQUAL(bid,1.30233);
+  
+  ask = pm.getAskPrice(symbol,ctime);
+
+  ASSERT_EQUAL(120.05,NormalizeDouble( 120.0499999999956, 2 ));
+  double p = NormalizeDouble( 120.0499999999956, 2 );
+  double res = NormalizeDouble(p/bid,2);
+  ASSERT_EQUAL(92.18,res);
+
+  double profit = pm.convertPriceFlat(120.0499999999956,"USD","EUR",ctime);
+  ASSERT_EQUAL(92.18,profit);
+
 END_TEST_CASE()
 
 END_TEST_SUITE()

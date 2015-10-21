@@ -48,8 +48,8 @@ int OnInit()
   // int nsym = 4;
   // string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
   int nsym = 1;
-  // string symbols[] = {"EURUSD"};
-  string symbols[] = {"GBPJPY"};
+  string symbols[] = {"EURUSD"};
+  // string symbols[] = {"GBPJPY"};
 
   nvDecisionComposerFactory* factory = portfolio.getDecisionComposerFactory();
 
@@ -68,6 +68,9 @@ int OnInit()
 
     ct.addTradingAgent(GetPointer(ichi));
   }
+  
+  // Ensure that we always use the same seed here:
+  portfolio.getRandomGenerator().SetSeed(123);
   
   portfolio.update(TimeCurrent());
   

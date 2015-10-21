@@ -447,7 +447,8 @@ public:
     logDEBUG("quoteProfit=" << quoteProfit)
 
     // Convert this profit into our account:
-    _profit = pm.convertPrice(quoteProfit,quoteCur,accCur,_exitTime);
+    // _profit = pm.convertPrice(quoteProfit,quoteCur,accCur,_exitTime);
+    _profit = pm.convertPriceFlat(quoteProfit,quoteCur,accCur,_exitTime);
     logDEBUG("profit=" << _profit)
 
     // // Compute the initial value that we had to pay from our balance:
@@ -532,7 +533,9 @@ public:
     double baseProfit = baseVal2 - baseVal;
 
     // Convert this profit into our account:
-    _profit = pm.convertPrice(baseProfit,baseCur,accCur,_exitTime);
+    // _profit = pm.convertPrice(baseProfit,baseCur,accCur,_exitTime);
+    _profit = pm.convertPriceFlat(baseProfit,baseCur,accCur,_exitTime);
+
     logDEBUG("profit=" << _profit)
     
     // Compute what quantity of the account currency we need to buy the previous baseVal:
