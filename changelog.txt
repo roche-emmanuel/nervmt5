@@ -322,3 +322,4 @@ But we need the fix for issue #29 first.
 10/20/15-22:21:16: Working on issue #52: Trying to add proper profit computation in Deal class.
 10/21/15-00:18:00: Working implementation for deal profit computation.
 10/21/15-22:37:01: Working on issue #52: It seems we can now get the proper profit values computed in the Deal class. But we still have a minor difference.
+10/21/15-23:08:27: Working on issue #52: handling currency value rounding appropriately.

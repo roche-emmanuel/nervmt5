@@ -51,7 +51,7 @@ BEGIN_TEST_CASE("Should be able to retrieve a balance value")
     // we rely on the price manager in that case:
     bid = man.getPriceManager().getBidPrice("EURUSD");
   }
-  ASSERT_EQUAL(rman.getBalanceValue("USD"),balance*bid);
+  ASSERT_EQUAL(rman.getBalanceValue("USD"),NormalizeDouble(balance*bid,2));
 
   if(SymbolInfoTick("EURJPY",latest_price)) {
     bid = latest_price.bid;
@@ -61,7 +61,7 @@ BEGIN_TEST_CASE("Should be able to retrieve a balance value")
     // we rely on the price manager in that case:
     bid = man.getPriceManager().getBidPrice("EURJPY");
   }
-  ASSERT_EQUAL(rman.getBalanceValue("JPY"),balance*bid);
+  ASSERT_EQUAL(rman.getBalanceValue("JPY"),NormalizeDouble(balance*bid,0));
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should be able to evaluate a lot size")

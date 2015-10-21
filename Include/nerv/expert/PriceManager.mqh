@@ -131,11 +131,24 @@ public:
   */
   double convertPrice(double price, string srcCurrency, string destCurrency, datetime time=0)
   {
+    int srcDigits = 2;
+    if(srcCurrency=="JPY") {
+      srcDigits = 0;
+    }
+
+    // Convert the input price given the number of digit precision:
+    price = NormalizeDouble( price, srcDigits );
+
     if(srcCurrency==destCurrency)
       return price;
 
     if(time==0) {
       time = getManager().getCurrentTime();
+    }
+
+    int destDigits = 2;
+    if(destCurrency=="JPY") {
+      destDigits = 0;
     }
 
     // If the currencies are not the same, we have to do the convertion:
@@ -149,7 +162,7 @@ public:
 
       // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
       // And thus ise the bid price:
-      return  price * bid;
+      return  NormalizeDouble(price * bid, destDigits);
     }
     else if(nvIsSymbolValid(symbol2))
     {
@@ -157,7 +170,7 @@ public:
       double ask = getAskPrice(symbol2,time);
 
       // we want to buy the "base" currency here so we have to divide by the ask price in that case:
-      return price / ask; // ask is bigger than bid, so we get the smallest value out of it.
+      return NormalizeDouble(price / ask, destDigits); // ask is bigger than bid, so we get the smallest value out of it.
     }
     
     THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
@@ -172,11 +185,25 @@ public:
   */
   double convertPriceInv(double price, string srcCurrency, string destCurrency, datetime time = 0)
   {
+
+    int srcDigits = 2;
+    if(srcCurrency=="JPY") {
+      srcDigits = 0;
+    }
+
+    // Convert the input price given the number of digit precision:
+    price = NormalizeDouble( price, srcDigits );
+
     if(srcCurrency==destCurrency)
       return price;
 
     if(time==0) {
       time = getManager().getCurrentTime();
+    }
+
+    int destDigits = 2;
+    if(destCurrency=="JPY") {
+      destDigits = 0;
     }
 
     // If the currencies are not the same, we have to do the convertion:
@@ -190,7 +217,7 @@ public:
 
       // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
       // And thus ise the bid price:
-      return  price / bid;
+      return  NormalizeDouble(price / bid,destDigits);
     }
     else if(nvIsSymbolValid(symbol2))
     {
@@ -198,7 +225,7 @@ public:
       double ask = getAskPrice(symbol2,time);
 
       // we want to buy the "base" currency here so we have to divide by the ask price in that case:
-      return price * ask; // ask is bigger than bid, so we get the smallest value out of it.
+      return NormalizeDouble(price * ask,destDigits); // ask is bigger than bid, so we get the smallest value out of it.
     }
 
     THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);

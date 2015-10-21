@@ -75,10 +75,11 @@ BEGIN_TEST_CASE("Should support converting prices at any time")
 
   string symbol1 = "EURUSD";
   string symbol2 = "GBPJPY";
-  double price = 1.23456;
 
   for(int i = 0;i<num;++i)
   {
+    double price = rng.GetUniform()*100.0;
+
     // compute a time point:
     datetime ctime = time - rng.GetInt(1,range);
     man.setCurrentTime(ctime);
@@ -93,7 +94,8 @@ BEGIN_TEST_CASE("Should support converting prices at any time")
     // double bid = (rates[0].high+rates[0].low+rates[0].close)/3.0;
     double bid = nsec < 30 ? rates[0].open : rates[0].close; //(rates[0].high+rates[0].low+rates[0].close)/3.0;
 
-    ASSERT_EQUAL(p1,price*bid);
+    double np = NormalizeDouble( price, 2 );
+    ASSERT_EQUAL(p1,NormalizeDouble(np*bid,2));
 
     ASSERT_EQUAL(CopyRates(symbol2,PERIOD_M1,ctime,1,rates),1);
 
@@ -101,7 +103,8 @@ BEGIN_TEST_CASE("Should support converting prices at any time")
     bid = nsec < 30 ? rates[0].open : rates[0].close; //(rates[0].high+rates[0].low+rates[0].close)/3.0;
 
     double ask = (bid+rates[0].spread*nvGetPointSize(symbol2));
-    ASSERT_EQUAL(p2,price/ask);
+    np = NormalizeDouble( price, 0 );
+    ASSERT_EQUAL(p2,NormalizeDouble(np/ask,2));
   }
 
 END_TEST_CASE()
@@ -114,7 +117,7 @@ BEGIN_TEST_CASE("Should support converting prices at current server time")
 
   string symbol1 = "EURUSD";
   string symbol2 = "GBPJPY";
-  double price = 1.23456;
+  double price = 123.456;
 
   // compute a time point:
   man.setCurrentTime(time);
@@ -126,12 +129,14 @@ BEGIN_TEST_CASE("Should support converting prices at current server time")
   ASSERT(SymbolInfoTick(symbol1,last_tick));
 
   double bid = last_tick.bid;
-  ASSERT_EQUAL(p1,price*bid);
+  double np = NormalizeDouble( price, 2 );
+  ASSERT_EQUAL(p1,NormalizeDouble(np*bid,2));
 
   ASSERT(SymbolInfoTick(symbol2,last_tick));
 
   double ask = last_tick.ask;
-  ASSERT_EQUAL(p2,price/ask);
+  np = NormalizeDouble( price, 0 );
+  ASSERT_EQUAL(p2,NormalizeDouble(np/ask,2));
 END_TEST_CASE()
 
 BEGIN_TEST_CASE("Should decrease value each time it is converted")
