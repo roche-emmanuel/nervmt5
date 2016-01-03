@@ -52,7 +52,7 @@ public:
     _predSignal = new nvPredictionSignalFile("eval_results_v36.csv");
 
     // We enter only when the signal abs value is higher than:
-    _entryThreshold = 0.6;
+    _entryThreshold = 0.5;
 
     // Last value of the entry signal:
     _lastEntrySignal = 0.0;
@@ -233,6 +233,10 @@ public:
       if(diff>0.0 && nsl>sl) {
         updateSLTP(_security,nsl);
       }
+      // if(diff < -5*spread) 
+      // {
+      //   closePosition(_security);
+      // }
     }
     else {
       double diff = _openPrice - last_tick.ask;
@@ -240,6 +244,10 @@ public:
       if(diff>0.0 && (nsl<sl || sl==0.0)) {
         updateSLTP(_security,nsl);
       }
+      // if(diff < -5*spread) 
+      // {
+      //   closePosition(_security);
+      // }
     }
   }
 };
