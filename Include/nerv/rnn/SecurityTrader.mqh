@@ -93,6 +93,9 @@ public:
     _lastUpdateTime = ctime;
     // logDEBUG("Update cycle at: " << ctime << " = " << (int)ctime)
 
+    // Close the previous position if any:
+    closePosition(_security);
+
     // Retrieve the prediction signal at that time:
     double pred = _predSignal.getPrediction(ctime);
     if(pred!=0.0) {
@@ -131,8 +134,8 @@ public:
     // double lot = evaluateLotSize(spread*2.0,1.0,signal);
     double lot = evaluateLotSize(100,1.0,signal);
 
-    double sl = spread*nvGetPointSize(symbol);
-    double tp = spread*nvGetPointSize(symbol);
+    double sl = 0.0; //spread*nvGetPointSize(symbol);
+    double tp = 0.0; //spread*nvGetPointSize(symbol);
 
     // Send the order:
     int otype = signal>0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
