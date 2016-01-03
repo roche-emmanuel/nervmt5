@@ -155,6 +155,147 @@ double nvNormalizeLotSize(double lot, string symbol)
 	return MathMin(maxlot,lot);
 }
 
+// Retrieve a given bid price:
+double nvGetBidPrice(string symbol, datetime time = 0)
+{
+  // Retrieve the target time from the manager if needed:
+  if(time==0) {
+    time = TimeCurrent();
+  }
+
+  // If the target time happens to be the server time, then this means we can use the latest tick available
+  if(time == TimeCurrent())
+  {
+    // Use the latest tick data:
+    MqlTick last_tick;
+    // Note that the following code may fail if we are on the week end,
+    // And connected to a server, and we didn't receive anything yet:
+    if(SymbolInfoTick(symbol,last_tick)) {
+      return last_tick.bid;
+    }
+    else {
+      logWARN("Cannot retrieve the latest tick from server")
+    }
+  }
+
+  // Fallback implementation:
+  // Use the bar history:
+  MqlRates rates[];
+  CHECK_RET(CopyRates(symbol,PERIOD_M1,time,1,rates)==1,false,"Cannot copy the rates at time: "<<time);
+
+  // For now we just return the typical price during that minute:
+  // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
+  // double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+
+  double price = (time - rates[0].time) < 30 ? rates[0].open : rates[0].close;
+  return price;      
+}
+  
+double nvGetAskPrice(string symbol, datetime time = 0)
+{
+  // Retrieve the target time from the manager if needed:
+  if(time==0) {
+    time = TimeCurrent();
+  }
+
+  // If the target time happens to be the server time, then this means we can use the latest tick available
+  if(time == TimeCurrent())
+  {
+    // Use the latest tick data:
+    MqlTick last_tick;
+    // Note that the following code may fail if we are on the week end,
+    // And connected to a server, and we didn't receive anything yet:
+    if(SymbolInfoTick(symbol,last_tick)) {
+      return last_tick.ask;
+    }
+    else {
+      logWARN("Cannot retrieve the latest tick from server")
+    }
+  }
+
+  // Fallback implementation:
+  // Use the bar history:
+  MqlRates rates[];
+  CHECK_RET(CopyRates(symbol,PERIOD_M1,time,1,rates)==1,false,"Cannot copy the rates at time: "<<time);
+
+  // For now we just return the typical price during that minute:
+  // Prices definition found on: https://www.mql5.com/en/docs/constants/indicatorconstants/prices
+  // double price = (rates[0].high + rates[0].low + rates[0].close)/3.0;
+
+  // Instead of returning a typical price we can return the open price if we are close enough to the opening of the bar:
+  // This is a valid approximation as long as we keep working with a resolution of 1 minute:
+  double price = (time - rates[0].time) < 30 ? rates[0].open : rates[0].close;
+  return price+rates[0].spread*nvGetPointSize(symbol);      
+}
+
+double nvGetSpread(string symbol, datetime time = 0)
+{
+  double diff = nvGetAskPrice(symbol,time)-nvGetBidPrice(symbol,time);
+  return diff/nvGetPointSize(symbol);
+}
+
+double nvConvertPrice(double price, string srcCurrency, string destCurrency, datetime time=0)
+{
+  int srcDigits = 2;
+  if(srcCurrency=="JPY") {
+    srcDigits = 0;
+  }
+
+  // Convert the input price given the number of digit precision:
+  price = NormalizeDouble( price, srcDigits );
+
+  if(srcCurrency==destCurrency)
+    return price;
+
+  if(time==0) {
+    time = TimeCurrent();
+  }
+
+  int destDigits = 2;
+  if(destCurrency=="JPY") {
+    destDigits = 0;
+  }
+
+  // If the currencies are not the same, we have to do the convertion:
+  string symbol1 = srcCurrency+destCurrency;
+  string symbol2 = destCurrency+srcCurrency;
+
+  if(nvIsSymbolValid(symbol1))
+  {
+    // Then we retrieve the current symbol1 value:
+    double bid = nvGetBidPrice(symbol1,time);
+
+    // we want to convert into the "quote" currency here, so we should get the smallest value out of it,
+    // And thus ise the bid price:
+    return NormalizeDouble(price * bid, destDigits);
+  }
+  else if(nvIsSymbolValid(symbol2))
+  {
+    // Then we retrieve the current symbol2 value:
+    double ask = nvGetAskPrice(symbol2,time);
+
+    // we want to buy the "base" currency here so we have to divide by the ask price in that case:
+    return NormalizeDouble(price / ask, destDigits); // ask is bigger than bid, so we get the smallest value out of it.
+  }
+  
+  THROW("Unsupported currency names: "<<srcCurrency<<", "<<destCurrency);
+  return 0.0;  
+}
+
+// Retrieve the balance value in a given currency:
+double nvGetBalance(string currency = "")
+{
+  if(currency=="")
+    currency = nvGetAccountCurrency();
+      
+  double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+  
+  // convert from account currency to the given currency:
+  balance = nvConvertPrice(balance,nvGetAccountCurrency(),currency);
+  return balance;    
+}
+
+
 // Retrieve a period duration in number of Seconds
 int nvGetPeriodDuration(ENUM_TIMEFRAMES period)
 {

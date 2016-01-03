@@ -10,12 +10,15 @@ and then use those predictions to place orders.
 
 #property version   "1.00"
 
+#property tester_file "eval_results_v36.csv"
+
 #include <nerv/unit/Testing.mqh>
 #include <nerv/core.mqh>
+#include <nerv/rnn/RNNTrader.mqh>
 
-input int   gTimerPeriod=60;  // Timer period in seconds
+input int   gTimerPeriod=1;  // Timer period in seconds
 
-nvPortfolioManager* portfolio = NULL;
+nvRNNTrader* trader = NULL;
 
 // Initialization method:
 int OnInit()
@@ -26,41 +29,9 @@ int OnInit()
   string fname = "rnn_ea_v01.log";
   nvFileLogger* logger = new nvFileLogger(fname);
   lm.addSink(logger);
-
-  logDEBUG("Initializing Portfolio test.");
-
-  portfolio = new nvPortfolioManager();
   
-  // Add some currency traders:
-  // int nsym = 4;
-  // string symbols[] = {"GBPJPY", "EURUSD", "EURJPY", "USDCHF"};
-  int nsym = 1;
-  string symbols[] = {"EURUSD"};
-  // string symbols[] = {"GBPJPY"};
+  trader = new nvRNNTrader();
 
-  nvDecisionComposerFactory* factory = portfolio.getDecisionComposerFactory();
-
-  for(int j=0;j<nsym;++j)
-  {
-    nvCurrencyTrader* ct = portfolio.addCurrencyTrader(symbols[j]);
-    // We have to stay on the virtual market only for the moment:
-    ct.setMarketType(MARKET_TYPE_REAL);
-    // ct.setMarketType(MARKET_TYPE_VIRTUAL);
-
-    ct.setEntryDecisionComposer(factory.createEntryComposer(ct,DECISION_COMPOSER_MEAN));
-    ct.setExitDecisionComposer(factory.createExitComposer(ct,DECISION_COMPOSER_MEAN));
-
-    nvIchimokuAgent* ichi = new nvIchimokuAgent(ct);
-    ichi.setPeriod(PERIOD_H1);
-
-    ct.addTradingAgent(GetPointer(ichi));
-  }
-  
-  // Ensure that we always use the same seed here:
-  portfolio.getRandomGenerator().SetSeed(123);
-
-  portfolio.update(TimeCurrent());
-  
   // Initialize the timer:
   CHECK_RET(EventSetTimer(gTimerPeriod),0,"Cannot initialize timer");
   return 0;
@@ -69,18 +40,30 @@ int OnInit()
 // Uninitialization:
 void OnDeinit(const int reason)
 {
-  logDEBUG("Uninitializing Nerv MultiCurrencyExpert.")
+  logDEBUG("Uninitializing Nerv RNN Expert.")
   EventKillTimer();
-  
-  int npos = portfolio.getMarket(MARKET_TYPE_REAL).getPositiveDealCount();
-  int nneg = portfolio.getMarket(MARKET_TYPE_REAL).getNegativeDealCount();
-  logDEBUG("Positive deals: "<<npos<<", negative deals: "<<nneg);
-  
-  RELEASE_PTR(portfolio);
+
+  // Destroy the trader:
+  RELEASE_PTR(trader);
+}
+
+// OnTick handler:
+void OnTick()
+{
+  trader.onTick();
 }
 
 void OnTimer()
 {
-  portfolio.update(TimeCurrent());
-}
+  // We call the timer every second because we don't know if we are
+  // on sec 0, and this is what we should compute here:
+  datetime ctime = TimeCurrent();
+  MqlDateTime dts;
+  TimeToStruct(ctime,dts);
 
+  // Zero the number of seconds:
+  ctime = ctime - dts.sec;
+
+  // Sent to the trader to see if an update cycle is required:
+  trader.update(ctime);
+}
