@@ -29,6 +29,13 @@ protected:
 
   // Level of risk:
   double _riskLevel;
+
+  // open price of the current position if any.
+  double _openPrice;
+
+  // True if current position is a buy:
+  bool _isBuy;
+
 public:
   /*
     Class constructor.
@@ -137,6 +144,12 @@ public:
     double sl = 0.0; //spread*nvGetPointSize(symbol);
     double tp = 0.0; //spread*nvGetPointSize(symbol);
 
+    MqlTick last_tick;
+    CHECK(SymbolInfoTick(symbol,last_tick),"Cannot retrieve last tick");
+    
+    _openPrice = signal > 0 ? last_tick.ask : last_tick.bid;
+    _isBuy = signal > 0;
+
     // Send the order:
     int otype = signal>0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
     sendDealOrder(_security, otype, lot, 0.0, sl, tp);
@@ -197,6 +210,36 @@ public:
 
   void onTick()
   {
-    // Should handle onTick  here.
+    if(!hasPosition(_security))
+      return; // nothing to do.
+
+    string symbol = _security.getSymbol();
+
+    // We have an open position.
+    // Get the current tick data:
+    MqlTick last_tick;
+    CHECK(SymbolInfoTick(symbol,last_tick),"Cannot retrieve last tick");
+
+    double spread = last_tick.ask - last_tick.bid;
+
+    double sl = PositionGetDouble(POSITION_SL);
+
+    if(_isBuy)
+    {
+      // We are in a long position:
+      // secure the gain if the current values are high enough:
+      double diff = last_tick.bid - _openPrice;
+      double nsl = last_tick.bid - spread;
+      if(diff>0.0 && nsl>sl) {
+        updateSLTP(_security,nsl);
+      }
+    }
+    else {
+      double diff = _openPrice - last_tick.ask;
+      double nsl = last_tick.bid + spread;
+      if(diff>0.0 && (nsl<sl || sl==0.0)) {
+        updateSLTP(_security,nsl);
+      }
+    }
   }
 };

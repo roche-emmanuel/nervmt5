@@ -327,3 +327,4 @@ But we need the fix for issue #29 first.
 01/03/16-18:42:49: Added data_retriever script and preparing RNN agent. Also ignoring csv files from repository.
 01/03/16-22:12:32: Adding implementation for RNN Trader.
 01/03/16-22:35:37: Finally getting some not catastrophic result with the RNN trader.
+01/03/16-23:29:30: Working strategy based on RNNTrader with a single currency, and threshold of 0.6

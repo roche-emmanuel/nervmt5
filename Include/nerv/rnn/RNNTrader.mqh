@@ -60,5 +60,6 @@ public:
   void onTick()
   {
     // Should handle onTick  here.
+    _trader.onTick();
   }
 };
