@@ -16,3 +16,4 @@ Files/test.log
 Files/tmp/*
 Files/strategy_evaluation/strategy_eval_data.json
 Files/*.log
+Files/*.csv

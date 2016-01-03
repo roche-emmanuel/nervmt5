@@ -324,3 +324,4 @@ But we need the fix for issue #29 first.
 10/21/15-22:37:01: Working on issue #52: It seems we can now get the proper profit values computed in the Deal class. But we still have a minor difference.
 10/21/15-23:08:27: Working on issue #52: handling currency value rounding appropriately.
 10/22/15-00:10:40: Working on issue #52: improved the precision of the deal profit computation, yet we still have a mismatch between the real/virtual markets computations.
+01/03/16-18:42:49: Added data_retriever script and preparing RNN agent. Also ignoring csv files from repository.
