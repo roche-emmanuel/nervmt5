@@ -331,3 +331,4 @@ But we need the fix for issue #29 first.
 01/03/16-23:51:25: Added test on bad position close => but this reduces the profits.
 01/04/16-10:44:53: Added support for multiple predictor per SecurityTrader.
 01/04/16-10:48:56: Moved the addition of the predictor for EURUSD into RNNTrader class.
+01/04/16-11:02:27: Added support for v36b predictions usage.

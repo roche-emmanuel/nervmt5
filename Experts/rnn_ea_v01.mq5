@@ -11,6 +11,7 @@ and then use those predictions to place orders.
 #property version   "1.00"
 
 #property tester_file "eval_results_v36.csv"
+#property tester_file "eval_results_v36b.csv"
 
 #include <nerv/unit/Testing.mqh>
 #include <nerv/core.mqh>
