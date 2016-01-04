@@ -333,3 +333,4 @@ But we need the fix for issue #29 first.
 01/04/16-10:48:56: Moved the addition of the predictor for EURUSD into RNNTrader class.
 01/04/16-11:02:27: Added support for v36b predictions usage.
 01/04/16-15:21:45: Added initial support for test of USDJPY
+01/04/16-15:30:35: Added improvement to keep the trailing stop loss at end of bar if in good conditions.

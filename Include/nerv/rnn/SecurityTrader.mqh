@@ -139,20 +139,21 @@ public:
     _lastUpdateTime = ctime;
     // logDEBUG("Update cycle at: " << ctime << " = " << (int)ctime)
 
-    // Close the previous position if any:
-    closePosition(_security);
-
     // Retrieve the prediction signal at that time:
     double pred = getPrediction(ctime);
-    if(pred!=0.0) {
 
-      if(hasPosition(_security))
-      {
-        // For now, do nothing if we are in an opened position.
-      }
-      else {
-        openPosition(pred);
-      }
+    // Check if we need to close the current position (if any)
+    // if the new signal is not strong enough or if it is not
+    // going in the same direction as the previous entry signal
+    // we just close the position. Otherwise, we let it running
+    // with the current trailing stop lost:
+    if(MathAbs(pred)<=_entryThreshold || pred *_lastEntrySignal <= 0.0)
+    {
+      closePosition(_security);
+    }
+      
+    if(pred!=0.0 && !hasPosition(_security)) {
+      openPosition(pred);
     }
   }
 
