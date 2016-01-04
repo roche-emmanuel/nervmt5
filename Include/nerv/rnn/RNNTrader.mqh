@@ -10,22 +10,22 @@ Base class representing a trader
 class nvRNNTrader : public nvObject
 {
 protected:
-  nvSecurityTrader _trader;
+  nvSecurityTrader* _trader;
 
 public:
   /*
     Class constructor.
   */
   nvRNNTrader()
-    : _trader("EURUSD")
   {
     logDEBUG("Creating new RNN Trader")
+    _trader = new nvSecurityTrader("EURUSD");
   }
 
   /*
     Copy constructor
   */
-  nvRNNTrader(const nvRNNTrader& rhs) : _trader("")
+  nvRNNTrader(const nvRNNTrader& rhs) : _trader(NULL)
   {
     this = rhs;
   }
@@ -44,6 +44,7 @@ public:
   ~nvRNNTrader()
   {
     logDEBUG("Deleting RNNTrader")
+    RELEASE_PTR(_trader);
   }
 
   /*

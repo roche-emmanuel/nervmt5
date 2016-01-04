@@ -16,7 +16,7 @@ protected:
   datetime _lastUpdateTime;
 
   // Prediction signal:
-  nvPredictionSignalFile* _predSignal;
+  nvPredictionSignalFile* _predictors[];
 
   nvSecurity _security;
 
@@ -49,7 +49,7 @@ public:
     _lastUpdateTime = 0;
 
     // Load the prediction signal:
-    _predSignal = new nvPredictionSignalFile("eval_results_v36.csv");
+    addPredictor("eval_results_v36.csv");
 
     // We enter only when the signal abs value is higher than:
     _entryThreshold = 0.5;
@@ -83,9 +83,51 @@ public:
   ~nvSecurityTrader()
   {
     logDEBUG("Deleting SecurityTrader")
-    RELEASE_PTR(_predSignal);
+    int len = ArraySize( _predictors );
+    for(int i = 0;i<len;++i)
+    {
+      RELEASE_PTR(_predictors[i]);  
+    }
+
+    ArrayResize( _predictors, 0 );
   }
 
+  /*
+  Function: addPredictor
+  
+  Add a predictor from a file
+  */
+  void addPredictor(string file)
+  {
+    nvPredictionSignalFile* pred = new nvPredictionSignalFile(file); //"eval_results_v36.csv"
+
+    // append to the list:
+    nvAppendArrayElement(_predictors,pred);
+  }
+  
+  /*
+  Function: getPrediction
+  
+  Method used to build the compound prediction from all predictors:
+  */
+  double getPrediction(datetime ctime)
+  {
+    int len = ArraySize( _predictors );
+    int count = 0;
+    double result = 0.0;
+
+    for(int i=0;i<len;++i)
+    {
+      double pred = _predictors[i].getPrediction(ctime);
+      if(pred!=0.0) {
+        count++;
+        result += pred;
+      }
+    }
+
+    return count==0 ? 0.0 : result/count;
+  }
+  
   /*
   Function: update
   
@@ -104,7 +146,7 @@ public:
     closePosition(_security);
 
     // Retrieve the prediction signal at that time:
-    double pred = _predSignal.getPrediction(ctime);
+    double pred = getPrediction(ctime);
     if(pred!=0.0) {
 
       if(hasPosition(_security))
