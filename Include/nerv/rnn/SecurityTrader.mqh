@@ -51,7 +51,8 @@ public:
     logDEBUG("Creating Security Trader for "<<symbol)
 
     // Add this symbol as input:
-    
+    addInputSymbol(symbol);
+
     // Initialize the last update time:
     _lastUpdateTime = 0;
 
@@ -96,6 +97,30 @@ public:
     ArrayResize( _predictors, 0 );
   }
 
+  /*
+  Function: addInputSymbol
+  
+  Method used to add an input symbol
+  */
+  void addInputSymbol(string symbol)
+  {
+    nvAppendArrayElement(_inputs,symbol);
+  }
+  
+  /*
+  Function: addInputSymbols
+  
+  Method used to add multiple input symbols
+  */
+  void addInputSymbols(string &symbols[])
+  {
+    int len = ArraySize( symbols );
+    for(int i = 0;i<len;++i)
+    {
+      addInputSymbol(symbols[i]);
+    }
+  }
+  
   /*
   Function: addPredictor
   

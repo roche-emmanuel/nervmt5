@@ -51,6 +51,7 @@ public:
   {
     // TODO: Provide implementation
     THROW("No implementation");
+    return 0.0;
   }
   
 };

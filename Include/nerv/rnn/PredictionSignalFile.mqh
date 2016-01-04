@@ -1,13 +1,14 @@
 
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
+#include <nerv/rnn/PredictionSignal.mqh>
 
 /*
 Class: nvPredictionSignalFile
 
 Class used to encapsulate a prediction signal from a given file
 */
-class nvPredictionSignalFile : public nvObject
+class nvPredictionSignalFile : public nvPredictionSignal
 {
 protected:
   int _timetags[];

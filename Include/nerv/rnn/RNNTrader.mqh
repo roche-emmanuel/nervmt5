@@ -19,13 +19,14 @@ public:
   nvRNNTrader()
   {
     logDEBUG("Creating new RNN Trader")
-    _trader = new nvSecurityTrader("EURUSD",0.4);
-    _trader.addPredictor("eval_results_v36.csv");
+    // _trader = new nvSecurityTrader("EURUSD",0.4);
+    // _trader.addPredictor("eval_results_v36.csv");
     // _trader.addPredictor("eval_results_v36b.csv");
     // _trader.addPredictor("eval_results_v36c.csv");
-    // _trader = new nvSecurityTrader("USDJPY",0.5);
-    // _trader.addPredictor("eval_results_v37.csv");
-    // _trader.addPredictor("eval_results_v37b.csv");
+    _trader = new nvSecurityTrader("USDJPY",0.4);
+    _trader.addPredictor("eval_results_v37.csv");
+    _trader.addPredictor("eval_results_v37b.csv");
+    _trader.addPredictor("eval_results_v37c.csv");
   }
 
   /*
