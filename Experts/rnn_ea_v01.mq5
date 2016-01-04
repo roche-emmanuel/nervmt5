@@ -23,7 +23,7 @@ and then use those predictions to place orders.
 
 input int   gTimerPeriod=1;  // Timer period in seconds
 
-nvRNNTrader* trader = NULL;
+nvRNNTrader* rnntrader = NULL;
 
 // Initialization method:
 int OnInit()
@@ -35,7 +35,7 @@ int OnInit()
   nvFileLogger* logger = new nvFileLogger(fname);
   lm.addSink(logger);
   
-  trader = new nvRNNTrader();
+  rnntrader = new nvRNNTrader();
 
   // Initialize the timer:
   CHECK_RET(EventSetTimer(gTimerPeriod),0,"Cannot initialize timer");
@@ -49,13 +49,13 @@ void OnDeinit(const int reason)
   EventKillTimer();
 
   // Destroy the trader:
-  RELEASE_PTR(trader);
+  RELEASE_PTR(rnntrader);
 }
 
 // OnTick handler:
 void OnTick()
 {
-  trader.onTick();
+  rnntrader.onTick();
 }
 
 void OnTimer()
@@ -70,5 +70,5 @@ void OnTimer()
   ctime = ctime - dts.sec;
 
   // Sent to the trader to see if an update cycle is required:
-  trader.update(ctime);
+  rnntrader.update(ctime);
 }

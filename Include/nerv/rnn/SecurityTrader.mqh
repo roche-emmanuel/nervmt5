@@ -63,7 +63,7 @@ public:
     _lastEntrySignal = 0.0;
 
     // 1% of risk:
-    _riskLevel = 0.01;
+    _riskLevel = 0.04;
   }
 
   /*
