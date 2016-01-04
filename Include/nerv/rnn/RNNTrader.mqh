@@ -20,6 +20,7 @@ public:
   {
     logDEBUG("Creating new RNN Trader")
     _trader = new nvSecurityTrader("EURUSD");
+    _trader.addPredictor("eval_results_v36.csv");
   }
 
   /*

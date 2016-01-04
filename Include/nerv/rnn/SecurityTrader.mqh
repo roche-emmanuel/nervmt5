@@ -48,9 +48,6 @@ public:
     // Initialize the last update time:
     _lastUpdateTime = 0;
 
-    // Load the prediction signal:
-    addPredictor("eval_results_v36.csv");
-
     // We enter only when the signal abs value is higher than:
     _entryThreshold = 0.5;
 
