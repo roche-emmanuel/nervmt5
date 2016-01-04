@@ -20,6 +20,11 @@ protected:
 
   nvSecurity _security;
 
+  // List of symbol names that are used as input for this trader:
+  // By convention, the predicted symbol should always be the first one
+  // in the list.
+  string _inputs[];
+
   // Threshold used to check if the signal we received is good enough
   // for an entry:
   double _entryThreshold;
@@ -40,16 +45,18 @@ public:
   /*
     Class constructor.
   */
-  nvSecurityTrader(string symbol)
+  nvSecurityTrader(string symbol, double entry)
     : _security(symbol)
   {
     logDEBUG("Creating Security Trader for "<<symbol)
 
+    // Add this symbol as input:
+    
     // Initialize the last update time:
     _lastUpdateTime = 0;
 
     // We enter only when the signal abs value is higher than:
-    _entryThreshold = 0.4;
+    _entryThreshold = entry;
 
     // Last value of the entry signal:
     _lastEntrySignal = 0.0;
