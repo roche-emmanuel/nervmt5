@@ -2,7 +2,7 @@
 #include <nerv/unit/Testing.mqh>
 #include <nerv/core.mqh>
 
-void writeCSV(MqlRates &rates[], string sname)
+void writeCSV(MqlRates &rates[], string sname,string suffix="")
 {
   string rpath = "Z:\\dev\\projects\\deepforex\\inputs\\mt5_2015_12\\";
   string filename = sname +"_M1.csv";
@@ -44,8 +44,10 @@ void OnStart()
   // The symbols we need are:
   // "EURUSD","AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"
   // Initialize the symbols:
+  // int nsym = 7;
+  // string symbols[] = {"EURUSD","AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
   int nsym = 7;
-  string symbols[] = {"EURUSD","AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
+  string symbols[] = {"EURUSD","EURAUD","EURCAD","EURCHF","EURGBP","EURJPY","EURNZD"};
 
   // datetime time = TimeLocal()-num*3600;
   datetime starttime = D'2015.12.01 00:00';

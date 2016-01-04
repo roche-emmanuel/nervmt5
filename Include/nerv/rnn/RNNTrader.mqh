@@ -22,6 +22,9 @@ public:
     _trader = new nvSecurityTrader("EURUSD");
     _trader.addPredictor("eval_results_v36.csv");
     _trader.addPredictor("eval_results_v36b.csv");
+    _trader.addPredictor("eval_results_v36c.csv");
+    // _trader = new nvSecurityTrader("USDJPY");
+    // _trader.addPredictor("eval_results_v37.csv");
   }
 
   /*

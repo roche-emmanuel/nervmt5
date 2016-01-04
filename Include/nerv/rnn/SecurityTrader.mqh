@@ -49,7 +49,7 @@ public:
     _lastUpdateTime = 0;
 
     // We enter only when the signal abs value is higher than:
-    _entryThreshold = 0.3;
+    _entryThreshold = 0.4;
 
     // Last value of the entry signal:
     _lastEntrySignal = 0.0;
