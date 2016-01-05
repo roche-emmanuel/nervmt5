@@ -1,7 +1,8 @@
 #include <nerv/core.mqh>
 
-#include <nerv/rnn/PredictionSignalFile.mqh>
 #include <nerv/rnn/MultiTrader.mqh>
+#include <nerv/rnn/PredictionSignalFile.mqh>
+#include <nerv/rnn/RemoteSignal.mqh>
 
 /*
 Class: nvSecurityTrader
@@ -16,7 +17,7 @@ protected:
   datetime _lastUpdateTime;
 
   // Prediction signal:
-  nvPredictionSignalFile* _predictors[];
+  nvPredictionSignal* _predictors[];
 
   nvSecurity _security;
 
@@ -63,7 +64,7 @@ public:
     _lastEntrySignal = 0.0;
 
     // 1% of risk:
-    _riskLevel = 0.04;
+    _riskLevel = 0.01;
   }
 
   /*
@@ -128,7 +129,20 @@ public:
   */
   void addPredictor(string file)
   {
-    nvPredictionSignalFile* pred = new nvPredictionSignalFile(file); //"eval_results_v36.csv"
+    nvPredictionSignal* pred = new nvPredictionSignalFile(file); //"eval_results_v36.csv"
+
+    // append to the list:
+    nvAppendArrayElement(_predictors,pred);
+  }
+  
+  /*
+  Function: addRemotePredictor
+  
+  Add a remote predictor
+  */
+  void addRemotePredictor(string address)
+  {
+    nvPredictionSignal* pred = new nvRemoteSignal(address,_inputs);
 
     // append to the list:
     nvAppendArrayElement(_predictors,pred);

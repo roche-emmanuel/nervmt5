@@ -60,7 +60,7 @@ void OnStart()
 
     // Read the rate data:
     MqlRates rates[];
-    logDEBUG("Copying rates")
+    // logDEBUG("Copying rates")
     int len = CopyRates(symbols[i],PERIOD_M1,starttime,stoptime,rates);
     while(len<0)
     {
