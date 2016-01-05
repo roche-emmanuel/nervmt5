@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                    ArrayLong.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Array.mqh"
@@ -39,6 +39,9 @@ public:
    //--- method of access to the array
    long              At(const int index) const;
    long operator[](const int index) const { return(At(index)); }
+   //--- methods of searching for minimum and maximum
+   int               Minimum(const int start,const int count) const { return(Minimum(m_data,start,count)); }
+   int               Maximum(const int start,const int count) const { return(Maximum(m_data,start,count)); }
    //--- methods change
    bool              Update(const int index,const long element);
    bool              Shift(const int index,const int shift);
@@ -100,13 +103,17 @@ int CArrayLong::MemMove(const int dest,const int src,const int count)
       return(dest);
 //--- copy
    if(dest<src)
+     {
       //--- copy from left to right
       for(i=0;i<count;i++)
          m_data[dest+i]=m_data[src+i];
+     }
    else
+     {
       //--- copy from right to left
       for(i=count-1;i>=0;i--)
          m_data[dest+i]=m_data[src+i];
+     }
 //--- successful
    return(dest);
   }
@@ -628,17 +635,13 @@ int CArrayLong::SearchLess(const long element) const
 //+------------------------------------------------------------------+
 int CArrayLong::SearchGreatOrEqual(const long element) const
   {
-   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   if((pos=SearchGreat(element))!=-1)
-     {
-      if(pos!=0 && m_data[pos-1]==element)
-         return(pos-1);
-      return(pos);
-     }
+   for(int pos=QuickSearch(element);pos<m_data_total;pos++)
+      if(m_data[pos]>=element)
+         return(pos);
 //--- not found
    return(-1);
   }
@@ -648,17 +651,13 @@ int CArrayLong::SearchGreatOrEqual(const long element) const
 //+------------------------------------------------------------------+
 int CArrayLong::SearchLessOrEqual(const long element) const
   {
-   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   if((pos=SearchLess(element))!=-1)
-     {
-      if(pos!=m_data_total-1 && m_data[pos+1]==element)
-         return(pos+1);
-      return(pos);
-     }
+   for(int pos=QuickSearch(element);pos>=0;pos--)
+      if(m_data[pos]<=element)
+         return(pos);
 //--- not found
    return(-1);
   }

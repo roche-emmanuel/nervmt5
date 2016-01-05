@@ -34,7 +34,7 @@ public:
    int               BalanceL(void)         const { return(m_l_balance); }
    int               BalanceR(void)         const { return(m_r_balance); }
    //--- method of identifying the object
-   virtual int       Type(void)             const { return(0x8888);      }
+   virtual int       Type(void) const { return(0x8888); }
    //--- methods for controlling
    int               RefreshBalance(void);
    CTreeNode        *GetNext(const CTreeNode *node);
@@ -44,7 +44,7 @@ public:
 
 protected:
    //--- method for creating an instance of class
-   virtual CTreeNode *CreateSample(void)          { return(NULL);        }
+   virtual CTreeNode *CreateSample(void) { return(NULL); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |

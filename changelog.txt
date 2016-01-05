@@ -338,3 +338,4 @@ But we need the fix for issue #29 first.
 01/04/16-20:42:09: Adding RemoteSignal class. Implemented USDJPY test with 3 network compound.
 01/04/16-20:57:09: Added support for multiagent trading.
 01/05/16-09:19:51: Working on valid sample retrieval system.
+01/05/16-09:35:44: Added test for v38 usage.

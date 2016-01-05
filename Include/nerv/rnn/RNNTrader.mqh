@@ -26,6 +26,10 @@ public:
     trader.addPredictor("eval_results_v36.csv");
     trader.addPredictor("eval_results_v36b.csv");
     trader.addPredictor("eval_results_v36c.csv");
+    trader.addPredictor("eval_results_v38.csv");
+    trader.addPredictor("eval_results_v38b.csv");
+    trader.addPredictor("eval_results_v38c.csv");
+
     trader.addRemotePredictor("tcp://localhost:22220");
 
     // trader = addTrader("USDJPY",0.4);

@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                        Array.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -37,7 +37,12 @@ public:
    void              Sort(const int mode=0);
 
 protected:
-   virtual void      QuickSort(int beg,int end,const int mode=0) { }
+   virtual void      QuickSort(int beg,int end,const int mode=0) { m_sort_mode=-1; }
+   //--- templates for methods of searching for minimum and maximum
+   template<typename T>
+   int               Minimum(const T &data[],const int start,const int count) const;
+   template<typename T>
+   int               Maximum(const T &data[],const int start,const int count) const;
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -119,5 +124,47 @@ bool CArray::Load(const int file_handle)
      }
 //--- failure
    return(false);
+  }
+//+------------------------------------------------------------------+
+//| Find minimum of array                                            |
+//+------------------------------------------------------------------+
+template<typename T>
+int CArray::Minimum(const T &data[],const int start,const int count) const
+  {
+   int real_count;
+//--- check
+   if(m_data_total<1)
+     {
+      SetUserError(ERR_USER_ARRAY_IS_EMPTY);
+      return(-1);
+     }
+//--- compute count of elements
+   real_count=(count==WHOLE_ARRAY || count>m_data_total) ? m_data_total : count;
+#ifdef __MQL5__
+   return(ArrayMinimum(data,start,real_count));
+#else
+   return(ArrayMinimum(data,real_count,start));
+#endif
+  }
+//+------------------------------------------------------------------+
+//| Find maximum of array                                            |
+//+------------------------------------------------------------------+
+template<typename T>
+int CArray::Maximum(const T &data[],const int start,const int count) const
+  {
+   int real_count;
+//--- check
+   if(m_data_total<1)
+     {
+      SetUserError(ERR_USER_ARRAY_IS_EMPTY);
+      return(-1);
+     }
+//--- compute count of elements
+   real_count=(count==WHOLE_ARRAY || count>m_data_total) ? m_data_total : count;
+#ifdef __MQL5__
+   return(ArrayMaximum(data,start,real_count));
+#else
+   return(ArrayMaximum(data,real_count,start));
+#endif
   }
 //+------------------------------------------------------------------+

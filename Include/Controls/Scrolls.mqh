@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                      Scrolls.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndContainer.mqh"
@@ -184,7 +184,7 @@ bool CScroll::OnShow(void)
    if(m_id==CONTROLS_INVALID_ID)
       return(true);
 //--- send notification
-   EventChartCustom(m_chart_id,ON_SHOW,m_id,0.0,m_name);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_SHOW,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -196,7 +196,7 @@ bool CScroll::OnHide(void)
    if(m_id==CONTROLS_INVALID_ID)
       return(true);
 //--- send notification
-   EventChartCustom(m_chart_id,ON_HIDE,m_id,0.0,m_name);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_HIDE,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -209,7 +209,7 @@ bool CScroll::OnClickInc(void)
    if(!CurrPos(m_curr_pos+1))
       return(true);
 //--- if value was changed, send notification
-   EventChartCustom(m_chart_id,ON_SCROLL_INC,m_id,0.0,m_name);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_SCROLL_INC,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -222,7 +222,7 @@ bool CScroll::OnClickDec(void)
    if(!CurrPos(m_curr_pos-1))
       return(true);
 //--- if value was changed, send notification
-   EventChartCustom(m_chart_id,ON_SCROLL_DEC,m_id,0.0,m_name);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_SCROLL_DEC,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -409,7 +409,7 @@ bool CScrollV::OnThumbDragProcess(void)
      {
       ushort event_id=(m_curr_pos<new_pos) ? ON_SCROLL_INC : ON_SCROLL_DEC;
       m_curr_pos=new_pos;
-      EventChartCustom(m_chart_id,event_id,m_id,0.0,m_name);
+      EventChartCustom(CONTROLS_SELF_MESSAGE,event_id,m_id,0.0,m_name);
      }
 //--- move thumb
    m_thumb.Move(x,y);
@@ -632,7 +632,7 @@ bool CScrollH::OnThumbDragProcess(void)
      {
       ushort event_id=(m_curr_pos<new_pos)?ON_SCROLL_INC:ON_SCROLL_DEC;
       m_curr_pos=new_pos;
-      EventChartCustom(m_chart_id,event_id,m_id,0.0,m_name);
+      EventChartCustom(CONTROLS_SELF_MESSAGE,event_id,m_id,0.0,m_name);
      }
 //--- move thumb
    m_thumb.Move(x,y);

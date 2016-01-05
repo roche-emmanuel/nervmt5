@@ -10,9 +10,16 @@ and then use those predictions to place orders.
 
 #property version   "1.00"
 
+// For EURUSD:
 #property tester_file "eval_results_v36.csv"
 #property tester_file "eval_results_v36b.csv"
 #property tester_file "eval_results_v36c.csv"
+
+#property tester_file "eval_results_v38.csv"
+#property tester_file "eval_results_v38b.csv"
+#property tester_file "eval_results_v38c.csv"
+
+// For USDJPY:
 #property tester_file "eval_results_v37.csv"
 #property tester_file "eval_results_v37b.csv"
 #property tester_file "eval_results_v37c.csv"
