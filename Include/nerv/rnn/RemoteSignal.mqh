@@ -128,8 +128,8 @@ public:
     if(_lastUpdateTime==0)
     {
       // This is the first initialization so we send all the training data
-      logDEBUG("Should send all the training data here.")
-      //sendInputs(time, 2024);
+      logDEBUG("Should send all the requested training samples: " << _trainSize)
+      sendMultipleInputs(time-60, _trainSize);
     }
 
     _lastUpdateTime = time;
@@ -237,7 +237,7 @@ public:
           logWARN("At " << time <<": detected mismatch in sample timetags: "<<timetag <<"!="<<rates[0].time);
           // We will not send that sample row:
           // but we anyway update the lastest available timetag:
-          time = timetag;
+          time = MathMin(timetag,rates[0].time);
           return false;
         }
       }
@@ -281,4 +281,71 @@ public:
     return true;
   }
 
+  /*
+  Function: sendMultipleInputs
+  
+  Method used to send multiple inputs to the predictor
+  */
+  void sendMultipleInputs(datetime time, int num)
+  {
+    // We prepare arrays to hold the data:
+    
+    datetime timetags[];
+    ArrayResize( timetags, num );
+
+    // number of features:
+    int nf = ArraySize( _inputs ) + 2;
+    double cvals[];
+    ArrayResize( cvals, nf*num );
+
+    // Start with the immediate previous bar:
+    datetime ctime = time-60;
+    double temp[];
+    MqlDateTime dts;
+    int idx;
+
+    for(int i=0;i<num;++i) {
+      // try to get a valid samples:
+      while(!getValidSample(ctime,temp)) {
+        logDEBUG("Looking for valid sample at: "<<ctime) 
+      }
+
+      CHECK(ArraySize( temp )==nf,"Invalid number of features")
+
+      // Ensure that the bar time still as sec = 0:
+      TimeToStruct(ctime,dts);
+      CHECK(dts.sec==0,"Invalid bar timetag: "<< ctime)
+
+      // populate the arrays:
+      timetags[num-1-i] = ctime;
+
+      idx = nf*(num-1-i);
+      for(j=0;j<nf;++j)
+      {
+        cvals[idx+j] = temp[j];
+      }
+
+      // We have a valid sample for ctime,
+      // the new iteration should be on ctime-60:
+      ctime = ctime-60;
+    }
+
+    // We should now build a string from all those data:
+    string msg = "multi_inputs," + (string)num + "," + (string)(nf+1);
+
+    idx = 0;
+    for(int i=0;i<num;++i)
+    {
+      msg += "," +(string)timetags[i];
+      for(int j=0;j<nf;++j)
+      {
+        msg += ","+DoubleToString(cvals[idx++]);
+      }
+    }
+
+    // Send the data:
+    // logDEBUG("Should send message: "<<msg)
+    _socket.sendString(msg,0);    
+  }
+  
 };
