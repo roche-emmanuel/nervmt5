@@ -23,11 +23,14 @@ public:
     trader.addPredictor("eval_results_v36.csv");
     trader.addPredictor("eval_results_v36b.csv");
     trader.addPredictor("eval_results_v36c.csv");
+    trader.addPredictor("eval_results_v38.csv");
+    trader.addPredictor("eval_results_v38b.csv");
+    trader.addPredictor("eval_results_v38c.csv");
     
-    trader = addTrader("USDJPY",0.4);
-    trader.addPredictor("eval_results_v37.csv");
-    trader.addPredictor("eval_results_v37b.csv");
-    trader.addPredictor("eval_results_v37c.csv");
+    // trader = addTrader("USDJPY",0.4);
+    // trader.addPredictor("eval_results_v37.csv");
+    // trader.addPredictor("eval_results_v37b.csv");
+    // trader.addPredictor("eval_results_v37c.csv");
   }
 
   /*

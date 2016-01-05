@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                       Dialog.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndContainer.mqh"
@@ -463,7 +463,7 @@ EVENT_MAP_END(CDialog)
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
 CAppDialog::CAppDialog(void) : m_program_type(WRONG_VALUE),
-                               m_deinit_reason(0),
+                               m_deinit_reason(WRONG_VALUE),
                                m_subwin_Yoff(0),
                                m_focused_wnd(NULL),
                                m_top_wnd(NULL)
@@ -515,10 +515,11 @@ bool CAppDialog::Create(const long chart,const string name,const int subwin,cons
 bool CAppDialog::CreateCommon(const long chart,const string name,const int subwin)
   {
 //--- save parameters
-   m_chart_id    =chart;
-   m_name        =name;
-   m_subwin      =subwin;
-   m_program_name=name;
+   m_chart_id     =chart;
+   m_name         =name;
+   m_subwin       =subwin;
+   m_program_name =name;
+   m_deinit_reason=WRONG_VALUE;
 //--- get unique ID
    m_instance_id=CreateInstanceId();
 //--- initialize chart object
@@ -629,8 +630,11 @@ bool CAppDialog::CreateIndicator(const int x1,const int y1,const int x2,const in
 //+------------------------------------------------------------------+
 void CAppDialog::Destroy(const int reason)
   {
-   m_deinit_reason=reason;
+//--- destroyed already?
+   if(m_deinit_reason!=WRONG_VALUE)
+      return;
 //---
+   m_deinit_reason=reason;
    IniFileSave();
 //--- detach chart object from chart
    m_chart.Detach();
@@ -645,7 +649,7 @@ void CAppDialog::Destroy(const int reason)
          ChartIndicatorDelete(m_chart_id,m_subwin,m_indicator_name);
      }
 //--- send message
-   EventChartCustom(m_chart_id,ON_APP_CLOSE,m_subwin,0.0,m_program_name);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_APP_CLOSE,m_subwin,0.0,m_program_name);
   }
 //+------------------------------------------------------------------+
 //| Calculate subwindow offset                                       |

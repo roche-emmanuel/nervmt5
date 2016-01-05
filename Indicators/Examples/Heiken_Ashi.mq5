@@ -80,7 +80,7 @@ int OnCalculate(const int rates_total,
 
       //--- set candle color
       if(haOpen<haClose) ExtColorBuffer[i]=0.0; // set color DodgerBlue
-      else               ExtColorBuffer[i]=10.0; // set color Red
+      else               ExtColorBuffer[i]=1.0; // set color Red
      }
 //--- done
    return(rates_total);

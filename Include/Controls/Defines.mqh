@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                      Defines.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -95,10 +95,11 @@ enum ENUM_WND_ALIGN_FLAGS
 //--- common
 #define CONTROLS_INVALID_ID                 (-1)     // invalid ID
 #define CONTROLS_INVALID_INDEX              (-1)     // invalid index of array
+#define CONTROLS_SELF_MESSAGE               (-1)     // message to oneself
 #define CONTROLS_MAXIMUM_ID                 (10000)  // maximum number of IDs in application
 #define CONTROLS_BORDER_WIDTH               (1)      // border width
-#define CONTROLS_SUBWINDOW_GAP              (3)      // зазор между подокнами по оси Y
-#define CONTROLS_DRAG_SPACING               (50)     // предел чувствительности при перетаскивании
+#define CONTROLS_SUBWINDOW_GAP              (3)      // gap between sub-windows along the Y axis
+#define CONTROLS_DRAG_SPACING               (50)     // sensitivity threshold for dragging
 #define CONTROLS_DBL_CLICK_TIME             (100)    // double click interval
 //--- BmpButton
 #define CONTROLS_BUTTON_SIZE                (16)     // default size of button (16 x 16)
@@ -132,7 +133,7 @@ enum ENUM_WND_ALIGN_FLAGS
 #define CONTROLS_DIALOG_CLIENT_OFF          (2)      // offset of dialog client area
 #define CONTROLS_DIALOG_MINIMIZE_LEFT       (10)     // left coordinate of dialog in minimized state
 #define CONTROLS_DIALOG_MINIMIZE_TOP        (10)     // top coordinate of dialog in minimized state
-#define CONTROLS_DIALOG_MINIMIZE_WIDTH      (100)     // width of dialog in minimized state
+#define CONTROLS_DIALOG_MINIMIZE_WIDTH      (100)    // width of dialog in minimized state
 #define CONTROLS_DIALOG_MINIMIZE_HEIGHT     (4*CONTROLS_BORDER_WIDTH+CONTROLS_DIALOG_CAPTION_HEIGHT) // height of dialog in minimized state
 //+------------------------------------------------------------------+
 //| Macro                                                            |
@@ -144,7 +145,7 @@ enum ENUM_WND_ALIGN_FLAGS
 #define IS_CAN_LOCK          ((m_prop_flags&WND_PROP_FLAG_CAN_LOCK)!=0)
 #define IS_READ_ONLY         ((m_prop_flags&WND_PROP_FLAG_READ_ONLY)!=0)
 //--- check state
-#define IS_ENABLED            ((m_state_flags&WND_STATE_FLAG_ENABLE)!=0)
+#define IS_ENABLED           ((m_state_flags&WND_STATE_FLAG_ENABLE)!=0)
 #define IS_VISIBLE           ((m_state_flags&WND_STATE_FLAG_VISIBLE)!=0)
 #define IS_ACTIVE            ((m_state_flags&WND_STATE_FLAG_ACTIVE)!=0)
 //+------------------------------------------------------------------+

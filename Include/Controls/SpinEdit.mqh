@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                     SpinEdit.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndContainer.mqh"
@@ -258,7 +258,7 @@ bool CSpinEdit::OnChangeValue(void)
 //--- copy text to the edit field edit
    m_edit.Text(IntegerToString(m_value));
 //--- send notification
-   EventChartCustom(m_chart_id,ON_CHANGE,m_id,0.0,m_name);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CHANGE,m_id,0.0,m_name);
 //--- handled
    return(true);
   }

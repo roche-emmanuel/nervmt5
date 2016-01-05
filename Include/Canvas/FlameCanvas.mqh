@@ -1,9 +1,10 @@
 //+------------------------------------------------------------------+
 //|                                                  FlameCanvas.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Canvas.mqh"
+#include <Controls\Defines.mqh>
 //+------------------------------------------------------------------+
 //| Gradient descriptors                                             |
 //+------------------------------------------------------------------+
@@ -278,7 +279,7 @@ void CFlameCanvas::FlameDraw(const double &prices[],const int width,const int le
 //--- copy flame buffer
    FlameCalculate();
 //--- start timer
-   EventChartCustom(-1,1302,0,0,NULL);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,1302,0,0,NULL);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -404,7 +405,7 @@ void CFlameCanvas::FlameSet(datetime tb1,double pb1,
                  }
      }
 //--- start timer
-   EventChartCustom(-1,1302,0,0,NULL);
+   EventChartCustom(CONTROLS_SELF_MESSAGE,1302,0,0,NULL);
   }
 //+------------------------------------------------------------------+
 //| Generate array that describes the body of flame                  |
@@ -729,7 +730,7 @@ void CFlameCanvas::ChartEventHandler(const int id,const long &lparam,const doubl
             m_time_redraw=GetTickCount()+m_delay;
            }
          //--- generate next event for custom timer
-         EventChartCustom(-1,1302,0,0,NULL);
+         EventChartCustom(CONTROLS_SELF_MESSAGE,1302,0,0,NULL);
          break;
      }
   }

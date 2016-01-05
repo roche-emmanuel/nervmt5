@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                  ArrayDouble.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Array.mqh"
@@ -41,8 +41,9 @@ public:
    //--- method of access to the array
    double            At(const int index) const;
    double operator[](const int index) const { return(At(index)); }
-   int               Minimum(const int start,const int count) const;
-   int               Maximum(const int start,const int count) const;
+   //--- methods of searching for minimum and maximum
+   int               Minimum(const int start,const int count) const { return(Minimum(m_data,start,count)); }
+   int               Maximum(const int start,const int count) const { return(Maximum(m_data,start,count)); }
    //--- methods of changing
    bool              Update(const int index,const double element);
    bool              Shift(const int index,const int shift);
@@ -103,13 +104,17 @@ int CArrayDouble::MemMove(const int dest,const int src,const int count)
       return(dest);
 //--- copy
    if(dest<src)
+     {
       //--- copy from left to right
       for(i=0;i<count;i++)
          m_data[dest+i]=m_data[src+i];
+     }
    else
+     {
       //--- copy from right to left
       for(i=count-1;i>=0;i--)
          m_data[dest+i]=m_data[src+i];
+     }
 //--- successful
    return(dest);
   }
@@ -350,20 +355,6 @@ double CArrayDouble::At(const int index) const
       return(DBL_MAX);
 //--- result
    return(m_data[index]);
-  }
-//+------------------------------------------------------------------+
-//| Find minimum of array                                            |
-//+------------------------------------------------------------------+
-int CArrayDouble::Minimum(const int start,const int count) const
-  {
-   return(ArrayMinimum(m_data,start,count));
-  }
-//+------------------------------------------------------------------+
-//| Find maximum of array                                            |
-//+------------------------------------------------------------------+
-int CArrayDouble::Maximum(const int start,const int count) const
-  {
-   return(ArrayMaximum(m_data,start,count));
   }
 //+------------------------------------------------------------------+
 //| Updating element in the specified position                       |
@@ -649,18 +640,13 @@ int CArrayDouble::SearchLess(const double element) const
 //+------------------------------------------------------------------+
 int CArrayDouble::SearchGreatOrEqual(const double element) const
   {
-   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   if((pos=SearchGreat(element))!=-1)
-     {
-      //--- compare with delta
-      if(pos!=0 && MathAbs(m_data[pos-1]-element)<=m_delta)
-         return(pos-1);
-      return(pos);
-     }
+   for(int pos=QuickSearch(element);pos<m_data_total;pos++)
+      if(m_data[pos]>=element)
+         return(pos);
 //--- not found
    return(-1);
   }
@@ -670,18 +656,13 @@ int CArrayDouble::SearchGreatOrEqual(const double element) const
 //+------------------------------------------------------------------+
 int CArrayDouble::SearchLessOrEqual(const double element) const
   {
-   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   if((pos=SearchLess(element))!=-1)
-     {
-      //--- compare with delta
-      if(pos!=m_data_total-1 && MathAbs(m_data[pos+1]-element)<=m_delta)
-         return(pos+1);
-      return(pos);
-     }
+   for(int pos=QuickSearch(element);pos>=0;pos--)
+      if(m_data[pos]<=element)
+         return(pos);
 //--- not found
    return(-1);
   }
