@@ -19,8 +19,18 @@ protected:
   // last update time:
   datetime _lastUpdateTime;
 
+  // Last timetag that was sent to the predictor:
+  datetime _lastSentTimetag;
+
   // predictor communication socket:
   nvZMQSocket* _socket;
+
+  // Seperator used for splitting strings:
+  ushort _sep;
+
+  // Number of training samples requested by the predictor.
+  int _trainSize;
+
 public:
   /*
     Class constructor.
@@ -35,15 +45,48 @@ public:
       nvAppendArrayElement(_inputs,inputs[i]);
     }
 
+    string sep = ",";
+    _sep = StringGetCharacter(sep,0);
+
+    _trainSize = 0;
     _lastUpdateTime = 0;
+    _lastSentTimetag = 0;
 
     // Create the socket:
     _socket = new nvZMQSocket(ZMQ_PAIR);
 
     logDEBUG("Connecting socket to endpoint: " << endpoint)
     _socket.connect(endpoint);
+
+    // Just after connecting we should send the initialization data:
+    // THe number of features is 2 + num input symbols:
+    int nf = len + 2;
+    string msg = "init," + (string)nf; 
+    _socket.sendString(msg,0);
+
+    string ans[];
+    len = receiveData(ans);
+    CHECK(ans[0]=="request_samples","Unexpected command id: "<<ans[0]);
+    
+    // Save the requested number of training samples for later initialization:
+    _trainSize = (int)StringToInteger(ans[1]);
+    logDEBUG("Received a request for "<< _trainSize <<" training samples.")
   }
 
+  /*
+  Function: receiveData
+  
+  Method used to receive some data in a string array:
+  */
+  int receiveData(string &data[], int flags = 0)
+  {
+    string ans = _socket.receiveString(flags);
+
+    // Need to cut the string, we expect:
+    // prediction,timetag,predvalue
+    return StringSplit(ans,_sep,data);
+  }
+  
   /*
     Copy constructor
   */
@@ -88,25 +131,26 @@ public:
       logDEBUG("Should send all the training data here.")
       //sendInputs(time, 2024);
     }
-    else
-    {
-      logDEBUG("Should send only the latest bar data.");
-      // If we are at time t, for instance t=12:11:00, this means
-      // We are at the beginning of a new bar, and the previous bar is closed.
-      // So we simply try to retrieve this "previous" bar, and we send it as
-      // input feature to the predictor, if it is valid:
-      datetime prevtime = time - 60;
-      double cvals[];
-
-      // retrieve the previous valid sample:
-      if(getValidSample(prevtime,cvals))
-      {
-        sendInput(prevtime,cvals);
-      }
-    }
 
     _lastUpdateTime = time;
-    
+
+    logDEBUG("Should send only the latest bar data.");
+    // If we are at time t, for instance t=12:11:00, this means
+    // We are at the beginning of a new bar, and the previous bar is closed.
+    // So we simply try to retrieve this "previous" bar, and we send it as
+    // input feature to the predictor, if it is valid:
+    datetime prevtime = time - 60;
+    double cvals[];
+
+    // retrieve the previous valid sample:
+    if(getValidSample(prevtime,cvals))
+    {
+      // Send the new input
+      // and return the answer we get from the predictor:
+      return sendInput(prevtime,cvals);
+    }
+
+    // Cannot make any prediction:
     return 0.0;
   }
 
@@ -114,9 +158,16 @@ public:
   Function: sendInput
   
   Method used to send a single input sample
+  This will also retrieve the latest prediction available
   */
-  void sendInput(datetime timetag, double &features[])
+  double sendInput(datetime timetag, double &features[])
   {
+    // We should ensure here that we never go back in time
+    CHECK_RET(_lastSentTimetag<timetag,0.0,"Trying to send old timetag: "<<timetag<<"<="<<_lastSentTimetag);
+    
+    // Update the last sent timetag:
+    _lastSentTimetag = timetag;
+
     // Build a string from this input:
     string msg = "single_input," + (string)((int)timetag);
     int len = ArraySize( features );
@@ -125,9 +176,24 @@ public:
       msg += "," + DoubleToString(features[i],5);
     }
 
-    logDEBUG("Should send message: "<<msg)
-    _socket.sendString(msg);
-    logDEBUG("Message sent.")
+    // logDEBUG("Should send message: "<<msg)
+    _socket.sendString(msg,0);
+    // logDEBUG("Message sent.")
+
+    // Read the prediction back from the predictor:
+    string ans = _socket.receiveString(0);
+
+    // Need to cut the string, we expect:
+    // prediction,timetag,predvalue
+    string elems[];
+    len = StringSplit(ans,_sep,elems); 
+    CHECK_RET(len==3,0.0,"Invalid number of elements: "<<len);
+    CHECK_RET(elems[0]=="prediction",0.0,"Unexpected command id: "<<elems[0]);
+    datetime dt = (datetime)StringToInteger(elems[1]);
+    CHECK_RET(dt==timetag,0.0,"Mismatch in timetag: "<<dt <<"!="<<timetag);
+    double pred = StringToDouble(elems[2]);
+    logDEBUG("Received prediction value: "<<pred)
+    return pred;
   }
   
   /*

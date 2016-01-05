@@ -179,7 +179,7 @@ public:
   
   Method used to send a char array on this socket
   */
-  void send(const char& data[])
+  void send(const char& data[], int flags = ZMQ_DONTWAIT)
   {
     CHECK(_socket!=0,"Invalid socket.")
     int len = ArraySize( data );
@@ -204,7 +204,7 @@ public:
     // logDEBUG("send: memcpy done.");
 
     // Now we can send the message:
-    int len2 = zmq_msg_send(_msg,_socket,ZMQ_DONTWAIT);
+    int len2 = zmq_msg_send(_msg,_socket,flags);
     if (len2!=len) {
       THROW("Error in zmq_send(): error "<<zmq_errno());
     }
@@ -222,7 +222,7 @@ public:
   
   Method used to receive a char array on this socket
   */
-  int receive(char& data[])
+  int receive(char& data[], int flags = ZMQ_DONTWAIT)
   {
     CHECK_RET(_socket!=0,0,"Invalid socket.")
 
@@ -234,7 +234,7 @@ public:
       THROW("Cannot init ZMQ message: error "<<zmq_errno());
     }
 
-    int len = zmq_msg_recv(_msg,_socket,ZMQ_DONTWAIT);
+    int len = zmq_msg_recv(_msg,_socket,flags);
     if (len<0)
     {
       int err = zmq_errno();
@@ -302,12 +302,12 @@ public:
   
   Helper method to send a string
   */
-  void sendString(string msg)
+  void sendString(string msg, int flags = ZMQ_DONTWAIT)
   {
     // Convert the string to char array:
     uchar ch[];
     StringToCharArray(msg,ch,0,StringLen(msg));
-    send(ch);
+    send(ch,flags);
   }
   
   /*
@@ -315,10 +315,10 @@ public:
   
   Helper method to receive a string
   */
-  string receiveString()
+  string receiveString(int flags = ZMQ_DONTWAIT)
   {
     char data[];
-    int len = receive(data);
+    int len = receive(data,flags);
     if(len==0)
     {
       return "";
