@@ -2,6 +2,8 @@
 #include <nerv/core.mqh>
 #include <nerv/utils.mqh>
 #include <nerv/rnn/PredictionSignal.mqh>
+#include <nerv/network/ZMQContext.mqh>
+#include <nerv/network/ZMQSocket.mqh>
 
 /*
 Class: nvRemoteSignal
@@ -17,13 +19,15 @@ protected:
   // last update time:
   datetime _lastUpdateTime;
 
+  // predictor communication socket:
+  nvZMQSocket* _socket;
 public:
   /*
     Class constructor.
   */
-  nvRemoteSignal(string address, string & inputs[])
+  nvRemoteSignal(string endpoint, string & inputs[])
   {
-    logDEBUG("Creating remote signal with address: "<< address)
+    logDEBUG("Creating remote signal with address: "<< endpoint)
     int len = ArraySize( inputs );
     for(int i=0;i<len;++i)
     {
@@ -33,7 +37,11 @@ public:
 
     _lastUpdateTime = 0;
 
-    logDEBUG("Should connect to address: " << address)
+    // Create the socket:
+    _socket = new nvZMQSocket(ZMQ_PAIR);
+
+    logDEBUG("Connecting socket to endpoint: " << endpoint)
+    _socket.connect(endpoint);
   }
 
   /*
@@ -57,7 +65,10 @@ public:
   */
   ~nvRemoteSignal()
   {
-    // No op.
+    // destroy the socket:
+    _socket.close();
+    
+    RELEASE_PTR(_socket);
   }
 
   /*
@@ -75,7 +86,7 @@ public:
     {
       // This is the first initialization so we send all the training data
       logDEBUG("Should send all the training data here.")
-      sendInputs(time, 2024);
+      //sendInputs(time, 2024);
     }
     else
     {
@@ -84,7 +95,14 @@ public:
       // We are at the beginning of a new bar, and the previous bar is closed.
       // So we simply try to retrieve this "previous" bar, and we send it as
       // input feature to the predictor, if it is valid:
-      sendPrevInputs(time);
+      datetime prevtime = time - 60;
+      double cvals[];
+
+      // retrieve the previous valid sample:
+      if(getValidSample(prevtime,cvals))
+      {
+        sendInput(prevtime,cvals);
+      }
     }
 
     _lastUpdateTime = time;
@@ -93,17 +111,36 @@ public:
   }
 
   /*
+  Function: sendInput
+  
+  Method used to send a single input sample
+  */
+  void sendInput(datetime timetag, double &features[])
+  {
+    // Build a string from this input:
+    string msg = "single_input," + (string)((int)timetag);
+    int len = ArraySize( features );
+    for(int i=0;i<len;++i)
+    {
+      msg += "," + DoubleToString(features[i],5);
+    }
+
+    logDEBUG("Should send message: "<<msg)
+    _socket.sendString(msg);
+    logDEBUG("Message sent.")
+  }
+  
+  /*
   Function: getValidSample
   
-  Method used to send the previous bar for a given timetag,
-  if all the features are valid:
+  Method used to retrieve a valid simple at a given timetag,
+  returns true if all the features are valid.
   */
-  void getValidSample(datetime time)
+  bool getValidSample(datetime& time, double &cvals[])
   {
     int nsym = ArraySize(_inputs);
     string symbol;
     datetime timetag = 0;
-    double cvals[];
 
     ArrayResize( cvals, nsym+2 );
 
@@ -112,15 +149,15 @@ public:
       symbol = _inputs[i];
       MqlRates rates[];
 
-      int len = CopyRates(symbol,PERIOD_M1,1,time,rates);
+      int len = CopyRates(symbol,PERIOD_M1,time,1,rates);
       while(len<0)
       {
         logDEBUG("Downloading data for "<<symbol<<"...")
-        len = CopyRates(symbol,PERIOD_M1,1,time,rates);
+        len = CopyRates(symbol,PERIOD_M1,time,1,rates);
         Sleep(50);
       }
 
-      CHECK(len==1,"Invalid result for CopyRates : "<<len)
+      CHECK_RET(len==1,false,"Invalid result for CopyRates : "<<len)
 
       if(i==0) {
         // Initialize the timetag value:
@@ -133,13 +170,18 @@ public:
         if(timetag!=rates[0].time) {
           logWARN("At " << time <<": detected mismatch in sample timetags: "<<timetag <<"!="<<rates[0].time);
           // We will not send that sample row:
-          return;
+          // but we anyway update the lastest available timetag:
+          time = timetag;
+          return false;
         }
       }
 
       // Write the close price for this symbol:
       cvals[2+i] = rates[0].close;
     }
+
+    // Update the current time value with the retrieved timetag:
+    time = timetag;
 
     // If we reached this point it meansthe sample is correct,
     // Now we need to use the timetag to produce the weektime and the daytime:
@@ -150,11 +192,11 @@ public:
     // out of range otherwise:
     if(dts.day_of_week==0) {
       logDEBUG("Discarding sample from sunday with timetag="<<timetag);
-      return;
+      return false;
     }
 
     // Ensure that we are not on saturday, as this is not expected:
-    CHECK(dts.day_of_week!=6,"Unexpected day of week in timetag="<<timetag);
+    CHECK_RET(dts.day_of_week!=6,false,"Unexpected day of week in timetag="<<timetag);
 
     // Now continue with the feature generation:
     double daylen = 24*60;
@@ -169,114 +211,8 @@ public:
     // Fill the feature buffer:
     cvals[0] = weektime;
     cvals[1] = daytime;
-  }
-  
-  /*
-  Function: getValidSample
-  
-  Method used to retrieve a valid sample
-  */
-  bool getValidSample(datetime& time, string &symbols[], double &features[])
-  {
-    bool valid = false;
-    while(!valid)
-    {
-      time -= 60;
-      valid = getSample(time,symbols,features);
-      if(time<_lastUpdateTime)
-        return false;
-    }
 
     return true;
-  }
-  
-  /*
-  Function: sendInputs
-  
-  Method used to send a given number of inputs
-  */
-  void sendInputs(datetime ctime, int num)
-  {
-    int nsym = ArraySize( _inputs );
-    int nf = nsym+2;
-
-    // for each symbol we need to collect num values,
-    // And we also add the weektime and the daytime
-    // So the total size we need is num*(nsym + 2):
-    double cvals[];
-    ArrayResize( cvals, nf*num );
-
-    // And we have one time tag per row:
-    datetime tvals[];
-    ArrayResize( tvals, num );
-
-    // For each row, we need to "find common" timetag
-    // where all the symbols are available,
-    // So we look for each row one by one, and we fill the final data array
-    // in reverse order:
-    double temp[];
-
-    int ridx = num;
-    int idx;
-    bool valid;
-    while(ridx>0)
-    {
-      // Read the start index for the row:
-      idx = (ridx-1)*nf;
-
-      // Retrieve the previous input:
-      valid = false;
-      while(!valid)
-      {
-        time -= 60;
-        valid = getSample(time,_inputs,temp);
-      }
-
-      // Copy the data:
-      for(int i=0;i<nf;++i)
-      {
-        cvals[idx+i] = temp[i];
-      }
-
-      tvals[ridx-1] = (int)time;
-      
-      // decrement the row ID:
-      ridx--;
-    }
-
-    string symbol;
-    for(int i =0; i<nsym; ++i)
-    {
-      symbol = _inputs[i];
-      MqlRates rates[];
-      int len = CopyRates(symbol,PERIOD_M1,1,num,rates);
-      while(len<0)
-      {
-        logDEBUG("Downloading data for "<<symbol<<"...")
-        len = CopyRates(symbol,PERIOD_M1,1,num,rates);
-        Sleep(200);
-      }
-
-      CHECK(len==num,"Invalid result for CopyRates : "<<len)
-      int idx = i;
-
-      for(int j=0;j<len;++j)
-      {
-        cvals[idx] = rates[j].close;
-
-      }
-    }
-  }
-  
-  /*
-  Function: sendInputs
-  
-  Method used to send the inputs to a remote predictor.
-  Does nothing by default:
-  */
-  void sendInputs(int &timetags[], double &features[])
-  {
-    
   }
 
 };

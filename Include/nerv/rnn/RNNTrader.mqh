@@ -20,17 +20,19 @@ public:
   {
     logDEBUG("Creating new RNN Trader")
     nvSecurityTrader* trader = addTrader("EURUSD",0.4);
+    
+    // input symbols should be specified before adding the predictors:
     string inputs[] = {"AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
     trader.addInputSymbols(inputs);
 
     trader.addPredictor("eval_results_v36.csv");
     trader.addPredictor("eval_results_v36b.csv");
     trader.addPredictor("eval_results_v36c.csv");
-    trader.addPredictor("eval_results_v38.csv");
-    trader.addPredictor("eval_results_v38b.csv");
-    trader.addPredictor("eval_results_v38c.csv");
+    // trader.addPredictor("eval_results_v38.csv");
+    // trader.addPredictor("eval_results_v38b.csv");
+    // trader.addPredictor("eval_results_v38c.csv");
 
-    trader.addRemotePredictor("tcp://localhost:22220");
+    trader.addRemotePredictor("tcp://192.168.0.20:30000");
 
     // trader = addTrader("USDJPY",0.4);
     // trader.addPredictor("eval_results_v37.csv");

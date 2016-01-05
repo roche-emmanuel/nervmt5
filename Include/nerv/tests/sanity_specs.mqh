@@ -1,5 +1,7 @@
 
 #include <nerv/unit/Testing.mqh>
+#include <nerv/math/SimpleRNG.mqh>
+#include <nerv/utils.mqh>
 
 void assign_value(double& arr[])
 {
@@ -261,6 +263,25 @@ BEGIN_TEST_CASE("Should be able to align rates array as expected")
   }
 
 END_TEST_CASE()
+
+
+BEGIN_TEST_CASE("should retrieve the desired bar by time")
+  datetime time = D'2016.01.05 10:30:00';
+
+  string symbol = "EURUSD";
+  MqlRates rates[];
+  int len = CopyRates(symbol,PERIOD_M1,time,1,rates);
+  while(len<0)
+  {
+    logDEBUG("Downloading data for "<<symbol<<"...")
+    len = CopyRates(symbol,PERIOD_M1,time,1,rates);
+    Sleep(50);
+  }
+
+  ASSERT_EQUAL(len,1);
+  ASSERT_EQUAL(time,rates[0].time);
+END_TEST_CASE()
+
 
 END_TEST_SUITE()
 

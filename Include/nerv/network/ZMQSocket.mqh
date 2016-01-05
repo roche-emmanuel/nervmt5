@@ -297,5 +297,35 @@ public:
     }
   }
   
+  /*
+  Function: sendString
+  
+  Helper method to send a string
+  */
+  void sendString(string msg)
+  {
+    // Convert the string to char array:
+    uchar ch[];
+    StringToCharArray(msg,ch,0,StringLen(msg));
+    send(ch);
+  }
+  
+  /*
+  Function: receiveString
+  
+  Helper method to receive a string
+  */
+  string receiveString()
+  {
+    char data[];
+    int len = receive(data);
+    if(len==0)
+    {
+      return "";
+    }
+
+    return CharArrayToString(data,0,len);
+  }
+  
 };
 

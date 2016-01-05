@@ -305,6 +305,28 @@ BEGIN_TEST_CASE("Should convert properly int32 to structure")
   ASSERT_EQUAL((int)opt.data[3],0);
 END_TEST_CASE()
 
+BEGIN_TEST_CASE("Should be able to send/receive strings")
+  // force complete uninit:
+  nvZMQContext::instance().uninit();
+
+  nvZMQSocket client(ZMQ_PUSH);
+  client.connect("tcp://localhost:22222");  
+  nvZMQSocket server(ZMQ_PULL);
+  server.bind("tcp://*:22222");
+
+  string msg1 = "Hello world!";
+  client.sendString(msg1);
+
+  Sleep(10); // We add some sleep to ensure the underlying IO threads gets
+  // the time to send the message.
+  string msg2 = server.receiveString();
+
+  int len = StringLen(msg2);
+  ASSERT_EQUAL(len,12);
+  ASSERT_EQUAL(msg1,msg2);
+END_TEST_CASE()
+
+
 END_TEST_SUITE()
 
 END_TEST_PACKAGE()

@@ -12,15 +12,14 @@ void writeCSV(MqlRates &rates[], string sname,string suffix="")
   int len = ArraySize( rates );
   logDEBUG("Writing "<<len<<" samples for symbol " << sname);
 
-  FileWriteString(handle,StringFormat("timetag,date,time,%s_open,%s_high,%s_low,%s_close,%s_volume\n",sname,sname,sname,sname,sname));
+  FileWriteString(handle,StringFormat("date,time,%s_open,%s_high,%s_low,%s_close,%s_volume\n",sname,sname,sname,sname,sname));
 
   MqlDateTime dts;
   string line;
   for(int i =0; i <len; i++)
   {
     TimeToStruct(rates[i].time,dts);
-    line = StringFormat("%d,%04d.%02d.%02d,%02d:%02d,%f,%f,%f,%f,0\n",
-      rates[i].time,
+    line = StringFormat("%04d.%02d.%02d,%02d:%02d,%f,%f,%f,%f,0\n",
       dts.year,dts.mon,dts.day,dts.hour,dts.min,
       rates[i].open,rates[i].high,rates[i].low,rates[i].close);
 
