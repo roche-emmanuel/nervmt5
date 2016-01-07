@@ -3,6 +3,8 @@
 #include <nerv/rnn/MultiTrader.mqh>
 #include <nerv/rnn/PredictionSignalFile.mqh>
 #include <nerv/rnn/RemoteSignal.mqh>
+#include <nerv/math.mqh>
+#include <nerv/math/SimpleRNG.mqh>
 
 /*
 Class: nvSecurityTrader
@@ -42,6 +44,9 @@ protected:
   // True if current position is a buy:
   bool _isBuy;
 
+  // Random generator:
+  SimpleRNG rnd;
+
 public:
   /*
     Class constructor.
@@ -65,6 +70,9 @@ public:
 
     // 1% of risk:
     _riskLevel = 0.01;
+
+    // rnd.SetSeedFromSystemTime();
+    rnd.SetSeed(123);
   }
 
   /*
@@ -188,7 +196,9 @@ public:
     // logDEBUG("Update cycle at: " << ctime << " = " << (int)ctime)
 
     // Retrieve the prediction signal at that time:
-    double pred = getPrediction(ctime);
+    // double pred = getPrediction(ctime);
+    double pred = (rnd.GetUniform()-0.5)*2.0;
+    pred = pred>0.0 ? 1.0 : -1.0;
 
     // Check if we need to close the current position (if any)
     // if the new signal is not strong enough or if it is not
@@ -313,16 +323,25 @@ public:
 
     double sl = PositionGetDouble(POSITION_SL);
 
+    // We close the position if the equity becomes too low:
+    double eq = nvGetEquity();
+    double balance = nvGetBalance();
+    if(eq/balance < 0.95) {
+      closePosition(_security);
+    }
+
     // Maximum number of lost spread:
     double maxLost = 10.0;
+    double threshold = 0.0; //3*spread;
+    double delta = 1*spread;
 
     if(_isBuy)
     {
       // We are in a long position:
       // secure the gain if the current values are high enough:
       double diff = last_tick.bid - _openPrice;
-      double nsl = last_tick.bid - spread;
-      if(diff>0.0 && nsl>sl) {
+      double nsl = last_tick.bid - delta;
+      if(diff>threshold && nsl>sl) {
         updateSLTP(_security,nsl);
       }
       // if(diff < -maxLost*spread) 
@@ -332,8 +351,8 @@ public:
     }
     else {
       double diff = _openPrice - last_tick.ask;
-      double nsl = last_tick.bid + spread;
-      if(diff>0.0 && (nsl<sl || sl==0.0)) {
+      double nsl = last_tick.bid + delta;
+      if(diff>threshold && (nsl<sl || sl==0.0)) {
         updateSLTP(_security,nsl);
       }
       // if(diff < -maxLost*spread) 

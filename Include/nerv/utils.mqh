@@ -295,6 +295,18 @@ double nvGetBalance(string currency = "")
   return balance;    
 }
 
+// Retrieve the balance value in a given currency:
+double nvGetEquity(string currency = "")
+{
+  if(currency=="")
+    currency = nvGetAccountCurrency();
+      
+  double balance = AccountInfoDouble(ACCOUNT_EQUITY);
+  
+  // convert from account currency to the given currency:
+  balance = nvConvertPrice(balance,nvGetAccountCurrency(),currency);
+  return balance;    
+}
 
 // Retrieve a period duration in number of Seconds
 int nvGetPeriodDuration(ENUM_TIMEFRAMES period)
