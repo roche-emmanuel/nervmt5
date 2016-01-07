@@ -326,7 +326,7 @@ public:
     // We close the position if the equity becomes too low:
     double eq = nvGetEquity();
     double balance = nvGetBalance();
-    if(eq/balance < 0.95) {
+    if(eq/balance < 0.94) {
       closePosition(_security);
     }
 
