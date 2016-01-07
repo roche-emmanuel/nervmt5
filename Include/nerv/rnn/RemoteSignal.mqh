@@ -220,7 +220,7 @@ public:
       {
         logDEBUG("Downloading data for "<<symbol<<"...")
         len = CopyRates(symbol,PERIOD_M1,time,1,rates);
-        Sleep(50);
+        Sleep(10);
       }
 
       CHECK_RET(len==1,false,"Invalid result for CopyRates : "<<len)
@@ -234,7 +234,7 @@ public:
         // Check if we still match the initial timetag, and if not, consider this as an
         // invalid sample:
         if(timetag!=rates[0].time) {
-          logWARN("At " << time <<": detected mismatch in sample timetags: "<<timetag <<"!="<<rates[0].time);
+          logWARN("At " << time <<": detected mismatch in sample timetags: "<<timetag <<"!="<<rates[0].time<<" for symbol "<<symbol);
           // We will not send that sample row:
           // but we anyway update the lastest available timetag:
           time = MathMin(timetag,rates[0].time);
@@ -258,6 +258,13 @@ public:
     // out of range otherwise:
     if(dts.day_of_week==0) {
       logDEBUG("Discarding sample from sunday with timetag="<<timetag);
+      // Apply an offset on the time to ensure we don't finish in a deadlock:
+      // We want to get to the end of the previous friday;
+      // So we need to remove the following number of seconds:
+      int offset = 3600*24+dts.hour*3600+dts.min*60+dts.sec + 1; // + 1 to ensure we don't end on saturday!
+      time -= offset;
+
+      logDEBUG("Applying offset: "<<time)
       return false;
     }
 
@@ -270,9 +277,11 @@ public:
     double daytime = dts.hour*60+dts.min;
     double weektime = (dts.day_of_week-1)*daylen + daytime;
 
+    // note: we should not perform normalization ourself, this will be
+    // done by the predictor:
     // normalize:
-    daytime /= daylen;
-    weektime /= weeklen;
+    // daytime /= daylen;
+    // weektime /= weeklen;
 
     // Fill the feature buffer:
     cvals[0] = weektime;
@@ -307,7 +316,12 @@ public:
     for(int i=0;i<num;++i) {
       // try to get a valid samples:
       while(!getValidSample(ctime,temp)) {
-        logDEBUG("Looking for valid sample at: "<<ctime) 
+        logDEBUG("Looking for valid sample at: "<<ctime)
+        if((time-ctime) > (4*3600*24)) {
+          logWARN("Detected too large gap in training data: discarding pre-training.");
+          CHECK(false,"cannot train.")
+          return;
+        }
       }
 
       CHECK(ArraySize( temp )==nf,"Invalid number of features")
@@ -320,7 +334,7 @@ public:
       timetags[num-1-i] = ctime;
 
       idx = nf*(num-1-i);
-      for(j=0;j<nf;++j)
+      for(int j=0;j<nf;++j)
       {
         cvals[idx+j] = temp[j];
       }
@@ -336,7 +350,7 @@ public:
     idx = 0;
     for(int i=0;i<num;++i)
     {
-      msg += "," +(string)timetags[i];
+      msg += "," +(string)((int)timetags[i]);
       for(int j=0;j<nf;++j)
       {
         msg += ","+DoubleToString(cvals[idx++]);

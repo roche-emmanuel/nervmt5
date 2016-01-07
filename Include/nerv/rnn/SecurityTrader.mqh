@@ -105,6 +105,8 @@ public:
   */
   void addInputSymbol(string symbol)
   {
+    // Ensure that this symbol is activated:
+    SymbolSelect(symbol,true);
     nvAppendArrayElement(_inputs,symbol);
   }
   
@@ -193,10 +195,10 @@ public:
     // going in the same direction as the previous entry signal
     // we just close the position. Otherwise, we let it running
     // with the current trailing stop lost:
-    if(MathAbs(pred)<=_entryThreshold || pred *_lastEntrySignal <= 0.0)
-    {
-      closePosition(_security);
-    }
+    // if(MathAbs(pred)<=_entryThreshold || pred *_lastEntrySignal <= 0.0)
+    // {
+    //   closePosition(_security);
+    // }
       
     if(pred!=0.0 && !hasPosition(_security)) {
       openPosition(pred);
@@ -226,6 +228,7 @@ public:
 
     // double lot = evaluateLotSize(spread*2.0,1.0,signal);
     double lot = evaluateLotSize(100,1.0,signal);
+    // double lot = evaluateLotSize(100,1.0,signal > 0.0 ? 0.5 : -0.5);
 
     double sl = 0.0; //spread*nvGetPointSize(symbol);
     double tp = 0.0; //spread*nvGetPointSize(symbol);
@@ -310,6 +313,9 @@ public:
 
     double sl = PositionGetDouble(POSITION_SL);
 
+    // Maximum number of lost spread:
+    double maxLost = 10.0;
+
     if(_isBuy)
     {
       // We are in a long position:
@@ -319,7 +325,7 @@ public:
       if(diff>0.0 && nsl>sl) {
         updateSLTP(_security,nsl);
       }
-      // if(diff < -5*spread) 
+      // if(diff < -maxLost*spread) 
       // {
       //   closePosition(_security);
       // }
@@ -330,7 +336,7 @@ public:
       if(diff>0.0 && (nsl<sl || sl==0.0)) {
         updateSLTP(_security,nsl);
       }
-      // if(diff < -5*spread) 
+      // if(diff < -maxLost*spread) 
       // {
       //   closePosition(_security);
       // }

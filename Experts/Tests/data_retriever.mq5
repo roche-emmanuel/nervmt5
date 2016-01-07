@@ -2,10 +2,10 @@
 #include <nerv/unit/Testing.mqh>
 #include <nerv/core.mqh>
 
-void writeCSV(MqlRates &rates[], string sname,string suffix="")
+void writeCSV(MqlRates &rates[], string sname,string period = "M1", string suffix="")
 {
   string rpath = "Z:\\dev\\projects\\deepforex\\inputs\\mt5_2015_12\\";
-  string filename = sname +"_M1.csv";
+  string filename = sname +"_" + period +".csv";
   
   int handle = FileOpen(filename, FILE_WRITE | FILE_ANSI);
 
@@ -43,14 +43,20 @@ void OnStart()
   // The symbols we need are:
   // "EURUSD","AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"
   // Initialize the symbols:
-  // int nsym = 7;
-  // string symbols[] = {"EURUSD","AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
   int nsym = 7;
-  string symbols[] = {"EURUSD","EURAUD","EURCAD","EURCHF","EURGBP","EURJPY","EURNZD"};
+  string symbols[] = {"EURUSD","AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
+  // int nsym = 7;
+  // string symbols[] = {"EURUSD","EURAUD","EURCAD","EURCHF","EURGBP","EURJPY","EURNZD"};
 
   // datetime time = TimeLocal()-num*3600;
   datetime starttime = D'2015.12.01 00:00';
-  datetime stoptime = D'2015.12.31 23:59';
+  // datetime starttime = D'2015.01.01 00:00';
+  // datetime stoptime = D'2015.12.31 23:59';
+  datetime stoptime = D'2016.01.07 17:30';
+  ENUM_TIMEFRAMES period = PERIOD_M1;
+  // ENUM_TIMEFRAMES period = PERIOD_H1;
+  string pstr = "M1";
+  // string pstr = "H1";
 
   for(int i=0;i<nsym;++i)
   {
@@ -60,11 +66,11 @@ void OnStart()
     // Read the rate data:
     MqlRates rates[];
     // logDEBUG("Copying rates")
-    int len = CopyRates(symbols[i],PERIOD_M1,starttime,stoptime,rates);
+    int len = CopyRates(symbols[i],period,starttime,stoptime,rates);
     while(len<0)
     {
       logDEBUG("Downloading data for "<<symbols[i])
-      len = CopyRates(symbols[i],PERIOD_M1,starttime,stoptime,rates);
+      len = CopyRates(symbols[i],period,starttime,stoptime,rates);
       Sleep(200);
     }
 
@@ -72,7 +78,7 @@ void OnStart()
     logDEBUG("Read "<<len<<" values for "<<symbols[i])
 
     // Write the data to file: 
-    writeCSV(rates,symbols[i]);
+    writeCSV(rates,symbols[i],pstr);
   }
 
   logDEBUG("Done executing DataRetriever.");
