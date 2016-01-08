@@ -135,9 +135,9 @@ public:
   
   Add a predictor from a file
   */
-  void addPredictor(string file)
+  void addPredictor(string file, int minId = -1, int maxId = -1)
   {
-    nvPredictionSignal* pred = new nvPredictionSignalFile(file); //"eval_results_v36.csv"
+    nvPredictionSignal* pred = new nvPredictionSignalFile(file,minId,maxId); //"eval_results_v36.csv"
 
     // append to the list:
     nvAppendArrayElement(_predictors,pred);
