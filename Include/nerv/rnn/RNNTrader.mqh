@@ -35,8 +35,11 @@ public:
     trader.addPredictor("eval_results_v42.csv");
     // trader.addPredictor("eval_results_v42b.csv");
     // trader.addPredictor("eval_results_v42c.csv");
-    // trader.addPredictor("eval_results_v42d.csv");
+    trader.addPredictor("eval_results_v42d.csv");
     // trader.addPredictor("eval_results_v42e.csv");
+
+    trader.addPredictor("eval_results_v44.csv");
+    trader.addPredictor("eval_results_v44d.csv");
 
     // trader.addRemotePredictor("tcp://192.168.0.20:30000");
 

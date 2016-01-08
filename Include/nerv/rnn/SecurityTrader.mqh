@@ -195,7 +195,7 @@ public:
     // going in the same direction as the previous entry signal
     // we just close the position. Otherwise, we let it running
     // with the current trailing stop lost:
-    // if(MathAbs(pred)<=_entryThreshold || pred *_lastEntrySignal <= 0.0)
+    // if(MathAbs(pred)>_entryThreshold || pred *_lastEntrySignal <= 0.0)
     // {
     //   closePosition(_security);
     // }
