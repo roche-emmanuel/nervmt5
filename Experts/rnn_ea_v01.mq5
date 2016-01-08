@@ -28,6 +28,9 @@ and then use those predictions to place orders.
 #property tester_file "eval_results_v44.csv"
 #property tester_file "eval_results_v44d.csv"
 
+#property tester_file "eval_results_v45.csv"
+#property tester_file "eval_results_v45b.csv"
+
 // For USDJPY:
 #property tester_file "eval_results_v37.csv"
 #property tester_file "eval_results_v37b.csv"
