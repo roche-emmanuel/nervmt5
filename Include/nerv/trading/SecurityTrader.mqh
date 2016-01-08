@@ -248,6 +248,9 @@ public:
     double threshold = 0.0; //3*spread;
     double delta = getTrailingOffset(last_tick);
 
+    if(delta<0.0)
+      return; // Nothing to trail.
+      
     if(_isBuy)
     {
       // We are in a long position:

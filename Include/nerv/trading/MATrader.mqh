@@ -23,6 +23,8 @@ protected:
   double _maFVal[]; // Dynamic array to hold the values of Moving Average of period 4 for each bars
   MqlRates _mrate[];
 
+  bool _buyCond;
+
 public:
   /*
     Class constructor.
@@ -46,6 +48,8 @@ public:
     ArraySetAsSeries(_maSVal,true);
     // the MA-4 values arrays
     ArraySetAsSeries(_maFVal,true);
+
+    _buyCond = false;
   }
 
   /*
@@ -77,9 +81,49 @@ public:
     // check if we are in a buy or sell precondition:
     // using the day MAs:
 
-    CHECK_RET(CopyRates(_symbol,PERIOD_H1,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
-    CHECK_RET(CopyBuffer(_maDSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
-    CHECK_RET(CopyBuffer(_maDFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
+    // if(_buyCond)
+    // {
+    //   _buyCond = false;
+
+      // We are in a good buy position, so now we check the hour trend:
+      // CHECK_RET(CopyRates(_symbol,PERIOD_M5,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
+      // CHECK_RET(CopyBuffer(_maHSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
+      // CHECK_RET(CopyBuffer(_maHFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
+
+      // double sSlope1 = _maSVal[1]-_maSVal[2];
+      // double sSlope2 = _maSVal[2]-_maSVal[3];
+      // double fSlope1 = _maFVal[1]-_maFVal[2];
+      // double fSlope2 = _maFVal[2]-_maFVal[3];
+
+      // // Buy if we meet the previous conditions on this lower time frame:
+      // bool bb1 = _maFVal[1]>_maSVal[1] && _maFVal[2]>_maSVal[2] && _maFVal[3]>_maSVal[3];
+
+      // // Chech the slopes are positives:
+      // bool bb2 = sSlope1 > sSlope2 && sSlope2 > 0.0;
+      // bool bb3 = fSlope1 > fSlope2 && fSlope2 > 0.2;
+
+      // // Check the current price position:
+      // bool bb4 = _mrate[0].close > _maFVal[0];
+
+      // // Check the price evolution:
+      // bool bb5 = _mrate[0].close > _mrate[1].close;
+
+      // // fast slope should be faster than the slow one:
+      // bool bb6 = fSlope1 > sSlope1;
+
+      // if(bb1 && bb2 && bb2 && bb4 && bb5 && bb6) 
+      // {
+      //    return 1.0;
+      // }
+    // }
+
+    // Update the buy condition:
+    CHECK_RET(CopyRates(_symbol,PERIOD_M5,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
+    CHECK_RET(CopyBuffer(_maHSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
+    CHECK_RET(CopyBuffer(_maHFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
+    // CHECK_RET(CopyRates(_symbol,PERIOD_H1,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
+    // CHECK_RET(CopyBuffer(_maDSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
+    // CHECK_RET(CopyBuffer(_maDFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
 
     double sSlope1 = _maSVal[1]-_maSVal[2];
     double sSlope2 = _maSVal[2]-_maSVal[3];
@@ -87,49 +131,16 @@ public:
     double fSlope2 = _maFVal[2]-_maFVal[3];
 
     // Check the curves positions:
-    bool b1 = _maFVal[1]>_maSVal[1] && _maFVal[2]>_maSVal[2] && _maFVal[3]>_maSVal[3];
+    // bool b1 = _maFVal[1]>_maSVal[1] && _maFVal[2]>_maSVal[2] && _maFVal[3]>_maSVal[3];
+    bool b1 = _maFVal[1]>_maSVal[1] && _maFVal[2]<=_maSVal[2];
 
     // Chech the slopes are positives:
-    bool b2 = sSlope1 > sSlope2 && sSlope2 > 0.0;
-    bool b3 = fSlope1 > fSlope2 && fSlope2 > 0.0;
+    bool b2 = sSlope1 > sSlope2;
+    bool b3 = fSlope1 > fSlope2 && fSlope2 > 0.1;
 
-    // Check the current price position:
-    bool b4 = _mrate[0].close > _maFVal[0];
-
-    // Check the price evolution:
-    bool b5 = _mrate[0].close > _mrate[1].close;
-
-    bool buycond = b1 && b2 && b2 && b4 && b5;
-
-    if(buycond)
+    if(b1 && b2 && b2)
     {
-      // We are in a good buy position, so now we check the hour trend:
-      CHECK_RET(CopyRates(_symbol,PERIOD_M5,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
-      CHECK_RET(CopyBuffer(_maHSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
-      CHECK_RET(CopyBuffer(_maHFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
-
-      sSlope1 = _maSVal[1]-_maSVal[2];
-      sSlope2 = _maSVal[2]-_maSVal[3];
-      fSlope1 = _maFVal[1]-_maFVal[2];
-      fSlope2 = _maFVal[2]-_maFVal[3];
-
-      // Buy if we meet the previous conditions on this lower time frame:
-      bool bb1 = _maFVal[1]>_maSVal[1] && _maFVal[2]>_maSVal[2] && _maFVal[3]>_maSVal[3];
-
-      // Chech the slopes are positives:
-      bool bb2 = sSlope1 > sSlope2 && sSlope2 > 0.0;
-      bool bb3 = fSlope1 > fSlope2 && fSlope2 > 0.0;
-
-      // Check the current price position:
-      bool bb4 = _mrate[0].close > _maFVal[0];
-
-      // Check the price evolution:
-      bool bb5 = _mrate[0].close > _mrate[1].close;
-
-      if(bb1 && bb2 && bb2 && bb4 && bb5) 
-      {
-         return 1.0;
-      }
+      return 1.0;
     }
 
     return 0.0;
@@ -146,10 +157,15 @@ public:
     CHECK(CopyBuffer(_maHSHandle,0,0,4,_maSVal)==4,"Cannot copy MA buffer 0");
     CHECK(CopyBuffer(_maHFHandle,0,0,4,_maFVal)==4,"Cannot copy MA buffer 0");
 
+    double fSlope1 = _maFVal[1]-_maFVal[2];
+    double fSlope2 = _maFVal[2]-_maFVal[3];
+
     bool c1 = _maFVal[0]< _maSVal[0];
     bool c2 = _mrate[1].close<_maFVal[1];
+    bool c3 = fSlope1 < fSlope2 < 0.0;
 
-    if (_isBuy && (c1 || c2))
+    // if (_isBuy && (c1 || c2 || c3))
+    if (_isBuy && (c3))
     {
       closePosition(_security);
     }
@@ -157,7 +173,8 @@ public:
 
   virtual double getTrailingOffset(MqlTick& last_tick)
   {
-    return (last_tick.ask - last_tick.bid);
+    //return 2.0*(last_tick.ask - last_tick.bid);
+    return -1.0;
   }
 
 };
