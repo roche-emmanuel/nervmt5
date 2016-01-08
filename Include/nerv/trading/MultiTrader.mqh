@@ -1,6 +1,7 @@
 #include <nerv/core.mqh>
 
-#include <nerv/rnn/SecurityTrader.mqh>
+#include <nerv/trading/SecurityTrader.mqh>
+#include <nerv/trading/RandomTrader.mqh>
 
 /*
 Class: nvMultiTrader
@@ -19,7 +20,9 @@ public:
   nvMultiTrader()
   {
     logDEBUG("Creating new RNN Trader")
-    nvSecurityTrader* trader = addTrader("EURUSD",0.5);
+    // nvSecurityTrader* trader = new nvSecurityTrader("EURUSD");
+    nvSecurityTrader* trader = new nvRandomTrader("EURUSD");
+    addTrader(trader);
   }
 
   /*
@@ -57,9 +60,8 @@ public:
   
   Method to add a security trader
   */
-  nvSecurityTrader* addTrader(string symbol, double entry)
+  nvSecurityTrader* addTrader(nvSecurityTrader* trader)
   {
-    nvSecurityTrader* trader = new nvSecurityTrader(symbol,entry);
     nvAppendArrayElement(_traders,trader);
     return trader;
   }

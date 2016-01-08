@@ -32,7 +32,7 @@ public:
     // trader.addPredictor("eval_results_v38b.csv");
     // trader.addPredictor("eval_results_v38c.csv");
 
-    trader.addPredictor("eval_results_v42.csv");
+    // trader.addPredictor("eval_results_v42.csv");
     // trader.addPredictor("eval_results_v42b.csv");
     // trader.addPredictor("eval_results_v42c.csv");
     // trader.addPredictor("eval_results_v42d.csv");

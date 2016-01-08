@@ -1,36 +1,23 @@
 #include <nerv/core.mqh>
 
 #include <nerv/trading/TraderBase.mqh>
-#include <nerv/rnn/PredictionSignalFile.mqh>
-#include <nerv/rnn/RemoteSignal.mqh>
 #include <nerv/math.mqh>
 #include <nerv/math/SimpleRNG.mqh>
+#include <nerv/utils.mqh>
 
 /*
-Class: nvRNNSecurityTrader
+Class: nvSecurityTrader
 
 Base class representing a trader 
 */
-class nvRNNSecurityTrader : public nvTraderBase
+class nvSecurityTrader : public nvTraderBase
 {
 protected:
   // Last update time value, used to keep track
   // of the last time this trader was updated, to avoid double updates.
   datetime _lastUpdateTime;
 
-  // Prediction signal:
-  nvPredictionSignal* _predictors[];
-
   nvSecurity _security;
-
-  // List of symbol names that are used as input for this trader:
-  // By convention, the predicted symbol should always be the first one
-  // in the list.
-  string _inputs[];
-
-  // Threshold used to check if the signal we received is good enough
-  // for an entry:
-  double _entryThreshold;
 
   // Current value of the entry signal:
   double _lastEntrySignal;
@@ -44,26 +31,19 @@ protected:
   // True if current position is a buy:
   bool _isBuy;
 
-  // Random generator:
-  SimpleRNG rnd;
+  double _entryThreshold;
 
 public:
   /*
     Class constructor.
   */
-  nvRNNSecurityTrader(string symbol, double entry)
+  nvSecurityTrader(string symbol)
     : _security(symbol)
   {
     logDEBUG("Creating Security Trader for "<<symbol)
 
-    // Add this symbol as input:
-    addInputSymbol(symbol);
-
     // Initialize the last update time:
     _lastUpdateTime = 0;
-
-    // We enter only when the signal abs value is higher than:
-    _entryThreshold = entry;
 
     // Last value of the entry signal:
     _lastEntrySignal = 0.0;
@@ -71,14 +51,13 @@ public:
     // 1% of risk:
     _riskLevel = 0.01;
 
-    // rnd.SetSeedFromSystemTime();
-    rnd.SetSeed(123);
+    _entryThreshold = 0.5;
   }
 
   /*
     Copy constructor
   */
-  nvRNNSecurityTrader(const nvRNNSecurityTrader& rhs) : _security("")
+  nvSecurityTrader(const nvSecurityTrader& rhs) : _security("")
   {
     this = rhs;
   }
@@ -86,7 +65,7 @@ public:
   /*
     assignment operator
   */
-  void operator=(const nvRNNSecurityTrader& rhs)
+  void operator=(const nvSecurityTrader& rhs)
   {
     THROW("No copy assignment.")
   }
@@ -94,93 +73,16 @@ public:
   /*
     Class destructor.
   */
-  ~nvRNNSecurityTrader()
+  ~nvSecurityTrader()
   {
     logDEBUG("Deleting SecurityTrader")
-    int len = ArraySize( _predictors );
-    for(int i = 0;i<len;++i)
-    {
-      RELEASE_PTR(_predictors[i]);  
-    }
-
-    ArrayResize( _predictors, 0 );
   }
-
-  /*
-  Function: addInputSymbol
   
-  Method used to add an input symbol
-  */
-  void addInputSymbol(string symbol)
+  virtual double getSignal(datetime ctime)
   {
-    // Ensure that this symbol is activated:
-    SymbolSelect(symbol,true);
-    nvAppendArrayElement(_inputs,symbol);
+    return 0.0;
   }
-  
-  /*
-  Function: addInputSymbols
-  
-  Method used to add multiple input symbols
-  */
-  void addInputSymbols(string &symbols[])
-  {
-    int len = ArraySize( symbols );
-    for(int i = 0;i<len;++i)
-    {
-      addInputSymbol(symbols[i]);
-    }
-  }
-  
-  /*
-  Function: addPredictor
-  
-  Add a predictor from a file
-  */
-  void addPredictor(string file)
-  {
-    nvPredictionSignal* pred = new nvPredictionSignalFile(file); //"eval_results_v36.csv"
 
-    // append to the list:
-    nvAppendArrayElement(_predictors,pred);
-  }
-  
-  /*
-  Function: addRemotePredictor
-  
-  Add a remote predictor
-  */
-  void addRemotePredictor(string address)
-  {
-    nvPredictionSignal* pred = new nvRemoteSignal(address,_inputs);
-
-    // append to the list:
-    nvAppendArrayElement(_predictors,pred);
-  }
-  
-  /*
-  Function: getPrediction
-  
-  Method used to build the compound prediction from all predictors:
-  */
-  double getPrediction(datetime ctime)
-  {
-    int len = ArraySize( _predictors );
-    int count = 0;
-    double result = 0.0;
-
-    for(int i=0;i<len;++i)
-    {
-      double pred = _predictors[i].getPrediction(ctime);
-      if(pred!=0.0) {
-        count++;
-        result += pred;
-      }
-    }
-
-    return count==0 ? 0.0 : result/count;
-  }
-  
   /*
   Function: update
   
@@ -197,10 +99,10 @@ public:
 
     // Retrieve the prediction signal at that time:
     // double pred = getPrediction(ctime);
-    double pred = (rnd.GetUniform()-0.5)*2.0;
-    logDEBUG(TimeCurrent() <<": signal = "<<pred);
-    
-    pred = pred>0.0 ? 1.0 : -1.0;
+    // double pred = (rnd.GetUniform()-0.5)*2.0;
+    // pred = pred>0.0 ? 1.0 : -1.0;
+
+    double pred = getSignal(ctime);
 
     // Check if we need to close the current position (if any)
     // if the new signal is not strong enough or if it is not
@@ -309,17 +211,14 @@ public:
     return lotsize;
   }
 
+  virtual void checkPosition()
+  {
+    // No op.
+  }
+
   void onTick()
   {
-    if(!hasPosition(_security))
-      return; // nothing to do.
-
-    // We close the position if the equity becomes too low:
-    double eq = nvGetEquity();
-    double balance = nvGetBalance();
-    if(eq/balance < 0.94) {
-      closePosition(_security);
-    }
+    checkPosition();
 
     if(!hasPosition(_security))
       return; // nothing to do.
