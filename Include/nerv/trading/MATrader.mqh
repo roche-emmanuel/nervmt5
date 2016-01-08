@@ -30,11 +30,11 @@ public:
   nvMATrader(string symbol)
     :nvSecurityTrader(symbol)
   {
-    _maDSHandle=iMA(symbol,PERIOD_D1,34,0,MODE_EMA,PRICE_CLOSE);
-    _maDFHandle=iMA(symbol,PERIOD_D1,8,0,MODE_EMA,PRICE_CLOSE);
+    _maDSHandle=iMA(symbol,PERIOD_H1,34,0,MODE_EMA,PRICE_CLOSE);
+    _maDFHandle=iMA(symbol,PERIOD_H1,8,0,MODE_EMA,PRICE_CLOSE);
     
-    _maHSHandle=iMA(symbol,PERIOD_H1,34,0,MODE_EMA,PRICE_CLOSE);
-    _maHFHandle=iMA(symbol,PERIOD_H1,8,0,MODE_EMA,PRICE_CLOSE);
+    _maHSHandle=iMA(symbol,PERIOD_M5,34,0,MODE_EMA,PRICE_CLOSE);
+    _maHFHandle=iMA(symbol,PERIOD_M5,8,0,MODE_EMA,PRICE_CLOSE);
     
     //--- What if handle returns Invalid Handle    
     CHECK(_maDSHandle>=0 && _maDFHandle>=0,"Invalid indicators handle");
@@ -77,7 +77,7 @@ public:
     // check if we are in a buy or sell precondition:
     // using the day MAs:
 
-    CHECK_RET(CopyRates(_symbol,PERIOD_D1,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
+    CHECK_RET(CopyRates(_symbol,PERIOD_H1,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
     CHECK_RET(CopyBuffer(_maDSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
     CHECK_RET(CopyBuffer(_maDFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
 
@@ -104,9 +104,14 @@ public:
     if(buycond)
     {
       // We are in a good buy position, so now we check the hour trend:
-      CHECK_RET(CopyRates(_symbol,PERIOD_H1,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
+      CHECK_RET(CopyRates(_symbol,PERIOD_M5,0,4,_mrate)==4,0.0,"Cannot copy the latest rates");
       CHECK_RET(CopyBuffer(_maHSHandle,0,0,4,_maSVal)==4,0.0,"Cannot copy MA buffer 0");
       CHECK_RET(CopyBuffer(_maHFHandle,0,0,4,_maFVal)==4,0.0,"Cannot copy MA buffer 0");
+
+      sSlope1 = _maSVal[1]-_maSVal[2];
+      sSlope2 = _maSVal[2]-_maSVal[3];
+      fSlope1 = _maFVal[1]-_maFVal[2];
+      fSlope2 = _maFVal[2]-_maFVal[3];
 
       // Buy if we meet the previous conditions on this lower time frame:
       bool bb1 = _maFVal[1]>_maSVal[1] && _maFVal[2]>_maSVal[2] && _maFVal[3]>_maSVal[3];
@@ -137,10 +142,14 @@ public:
 
     // We close the current position if the fast MA is going under the slow MA:
     // on the hour time scale:
+    CHECK(CopyRates(_symbol,PERIOD_M5,0,4,_mrate)==4,"Cannot copy the latest rates");
     CHECK(CopyBuffer(_maHSHandle,0,0,4,_maSVal)==4,"Cannot copy MA buffer 0");
     CHECK(CopyBuffer(_maHFHandle,0,0,4,_maFVal)==4,"Cannot copy MA buffer 0");
 
-    if (_isBuy && _maFVal[0]< _maSVal[0])
+    bool c1 = _maFVal[0]< _maSVal[0];
+    bool c2 = _mrate[1].close<_maFVal[1];
+
+    if (_isBuy && (c1 || c2))
     {
       closePosition(_security);
     }
