@@ -1,6 +1,6 @@
 #include <nerv/core.mqh>
 
-#include <nerv/rnn/SecurityTrader.mqh>
+#include <nerv/rnn/RNNSecurityTrader.mqh>
 
 /*
 Class: nvRNNTrader
@@ -10,7 +10,7 @@ Base class representing a trader
 class nvRNNTrader : public nvObject
 {
 protected:
-  nvSecurityTrader* _traders[];
+  nvRNNSecurityTrader* _traders[];
 
 public:
   /*
@@ -19,7 +19,7 @@ public:
   nvRNNTrader()
   {
     logDEBUG("Creating new RNN Trader")
-    nvSecurityTrader* trader = addTrader("EURUSD",0.5);
+    nvRNNSecurityTrader* trader = addTrader("EURUSD",0.5);
     
     // input symbols should be specified before adding the predictors:
     string inputs[] = {"AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
@@ -81,9 +81,9 @@ public:
   
   Method to add a security trader
   */
-  nvSecurityTrader* addTrader(string symbol, double entry)
+  nvRNNSecurityTrader* addTrader(string symbol, double entry)
   {
-    nvSecurityTrader* trader = new nvSecurityTrader(symbol,entry);
+    nvRNNSecurityTrader* trader = new nvRNNSecurityTrader(symbol,entry);
     nvAppendArrayElement(_traders,trader);
     return trader;
   }

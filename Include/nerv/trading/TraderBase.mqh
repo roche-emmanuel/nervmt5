@@ -2,11 +2,11 @@
 #include <nerv/expert/Security.mqh>
 
 /*
-Class: nvMultiTrader
+Class: nvTraderBase
 
 Base class used for multi trader implementation
 */
-class nvMultiTrader : public nvObject
+class nvTraderBase : public nvObject
 {
 protected:
   int _ea_magic;
@@ -15,7 +15,7 @@ public:
   /*
     Class constructor.
   */
-  nvMultiTrader()
+  nvTraderBase()
   {
     _ea_magic = 10001;
   }
@@ -23,7 +23,7 @@ public:
   /*
     Copy constructor
   */
-  nvMultiTrader(const nvMultiTrader& rhs)
+  nvTraderBase(const nvTraderBase& rhs)
   {
     this = rhs;
   }
@@ -31,7 +31,7 @@ public:
   /*
     assignment operator
   */
-  void operator=(const nvMultiTrader& rhs)
+  void operator=(const nvTraderBase& rhs)
   {
     THROW("No copy assignment.")
   }
@@ -39,7 +39,7 @@ public:
   /*
     Class destructor.
   */
-  ~nvMultiTrader()
+  ~nvTraderBase()
   {
     // No op.
   }

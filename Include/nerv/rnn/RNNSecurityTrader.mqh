@@ -1,17 +1,17 @@
 #include <nerv/core.mqh>
 
-#include <nerv/rnn/MultiTrader.mqh>
+#include <nerv/trading/TraderBase.mqh>
 #include <nerv/rnn/PredictionSignalFile.mqh>
 #include <nerv/rnn/RemoteSignal.mqh>
 #include <nerv/math.mqh>
 #include <nerv/math/SimpleRNG.mqh>
 
 /*
-Class: nvSecurityTrader
+Class: nvRNNSecurityTrader
 
 Base class representing a trader 
 */
-class nvSecurityTrader : public nvMultiTrader
+class nvRNNSecurityTrader : public nvTraderBase
 {
 protected:
   // Last update time value, used to keep track
@@ -51,7 +51,7 @@ public:
   /*
     Class constructor.
   */
-  nvSecurityTrader(string symbol, double entry)
+  nvRNNSecurityTrader(string symbol, double entry)
     : _security(symbol)
   {
     logDEBUG("Creating Security Trader for "<<symbol)
@@ -78,7 +78,7 @@ public:
   /*
     Copy constructor
   */
-  nvSecurityTrader(const nvSecurityTrader& rhs) : _security("")
+  nvRNNSecurityTrader(const nvRNNSecurityTrader& rhs) : _security("")
   {
     this = rhs;
   }
@@ -86,7 +86,7 @@ public:
   /*
     assignment operator
   */
-  void operator=(const nvSecurityTrader& rhs)
+  void operator=(const nvRNNSecurityTrader& rhs)
   {
     THROW("No copy assignment.")
   }
@@ -94,7 +94,7 @@ public:
   /*
     Class destructor.
   */
-  ~nvSecurityTrader()
+  ~nvRNNSecurityTrader()
   {
     logDEBUG("Deleting SecurityTrader")
     int len = ArraySize( _predictors );
