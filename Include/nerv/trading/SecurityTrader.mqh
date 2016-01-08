@@ -33,6 +33,8 @@ protected:
 
   double _entryThreshold;
 
+  string _symbol;
+
 public:
   /*
     Class constructor.
@@ -42,6 +44,8 @@ public:
   {
     logDEBUG("Creating Security Trader for "<<symbol)
 
+    _symbol = symbol;
+    
     // Initialize the last update time:
     _lastUpdateTime = 0;
 
@@ -216,6 +220,11 @@ public:
     // No op.
   }
 
+  virtual double getTrailingOffset(MqlTick& last_tick)
+  {
+    return last_tick.ask - last_tick.bid;
+  }
+
   void onTick()
   {
     checkPosition();
@@ -237,7 +246,7 @@ public:
     // Maximum number of lost spread:
     double maxLost = 10.0;
     double threshold = 0.0; //3*spread;
-    double delta = 1*spread;
+    double delta = getTrailingOffset(last_tick);
 
     if(_isBuy)
     {

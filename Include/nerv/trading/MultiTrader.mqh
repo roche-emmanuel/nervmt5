@@ -2,6 +2,7 @@
 
 #include <nerv/trading/SecurityTrader.mqh>
 #include <nerv/trading/RandomTrader.mqh>
+#include <nerv/trading/MATrader.mqh>
 
 /*
 Class: nvMultiTrader
@@ -21,7 +22,8 @@ public:
   {
     logDEBUG("Creating new RNN Trader")
     // nvSecurityTrader* trader = new nvSecurityTrader("EURUSD");
-    nvSecurityTrader* trader = new nvRandomTrader("EURUSD");
+    // nvSecurityTrader* trader = new nvRandomTrader("EURUSD");
+    nvSecurityTrader* trader = new nvMATrader("EURUSD");
     addTrader(trader);
   }
 
