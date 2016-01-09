@@ -141,7 +141,7 @@ public:
       double s1 = _maVal[1]-_maVal[2];
       // double s2 = _maVal[2]-_maVal[3];
 
-      if(s1<0.0) {
+      if(sig*s1<=0.0) {
         return; // prevent the trade.
       }
 

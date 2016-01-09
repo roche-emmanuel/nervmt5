@@ -44,7 +44,7 @@ public:
     // trader.addPredictor("eval_results_v44.csv");
     // trader.addPredictor("eval_results_v44d.csv");
 
-    nvSecurityTrader* trader = new nvForcastSecurityTrader("EURUSD",0.4);
+    nvSecurityTrader* trader = new nvForcastSecurityTrader("EURUSD",0.3);
     addTrader(trader);
     trader.addPredictor("eval_results_v45.csv",1,5);
     trader.addPredictor("eval_results_v45b.csv",1,5);
