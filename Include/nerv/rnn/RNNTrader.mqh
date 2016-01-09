@@ -46,9 +46,9 @@ public:
 
     nvSecurityTrader* trader = new nvForcastSecurityTrader("EURUSD",0.3);
     addTrader(trader);
-    trader.addPredictor("eval_results_v45.csv",1,5);
-    trader.addPredictor("eval_results_v45b.csv",1,5);
-    // trader.addPredictor("eval_results_v45c.csv",1,5);
+    trader.addPredictor("eval_results_v45.csv",2,5);
+    trader.addPredictor("eval_results_v45b.csv",2,5);
+    trader.addPredictor("eval_results_v45c.csv",2,5);
 
     // trader.addRemotePredictor("tcp://192.168.0.20:30000");
 
