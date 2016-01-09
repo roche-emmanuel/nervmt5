@@ -291,11 +291,11 @@ public:
     // We should not allow the trader to enter a deal with too big lot size,
     // otherwise, we could soon not be able to trade anymore.
     // So we should also apply the risk level trader weight and confidence level on this max lot size:
-    if (lotsize>5.0)
-    {
-      logDEBUG("Clamping lot size to 5.0")
-      lotsize = 5.0;
-    }
+    // if (lotsize>5.0)
+    // {
+    //   logDEBUG("Clamping lot size to 5.0")
+    //   lotsize = 5.0;
+    // }
 
     // Compute the new margin level:
     // double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
