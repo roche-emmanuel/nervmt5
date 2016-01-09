@@ -15,6 +15,9 @@ protected:
   double _signals[];
   int _holdingPeriodCount;
 
+  int _ma;
+  double _maVal[];
+
 public:
   /*
     Class constructor.
@@ -24,6 +27,11 @@ public:
   {
     logDEBUG("Creating Forcast Security Trader for "<<symbol)
     ArrayResize( _signals, 0 );
+
+    _ma = iMA(_symbol,PERIOD_M1,4,0,MODE_LWMA,PRICE_TYPICAL);
+
+    // the rates arrays
+    ArraySetAsSeries(_maVal,true);
   }
 
   /*
@@ -47,6 +55,7 @@ public:
   */
   ~nvForcastSecurityTrader()
   {
+    IndicatorRelease(_ma);
   }
   
   /*
@@ -116,12 +125,27 @@ public:
         return;
       }
     }
-    
-    // Reset the period count:
-    _holdingPeriodCount = 0;
+    else {
+      // Reset the period count:
+      _holdingPeriodCount = 0;
+  
+      if(MathAbs(sig)<=_entryThreshold)
+        return; // Should not enter anything.
 
-    // Let's check if we should open a position:
-    if(sig!=0.0 && !hasPosition(_security)) {
+      // Check the current moving average to see if we should enter
+      // a trade:
+      // If the slope of the MA is agains the signal, then we do not
+      // enter the desired position
+      CHECK(CopyBuffer(_ma,0,0,4,_maVal)==4,"Cannot copy MA buffer 0");
+
+      double s1 = _maVal[1]-_maVal[2];
+      // double s2 = _maVal[2]-_maVal[3];
+
+      if(s1<0.0) {
+        return; // prevent the trade.
+      }
+
+      // Let's check if we should open a position:
       openPosition(sig);
     }
   }

@@ -45,6 +45,8 @@ protected:
   // True if the current position has locked profit.
   bool _profitable;
 
+  string _symbol;
+  
 public:
   /*
     Class constructor.
@@ -53,6 +55,8 @@ public:
     : _security(symbol)
   {
     logDEBUG("Creating Security Trader for "<<symbol)
+
+    _symbol = symbol;
 
     // Add this symbol as input:
     addInputSymbol(symbol);
@@ -311,8 +315,18 @@ public:
     return last_tick.ask - last_tick.bid;
   }
 
+  virtual void checkPosition()
+  {
+    // No op.
+  }
+
   void onTick()
   {
+    if(!hasPosition(_security))
+      return; // nothing to do.
+
+    checkPosition();
+
     if(!hasPosition(_security))
       return; // nothing to do.
 
@@ -331,6 +345,9 @@ public:
     double maxLost = 10.0;
 
     double trail = getTrailDelta(last_tick);
+
+    if(trail<0.0)
+      return; // Nothing to trail.
 
     if(_isBuy)
     {
