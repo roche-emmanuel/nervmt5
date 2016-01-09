@@ -68,7 +68,7 @@ public:
     int len = ArraySize( _signals );
     for(int i=0;i<len;++i)
     {
-      if(_signals[i]>_entryThreshold)
+      if(MathAbs(_signals[i])>_entryThreshold)
         return _signals[i];
     }
 
@@ -77,7 +77,8 @@ public:
   
   virtual double getTrailDelta(MqlTick& last_tick)
   {
-    return (last_tick.ask - last_tick.bid);
+    // return (last_tick.ask - last_tick.bid);
+    return -1;
   }
 
   /*
@@ -102,6 +103,13 @@ public:
 
     double sig = getClosestValidSignal();
 
+    // If the slope of the MA is agains the signal, then we do not
+    // enter the desired position
+    CHECK(CopyBuffer(_ma,0,0,4,_maVal)==4,"Cannot copy MA buffer 0");
+
+    double s1 = _maVal[1]-_maVal[2];
+    double s2 = _maVal[2]-_maVal[3];
+
     // If we are already in a position we just wait for completion.
     if(hasPosition(_security)) {
       // if the position is already profitable then we just keep trailing.
@@ -119,6 +127,10 @@ public:
         // Do not hold loosing position for too long:
         closePosition(_security);
       }
+      else if(s1*sig<=0.0 && s2*sig <= 0.0)
+      {
+        closePosition(_security);
+      }
       else {
         // Just let the position run further...
         _holdingPeriodCount++;
@@ -132,14 +144,10 @@ public:
       if(MathAbs(sig)<=_entryThreshold)
         return; // Should not enter anything.
 
+      //  We could consider that sig basically tell us
+      // what tendency we should trade on.
       // Check the current moving average to see if we should enter
       // a trade:
-      // If the slope of the MA is agains the signal, then we do not
-      // enter the desired position
-      CHECK(CopyBuffer(_ma,0,0,4,_maVal)==4,"Cannot copy MA buffer 0");
-
-      double s1 = _maVal[1]-_maVal[2];
-      // double s2 = _maVal[2]-_maVal[3];
 
       if(sig*s1<=0.0) {
         return; // prevent the trade.
