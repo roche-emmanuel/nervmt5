@@ -128,8 +128,8 @@ public:
     if(_lastUpdateTime==0)
     {
       // This is the first initialization so we send all the training data
-      logDEBUG("Should send all the requested training samples: " << _trainSize)
-      sendMultipleInputs(time-60, _trainSize);
+      // logDEBUG("Should send all the requested training samples: " << _trainSize)
+      // sendMultipleInputs(time-60, _trainSize);
     }
 
     _lastUpdateTime = time;
@@ -141,6 +141,12 @@ public:
     // input feature to the predictor, if it is valid:
     datetime prevtime = time - 60;
     double cvals[];
+
+    if(prevtime < 1448928000)
+    {
+      // discard this input for now.
+      return 0.0;
+    }
 
     // retrieve the previous valid sample:
     if(getValidSample(prevtime,cvals))
@@ -206,20 +212,22 @@ public:
   {
     int nsym = ArraySize(_inputs);
     string symbol;
-    datetime timetag = 0;
+    datetime timetag = time;
 
     ArrayResize( cvals, nsym+2 );
+
+    logDEBUG("Getting valid sample at time "<< (int)time)
 
     for(int i =0; i<nsym; ++i)
     {
       symbol = _inputs[i];
       MqlRates rates[];
 
-      int len = CopyRates(symbol,PERIOD_M1,time,1,rates);
+      int len = CopyRates(symbol,PERIOD_M1,timetag,1,rates);
       while(len<0)
       {
         logDEBUG("Downloading data for "<<symbol<<"...")
-        len = CopyRates(symbol,PERIOD_M1,time,1,rates);
+        len = CopyRates(symbol,PERIOD_M1,timetag,1,rates);
         Sleep(10);
       }
 
