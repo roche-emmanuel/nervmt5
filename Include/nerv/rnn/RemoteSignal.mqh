@@ -169,6 +169,13 @@ public:
   double sendInput(datetime timetag, double &features[])
   {
     // We should ensure here that we never go back in time
+    if(_lastSentTimetag==timetag) 
+    {
+      // Not resending the last timetag:
+      logWARN("Detected resending of single time tag at: "<<timetag)
+      return 0.0;
+    }
+
     CHECK_RET(_lastSentTimetag<timetag,0.0,"Trying to send old timetag: "<<timetag<<"<="<<_lastSentTimetag);
     
     // Update the last sent timetag:
