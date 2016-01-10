@@ -48,7 +48,7 @@ public:
     string inputs[] = {"AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
     trader.addInputSymbols(inputs);
 
-    trader.addPredictor("eval_results_v45.csv",1,10);
+    // trader.addPredictor("eval_results_v45.csv",1,10);
     // trader.addPredictor("eval_results_v45b.csv",2,5);
     // trader.addPredictor("eval_results_v45c.csv",2,5);
 
@@ -56,7 +56,7 @@ public:
     // trader.addPredictor("eval_results_v47b.csv",2,5);
     // trader.addPredictor("eval_results_v47c.csv",2,5);
 
-    // trader.addRemotePredictor("tcp://192.168.0.20:30000");
+    trader.addRemotePredictor("tcp://192.168.0.20:30000");
 
     // trader = addTrader("USDJPY",0.4);
     // trader.addPredictor("eval_results_v37.csv");
