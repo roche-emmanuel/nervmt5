@@ -66,13 +66,23 @@ public:
   double getClosestValidSignal()
   {
     int len = ArraySize( _signals );
+    // for(int i=0;i<len;++i)
+    // {
+    //   if(MathAbs(_signals[i])>_entryThreshold)
+    //     return _signals[i];
+    // }
+    // return 0.0;
+
+    double sig = 0.0;
     for(int i=0;i<len;++i)
     {
-      if(MathAbs(_signals[i])>_entryThreshold)
-        return _signals[i];
+      if(MathAbs(_signals[i])>_entryThreshold && MathAbs(_signals[i]) > MathAbs(sig))
+      {
+        sig = _signals[i];
+      }
     }
 
-    return 0.0;
+    return sig;
   }
   
   virtual double getTrailDelta(MqlTick& last_tick)
@@ -96,7 +106,7 @@ public:
     // logDEBUG("Update cycle at: " << ctime << " = " << (int)ctime)
 
     // Retrieve the prediction signal at that time:
-    double pred = getPrediction(ctime);
+    double pred = getPrediction(ctime-60);
 
     // First we need to push this on our forcast buffer:
     nvAppendArrayElement(_signals,pred,10);

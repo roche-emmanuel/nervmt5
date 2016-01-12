@@ -149,7 +149,7 @@ public:
     }
 
     // retrieve the previous valid sample:
-    if(getValidSample(prevtime,cvals))
+    if(nvGetValidSample(prevtime,cvals,_inputs))
     {
       // Send the new input
       // and return the answer we get from the predictor:
@@ -330,7 +330,7 @@ public:
 
     for(int i=0;i<num;++i) {
       // try to get a valid samples:
-      while(!getValidSample(ctime,temp)) {
+      while(!nvGetValidSample(ctime,temp,_inputs)) {
         logDEBUG("Looking for valid sample at: "<<ctime)
         if((time-ctime) > (4*3600*24)) {
           logWARN("Detected too large gap in training data: discarding pre-training.");

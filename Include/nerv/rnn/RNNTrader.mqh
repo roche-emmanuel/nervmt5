@@ -48,7 +48,7 @@ public:
     string inputs[] = {"AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
     trader.addInputSymbols(inputs);
 
-    // trader.addPredictor("eval_results_v45.csv",1,10);
+    // trader.addPredictor("eval_results_v45.csv",2,5);
     // trader.addPredictor("eval_results_v45b.csv",2,5);
     // trader.addPredictor("eval_results_v45c.csv",2,5);
 
