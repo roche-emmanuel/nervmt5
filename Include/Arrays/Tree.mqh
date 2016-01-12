@@ -21,7 +21,7 @@ public:
    //--- methods of access to protected data
    CTreeNode        *Root(void) const { return(m_root_node); }
    //--- method of identifying the object
-   virtual int       Type() const { return(0x9999); }
+   virtual int       Type()     const { return(0x9999);      }
    //--- method of filling the tree
    CTreeNode        *Insert(CTreeNode *new_node);
    //--- methods of removing tree nodes
@@ -31,7 +31,7 @@ public:
    //--- method of searching data in the tree
    CTreeNode        *Find(const CTreeNode *node);
    //--- method to create elements in the tree
-   virtual CTreeNode *CreateElement() { return(NULL); }
+   virtual CTreeNode *CreateElement() { return(NULL);        }
    //--- methods for working with files
    virtual bool      Save(const int file_handle);
    virtual bool      Load(const int file_handle);

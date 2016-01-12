@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                       Canvas.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Files\FileBin.mqh>

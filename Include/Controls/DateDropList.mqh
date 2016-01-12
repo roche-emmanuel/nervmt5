@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                 DateDropList.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndContainer.mqh"
@@ -260,7 +260,7 @@ bool CDateDropList::OnClick(void)
                   m_value.Day(i);
                   Hide();
                   //--- send notification
-                  EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CHANGE,m_id,0.0,m_name);
+                  EventChartCustom(m_chart_id,ON_CHANGE,m_id,0.0,m_name);
                   break;
                   //--- within the year
                case DATE_MODE_YEAR:
