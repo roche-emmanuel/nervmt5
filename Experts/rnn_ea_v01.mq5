@@ -31,6 +31,8 @@ and then use those predictions to place orders.
 #property tester_file "eval_results_v45.csv"
 #property tester_file "eval_results_v45b.csv"
 #property tester_file "eval_results_v45c.csv"
+#property tester_file "eval_results_v45d.csv"
+#property tester_file "eval_results_v45e.csv"
 
 #property tester_file "eval_results_v47.csv"
 #property tester_file "eval_results_v47b.csv"
