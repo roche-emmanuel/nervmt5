@@ -29,7 +29,7 @@ int OnInit()
   lm.addSink(logger);
 
   logDEBUG("Initializing Nerv EA.")
-  nvSecurity sec("EURUSD",5,0.00001);
+  nvSecurity sec("EURUSD");
   trader = new HeikenAshiTrader(sec,Period());
 
   return 0;

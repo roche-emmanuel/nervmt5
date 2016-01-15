@@ -41,21 +41,23 @@ public:
     // trader.addPredictor("eval_results_v44.csv");
     // trader.addPredictor("eval_results_v44d.csv");
 
-    nvSecurityTrader* trader = new nvForcastSecurityTrader("EURUSD",0.3);
+    nvSecurityTrader* trader = new nvForcastSecurityTrader("EURUSD",0.5);
     addTrader(trader);
 
     // // input symbols should be specified before adding the predictors:
     string inputs[] = {"AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};
     trader.addInputSymbols(inputs);
 
-    trader.addPredictor("eval_results_v45.csv",2,5);
-    trader.addPredictor("eval_results_v45b.csv",2,5);
-    trader.addPredictor("eval_results_v45c.csv",2,5);
+    // trader.addPredictor("eval_results_v45.csv",2,5);
+    // trader.addPredictor("eval_results_v45b.csv",2,5);
+    // trader.addPredictor("eval_results_v45c.csv",2,5);
     // trader.addPredictor("eval_results_v45d.csv",2,5);
 
     // trader.addPredictor("eval_results_v47.csv",2,5);
     // trader.addPredictor("eval_results_v47b.csv",2,5);
     // trader.addPredictor("eval_results_v47c.csv",2,5);
+
+    trader.addPredictor("eval_results_v48.csv",11,25);
 
     // trader.addRemotePredictor("tcp://192.168.0.20:30000");
 
