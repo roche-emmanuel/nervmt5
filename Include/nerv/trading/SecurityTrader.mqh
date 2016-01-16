@@ -93,7 +93,7 @@ public:
   Method called to update the state of this trader 
   normally once per minute
   */
-  void update(datetime ctime)
+  virtual void update(datetime ctime)
   {
     if(_lastUpdateTime>=ctime)
       return; // Nothing to process.
@@ -225,8 +225,61 @@ public:
     return last_tick.ask - last_tick.bid;
   }
 
-  void onTick()
+  // Check if we are in a long position:
+  bool isLong()
   {
+    if(hasPosition(_security))
+    {
+      return PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
+    }
+
+    return false;
+  }
+
+  /*
+  Function: isShort
+  
+  Check if we are in  ashort position
+  */
+  bool isShort()
+  {
+    if(hasPosition(_security))
+    {
+      return PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL;
+    }
+
+    return false;    
+  }
+  
+  /*
+  Function: hasPosition
+  
+  Select the current position if any
+  */
+  bool hasPosition()
+  {
+    return hasPosition(_security);
+  }
+  
+  /*
+  Function: getStopLoss
+  
+  Retrieve the current stop loss value if any.
+  */
+  double getStopLoss()
+  {
+    if(hasPosition())
+    {
+      return PositionGetDouble(POSITION_SL);
+    }
+    return 0.0;
+  }
+  
+  virtual void onTick()
+  {
+    if(!hasPosition(_security))
+      return; // nothing to do.
+
     checkPosition();
 
     if(!hasPosition(_security))
