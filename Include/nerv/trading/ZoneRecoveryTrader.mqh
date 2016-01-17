@@ -201,11 +201,21 @@ public:
     // First we need to check what the primary direction is
     // using the primary Heiken Ashi indicator:
     double phaVals[];
-    CHECK_RET(CopyBuffer(_phaHandle,4,1,1,phaVals)==1,0.0,"Cannot copy ATR buffer 0");
+    ArraySetAsSeries(phaVals,true);
+
+    CHECK_RET(CopyBuffer(_phaHandle,4,1,3,phaVals)==3,0.0,"Cannot copy Primary HA buffer 0");
+
+    double sig = nvGetMeanEstimate(phaVals);
+    sig = -(sig-0.5)*2.0;
+
+    if((sig < 0.0 && phaVals[0]==0.0) || (sig>0.0 && phaVals[0]==1.0))
+      return 0.0;
+
+    return sig;
 
     //  Here we might also consider a frequency ratio on the last x timeframe
     // for the primary direction indication maybe ?
-    return phaVals[0]>0.5 ? -1.0 : 1.0;    
+    // return phaVals[0]>0.5 ? -1.0 : 1.0;    
   }
     
   /*
@@ -659,7 +669,7 @@ public:
       // that we can put at risk:
 
       // Check if we should buy or sell:
-      if(pdir>0.0 && trend>0.0 && pind>0.0 && sig0>0.0 && sig1>0.0)
+      if(pdir>0.0 && trend>0.3 && pind>0.0 && sig0>0.0 && sig1>0.0)
          // && level>_volatilityThreshold)
       {
         // In that case we should place a buy order,
@@ -668,7 +678,7 @@ public:
         openPosition(ORDER_TYPE_BUY,vol,1.0); //conf);
       }
 
-      if(pdir<0.0 && trend<0.0 && pind<0.0 && sig0<0.0 && sig1<0.0) 
+      if(pdir<0.0 && trend<-0.3 && pind<0.0 && sig0<0.0 && sig1<0.0) 
          // && level>_volatilityThreshold)
       {
         double conf = computeNormalizedConfidence(pdir*trend*pind*sig0);
