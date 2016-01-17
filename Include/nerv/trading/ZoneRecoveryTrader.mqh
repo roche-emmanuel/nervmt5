@@ -138,7 +138,7 @@ public:
     ArraySetAsSeries(_ma20Val,true);
     ArraySetAsSeries(_sigVal,true);
 
-    _riskLevel = 0.1;
+    _riskLevel = 0.004;
   }
 
   /*
@@ -421,15 +421,15 @@ public:
     _totalLost += lost;
     
     // Now check if we really want to keep this lot size of if we just accept this loosing trade:
-    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+    // double balance = AccountInfoDouble(ACCOUNT_BALANCE);
     // If this current total lost is too big, we may just cut the losses:
-    if( 100.0*nvGetContractValue(_symbol,_totalLost)/balance > _riskLevel )
-    {
-      logDEBUG("Detected too much risk, stopping lot scale up with total lost of " << _totalLost)
-      // Stop the scale up:
-      // prevSize = _lotBaseSize;
-      return;
-    }
+    // if( 100.0*nvGetContractValue(_symbol,_totalLost)/balance > _riskLevel )
+    // {
+    //   logDEBUG("Detected too much risk, stopping lot scale up with total lost of " << _totalLost)
+    //   // Stop the scale up:
+    //   // prevSize = _lotBaseSize;
+    //   return;
+    // }
 
     // Update the new entry value:
     prevEntry = entry;
@@ -624,6 +624,7 @@ public:
 
         if(isLong() && (oprice - bid) > _volatility)
         {
+          logDEBUG("Entering recovery from long position.")
           // We have to close the current long position and 
           // apply edging for recovery:
           _inRecovery = true;
@@ -637,6 +638,7 @@ public:
         else if(isShort() && (bid - oprice) > _volatility)
         {
           // We should enter a long position now:
+          logDEBUG("Entering recovery from short position.")
           _inRecovery = true;
           _zoneWidth = latest_price.ask-oprice;
           _totalLost = getPositionVolume()*(_zoneWidth);
@@ -645,7 +647,6 @@ public:
           _targetProfit = _zoneWidth;
           toggleHedge(latest_price.ask);
         }
-
       }
 
       // if(isBuy && bid > (_zoneHigh + _targetProfit))
