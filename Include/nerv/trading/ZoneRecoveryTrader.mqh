@@ -76,6 +76,16 @@ protected:
 
   double _prevProfit;
 
+  bool _inRecovery;
+  double _totalLost;
+
+  double _zoneWidth;
+  double _zoneHigh;
+  double _zoneLow;
+  double _targetProfit;
+  double _minGain;
+  int _bounceCount;
+
 public:
   /*
     Class constructor.
@@ -114,12 +124,15 @@ public:
     _confidenceCount = 100;
 
     _fastMACount = 5;
+    _totalLost = 0.0;
 
+    _inRecovery = false;
     _volatilityThreshold = 0.5;
     _lotSize = 0.0;
     _volatility = 0.0;
     _averagingCount = 0;
     _sigLevel = 0;
+    _minGain = nvGetPointSize(_symbol)*10.0;
 
     ArraySetAsSeries(_atrVal,true);
     ArraySetAsSeries(_ma20Val,true);
@@ -388,6 +401,100 @@ public:
     return nvSigmoid(conf);
   }
   
+  void toggleHedge(double entry)
+  {
+    ENUM_ORDER_TYPE order = isLong() ? ORDER_TYPE_SELL : ORDER_TYPE_BUY;
+
+    // Get the current entry price:
+    double prevEntry = getOpenPrice();
+
+    double prevSize = getPositionVolume();
+
+    // close current position:
+    closePosition();
+
+    // So first we compute how much money we are about to loose:
+    // Taking into account that we pay the bid price:
+    // the lost in curreny is the lost in number of points multiplied by the current number of lots
+    // And multiplied by the contract size, thus:
+    double lost = MathAbs(entry - prevEntry)*prevSize;
+    _totalLost += lost;
+    
+    // Now check if we really want to keep this lot size of if we just accept this loosing trade:
+    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+    // If this current total lost is too big, we may just cut the losses:
+    if( 100.0*nvGetContractValue(_symbol,_totalLost)/balance > _riskLevel )
+    {
+      logDEBUG("Detected too much risk, stopping lot scale up with total lost of " << _totalLost)
+      // Stop the scale up:
+      // prevSize = _lotBaseSize;
+      return;
+    }
+
+    // Update the new entry value:
+    prevEntry = entry;
+
+    // Compute the current band details.
+
+    // we will now want the take profit to be at:
+    double tp = order==ORDER_TYPE_BUY ? _zoneHigh + _targetProfit : _zoneLow - _targetProfit;
+
+    // and we want to compute the lot size to ensure we can cover the previous lost:
+    // What we will get if successfull is (in points):
+    // double gain = (tp - prevEntry) * lotsize;
+    // And we want this gain to cover the lost plus say 10 points:
+    prevSize = (_totalLost+_minGain)/MathAbs(tp - prevEntry);  
+    
+    // round this to a value lot number:
+    prevSize = nvNormalizeLotSize(prevSize,_symbol);
+    _bounceCount++;
+
+    logDEBUG(TimeCurrent() <<": Bounce " << _bounceCount <<": Entering "<< (order==ORDER_TYPE_BUY ? "LONG" : "SHORT") <<" position at "<< prevEntry << " with " << prevSize << " lots. (totalLost: "<<NormalizeDouble(_totalLost,6)<<")")
+    if(!sendDealOrder(_security, order, prevSize, 0.0, 0.0, tp))
+    {
+      // Could not place a new order (too much risk ?)
+      // So we just close the current position:
+      logDEBUG("Could not open zone recovery position!");
+      closePosition();
+    };
+  }
+
+  /*
+  Function: updateRecovery
+
+  Method used to update the recovery state:
+  */
+  void updateRecovery(MqlTick& latest_price)
+  {
+    // We already have a position opened
+    // We just need to monitor the crossing of the zone recovery borders.
+    // Check what is the current position:
+    bool isBuy = isLong();
+    double bid = latest_price.bid;
+
+    if(isBuy && bid > _zoneHigh + _targetProfit)
+    {
+      // Update the stoploss of the position:
+      updateStopLoss(bid - getCurrentSpread());
+    }
+
+    if(!isBuy && bid < _zoneLow - _targetProfit)
+    {
+      // Update the stoploss of the position:
+      updateStopLoss(bid + getCurrentSpread());
+    }
+
+    if(!isBuy && bid > _zoneHigh) 
+    {
+      toggleHedge(latest_price.ask);
+    }
+
+    if(isBuy && bid < _zoneLow) 
+    {
+      toggleHedge(latest_price.bid);
+    }    
+  }
+
   virtual void update(datetime ctime)
   {        
     MqlTick latest_price;
@@ -414,6 +521,12 @@ public:
 
     if(hasPosition())
     {
+      if(_inRecovery)
+      {
+        updateRecovery(latest_price);
+        return;
+      }
+
       // We are already in a position.
       bool isBuy = isLong();
 
@@ -504,6 +617,37 @@ public:
         dollarCostAverage();
       }
 
+      if(!_inRecovery)
+      {
+        // check if we are loosing ourself:
+        double oprice = getOpenPrice();
+
+        if(isLong() && (oprice - bid) > _volatility)
+        {
+          // We have to close the current long position and 
+          // apply edging for recovery:
+          _inRecovery = true;
+          _zoneWidth = oprice-bid;
+          _totalLost = getPositionVolume()*(_zoneWidth);
+          _zoneHigh = oprice;
+          _zoneLow = bid;
+          _targetProfit = _zoneWidth;
+          toggleHedge(latest_price.bid);
+        }
+        else if(isShort() && (bid - oprice) > _volatility)
+        {
+          // We should enter a long position now:
+          _inRecovery = true;
+          _zoneWidth = latest_price.ask-oprice;
+          _totalLost = getPositionVolume()*(_zoneWidth);
+          _zoneHigh = latest_price.ask;
+          _zoneLow = oprice;
+          _targetProfit = _zoneWidth;
+          toggleHedge(latest_price.ask);
+        }
+
+      }
+
       // if(isBuy && bid > (_zoneHigh + _targetProfit))
       // {
       //   // Update the stoploss of the position:
@@ -585,6 +729,9 @@ public:
     _entryTime = TimeCurrent();
     _sigLevel = 0;
     _prevProfit = 0.0;
+    _inRecovery = false;
+    _totalLost = 0.0;
+    _bounceCount = 0;
 
     logDEBUG(TimeCurrent() << ": Entry price: " << _entryPrice)
 
@@ -594,10 +741,10 @@ public:
     sendDealOrder(_security, otype, _lotSize, 0.0, 0.0, 0.0);
 
     // Assign the absolute stoploss:
-    double oprice = getOpenPrice();
-    updateSLTP(_security,oprice + (isLong() ? (-_volatility) : _volatility));
+    // double oprice = getOpenPrice();
+    // updateSLTP(_security,oprice + (isLong() ? (-_volatility) : _volatility));
     
-    logDEBUG(TimeCurrent() << ": Updated stoploss to " << getStopLoss() << " for sub step "<<_averagingCount)
+    // logDEBUG(TimeCurrent() << ": Updated stoploss to " << getStopLoss() << " for sub step "<<_averagingCount)
   }
 
   /*
@@ -628,10 +775,10 @@ public:
     sendDealOrder(_security, otype, _lotSize, 0.0, 0.0, 0.0);
 
     // Assign the absolute stoploss:
-    double oprice = getOpenPrice();
-    updateSLTP(_security,oprice + (isLong() ? (-_volatility) : _volatility));
+    // double oprice = getOpenPrice();
+    // updateSLTP(_security,oprice + (isLong() ? (-_volatility) : _volatility));
 
-    logDEBUG(TimeCurrent() << ": Updated stoploss to " << getStopLoss() << " for sub step "<<_averagingCount)
+    // logDEBUG(TimeCurrent() << ": Updated stoploss to " << getStopLoss() << " for sub step "<<_averagingCount)
   }
   
   virtual void onTick()

@@ -326,6 +326,20 @@ public:
     return 0.0;
   }
   
+  /*
+  Function: getPositionVolume
+  
+  Get the volume for the current position if any
+  */
+  double getPositionVolume()
+  {
+    if(hasPosition())
+    {
+      return PositionGetDouble(POSITION_VOLUME);
+    }
+    return 0.0;
+  }
+  
   virtual void onTick()
   {
     if(!hasPosition(_security))
