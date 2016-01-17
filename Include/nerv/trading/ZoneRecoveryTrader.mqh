@@ -74,7 +74,9 @@ public:
     ENUM_TIMEFRAMES atrPeriod,
     ENUM_TIMEFRAMES phaPeriod, 
     ENUM_TIMEFRAMES maPeriod,
-    ENUM_TIMEFRAMES ehaPeriod)
+    ENUM_TIMEFRAMES ehaPeriod,
+    ENUM_TIMEFRAMES s2haPeriod
+    )
     :nvSecurityTrader(symbol)
   {
     _patrHandle = iATR(_symbol,patrPeriod,14);
@@ -96,8 +98,8 @@ public:
     _statATRCount = 500;
     _confidenceCount = 100;
 
-    _fastMACount = 4;
-    _entryHACount = 3;
+    _fastMACount = 5;
+    _entryHACount = 4;
     _volatilityThreshold = 0.5;
     _lotSize = 0.0;
     _volatility = 0.0;
@@ -426,7 +428,7 @@ public:
         // In that case we should place a buy order,
         double conf = computeNormalizedConfidence(pdir*trend*pind*sig);
         logDEBUG(TimeCurrent() << ": Should open long position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol<<", conf="<<conf)
-        openPosition(ORDER_TYPE_BUY,vol,conf);
+        openPosition(ORDER_TYPE_BUY,vol,1.0); //conf);
       }
 
       if(pdir<0.0 && trend<0.0 && pind<0.0 && sig<0.0) 
@@ -434,7 +436,7 @@ public:
       {
         double conf = computeNormalizedConfidence(pdir*trend*pind*sig);
         logDEBUG(TimeCurrent() << ": Should open short position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol<<", conf="<<conf)
-        openPosition(ORDER_TYPE_SELL,vol,conf);
+        openPosition(ORDER_TYPE_SELL,vol,1.0); //conf);
       }
     }
   }
