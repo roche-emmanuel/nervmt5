@@ -20,11 +20,11 @@ public:
   */
   nvMultiTrader()
   {
-    logDEBUG("Creating new RNN Trader")
+    logDEBUG("Creating new Multi Trader")
     // nvSecurityTrader* trader = new nvSecurityTrader("EURUSD");
     // nvSecurityTrader* trader = new nvRandomTrader("EURUSD");
-    nvSecurityTrader* trader = new nvMATrader("EURUSD");
-    addTrader(trader);
+    // nvSecurityTrader* trader = new nvMATrader("EURUSD");
+    // addTrader(trader);
   }
 
   /*

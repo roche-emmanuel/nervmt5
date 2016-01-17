@@ -35,6 +35,8 @@ protected:
 
   string _symbol;
 
+  double _traderWeight;
+
 public:
   /*
     Class constructor.
@@ -56,6 +58,8 @@ public:
     _riskLevel = 0.01;
 
     _entryThreshold = 0.5;
+
+    _traderWeight = 1.0;
   }
 
   /*
@@ -145,7 +149,7 @@ public:
     double spread = nvGetSpread(symbol);
 
     // double lot = evaluateLotSize(spread*2.0,1.0,signal);
-    double lot = evaluateLotSize(100,1.0,signal);
+    double lot = evaluateLotSize(100,signal);
     // double lot = evaluateLotSize(100,1.0,signal > 0.0 ? 0.5 : -0.5);
 
     double sl = 0.0; //spread*nvGetPointSize(symbol);
@@ -167,52 +171,9 @@ public:
   
   Main method of this class used to evaluate the lot size that should be used for a potential trade.
   */
-  double evaluateLotSize(double numLostPoints, double traderWeight, double confidence)
+  double evaluateLotSize(double numLostPoints, double confidence)
   {
-    CHECK_RET(0.0<=traderWeight && traderWeight <= 1.0,0.0,"Invalid trader weight: "<<traderWeight);
-
-    string symbol = _security.getSymbol();
-
-    // First we need to convert the current balance value in the desired profit currency:
-    string quoteCurrency = nvGetQuoteCurrency(symbol);
-    double balance = nvGetBalance(quoteCurrency);
-
-    // Now we determine what fraction of this balance we can risk:
-    double VaR = balance * _riskLevel * traderWeight * MathAbs(confidence); // This is given in the quote currency.
-
-    // Now we can compute the final lot size:
-    // The worst lost we will achieve in the quote currency is:
-    // VaR = lost = lotsize*contract_size*num_point
-    // thus we need lotsize = VaR/(contract_size*numPoints) = VaR / (point_value * numPoints)
-    // Also: we should prevent the lost point value to go too low !!
-    double lotsize = VaR/(nvGetPointValue(symbol)*MathMax(numLostPoints,1.0));
-    
-    logDEBUG("Normalizing lotsize="<<lotsize<<", with lostPoints="<<numLostPoints<<", VaR="<<VaR
-      <<", balance="<<balance<<", quoteCurrency="<<quoteCurrency<<", confidence="<<confidence
-      <<", weight="<<traderWeight<<", riskLevel="<<_riskLevel);
-
-    // logDEBUG("Margin call level: "<<marginCall<<", margin stop out: "<<marginStopOut);
-
-    // We should not allow the trader to enter a deal with too big lot size,
-    // otherwise, we could soon not be able to trade anymore.
-    // So we should also apply the risk level trader weight and confidence level on this max lot size:
-    if (lotsize>5.0)
-    {
-      logDEBUG("Clamping lot size to 5.0")
-      lotsize = 5.0;
-    }
-
-    // Compute the new margin level:
-    // double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
-
-    // if(lotsize>maxlot) { //0 && marginLevel<=marginCall
-    //   logDEBUG("Detected margin call conditions: "<<lotsize<<">="<<maxlot);
-    // }
-
-    // finally we should normalize the lot size:
-    lotsize = nvNormalizeLotSize(lotsize,symbol);
-
-    return lotsize;
+    return nvEvaluateLotSize(_security.getSymbol(), numLostPoints, _riskLevel, _traderWeight, confidence);
   }
 
   virtual void checkPosition()
@@ -262,6 +223,21 @@ public:
   }
   
   /*
+  Function: getPositionProfit
+  
+  Retrieve the current profit for the current position if any.
+  */
+  double getPositionProfit()
+  {
+    if(hasPosition())
+    {
+      return PositionGetDouble(POSITION_PROFIT);
+    }
+
+    return 0.0;
+  }
+  
+  /*
   Function: getStopLoss
   
   Retrieve the current stop loss value if any.
@@ -272,6 +248,71 @@ public:
     {
       return PositionGetDouble(POSITION_SL);
     }
+    return 0.0;
+  }
+  
+  /*
+  Function: getCurrentSpread
+  
+  Retrieve the current spread
+  */
+  double getCurrentSpread()
+  {
+    MqlTick last_tick;
+    CHECK_RET(SymbolInfoTick(_symbol,last_tick),0.0,"Cannot retrieve last tick");
+    return last_tick.ask - last_tick.bid;
+  }
+  
+  /*
+  Function: getCurrentPrice
+  
+  retrieve the current bid price
+  */
+  double getCurrentPrice()
+  {
+    MqlTick last_tick;
+    CHECK_RET(SymbolInfoTick(_symbol,last_tick),0.0,"Cannot retrieve last tick");
+    return last_tick.bid;    
+  }
+
+  /*
+  Function: updateStopLoss
+  
+  Update the current stop loss value
+  */
+  void updateStopLoss(double nsl)
+  {
+    if(!hasPosition())
+      return; // no current position.
+
+    double sl = getStopLoss();
+    if(sl==0.0) {
+      updateSLTP(_security,nsl);
+      return;
+    }
+
+    if(isLong() && nsl > sl) {
+      updateSLTP(_security,nsl);
+    }
+    
+    if(isShort() && nsl < sl)
+    {
+      updateSLTP(_security,nsl);
+    }
+  }
+  
+  /*
+  Function: getOpenPrice
+  
+  Get the open price for the current position
+  */
+  double getOpenPrice()
+  {
+    if(hasPosition())
+    {
+      return PositionGetDouble(POSITION_PRICE_OPEN);
+    }
+
     return 0.0;
   }
   

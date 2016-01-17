@@ -1,6 +1,60 @@
 
 #include <nerv/core.mqh>
 
+double nvSigmoid(double val, double lambda = 1.0)
+{
+  return 1.0/(1.0 + MathExp(-lambda*val));
+}
+
+double nvEvaluateLotSize(string symbol, double numLostPoints, double risk, double weight, double confidence)
+{
+  CHECK_RET(0.0<=weight && weight <= 1.0,0.0,"Invalid trader weight: "<<weight);
+
+  // First we need to convert the current balance value in the desired profit currency:
+  string quoteCurrency = nvGetQuoteCurrency(symbol);
+  double balance = nvGetBalance(quoteCurrency);
+
+  // Now we determine what fraction of this balance we can risk:
+  double VaR = balance * risk * weight * MathAbs(confidence); // This is given in the quote currency.
+
+  // Now we can compute the final lot size:
+  // The worst lost we will achieve in the quote currency is:
+  // VaR = lost = lotsize*contract_size*num_point
+  // thus we need lotsize = VaR/(contract_size*numPoints) = VaR / (point_value * numPoints)
+  // Also: we should prevent the lost point value to go too low !!
+  double lotsize = VaR/(nvGetPointValue(symbol)*MathMax(numLostPoints,1.0));
+  
+  // logDEBUG("Normalizing lotsize="<<lotsize
+  //   <<", with lostPoints="<<numLostPoints
+  //   <<", VaR="<<VaR
+  //   <<", balance="<<balance
+  //   <<", quoteCurrency="<<quoteCurrency
+  //   <<", riskLevel="<<risk);
+
+  // logDEBUG("Margin call level: "<<marginCall<<", margin stop out: "<<marginStopOut);
+
+  // We should not allow the trader to enter a deal with too big lot size,
+  // otherwise, we could soon not be able to trade anymore.
+  // So we should also apply the risk level trader weight and confidence level on this max lot size:
+  // if (lotsize>5.0)
+  // {
+  //   logDEBUG("Clamping lot size to 5.0")
+  //   lotsize = 5.0;
+  // }
+
+  // Compute the new margin level:
+  // double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
+
+  // if(lotsize>maxlot) { //0 && marginLevel<=marginCall
+  //   logDEBUG("Detected margin call conditions: "<<lotsize<<">="<<maxlot);
+  // }
+
+  // finally we should normalize the lot size:
+  lotsize = nvNormalizeLotSize(lotsize,symbol);
+
+  return lotsize;
+}
+
 // Simple generic method to remove an object from an array:
 template<typename T>
 void nvRemoveArrayItem(T &array[], int index)

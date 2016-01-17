@@ -13,8 +13,10 @@ and then use those predictions to place orders.
 #include <nerv/unit/Testing.mqh>
 #include <nerv/core.mqh>
 #include <nerv/trading/MultiTrader.mqh>
+#include <nerv/trading/MATrader.mqh>
+#include <nerv/trading/ZoneRecoveryTrader.mqh>
 
-input int   gTimerPeriod=1;  // Timer period in seconds
+input int   gTimerPeriod=60;  // Timer period in seconds
 
 nvMultiTrader* mtrader = NULL;
 
@@ -29,6 +31,10 @@ int OnInit()
   lm.addSink(logger);
   
   mtrader = new nvMultiTrader();
+
+  // mtrader.addTrader(new nvMATrader("EURUSD"));
+  mtrader.addTrader(new nvZoneRecoveryTrader("EURUSD",PERIOD_D1,PERIOD_M15,PERIOD_H4,PERIOD_H1,PERIOD_M15));
+  // mtrader.addTrader(new nvZoneRecoveryTrader("GBPUSD",PERIOD_D1,PERIOD_M15,PERIOD_H4,PERIOD_H1,PERIOD_M15));
 
   // Initialize the timer:
   CHECK_RET(EventSetTimer(gTimerPeriod),0,"Cannot initialize timer");
