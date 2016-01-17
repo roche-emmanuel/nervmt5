@@ -74,6 +74,8 @@ protected:
 
   datetime _entryTime;
 
+  double _prevProfit;
+
 public:
   /*
     Class constructor.
@@ -102,10 +104,10 @@ public:
     _ma20Handle=iMA(_symbol,maPeriod,20,0,MODE_EMA,PRICE_CLOSE);
     CHECK(_ma20Handle>=0,"Invalid Moving average handle");
 
-    appendSignal(ehaPeriod, 4, 3);
-    appendSignal(s2haPeriod, 1, 1);
-    appendSignal(s3haPeriod, 1, 1);
-    appendSignal(s4haPeriod, 1, 1);
+    appendSignal(ehaPeriod, 4, 3); // 5 min
+    appendSignal(s2haPeriod, 1, 1); // 15min
+    appendSignal(s3haPeriod, 1, 1); // 30min
+    appendSignal(s4haPeriod, 1, 1); // 1hour
 
     _statMACount = 500;
     _statATRCount = 500;
@@ -405,6 +407,7 @@ public:
     // Get the current signal:
     double sig0 = getSignal(0, hasPosition());
     double sig1 = getSignal(1, hasPosition());
+    double sig2 = getSignal(2, hasPosition());
 
     // Retrieve volatility level:
     double level = getVolatilityLevel();
@@ -419,7 +422,7 @@ public:
       // We need to consider only the signal value at first:
       if(isBuy)
       {
-        if(sig0 < - 0.5 || sig1 < -0.5)
+        if(sig0 < - 0.5)
         {
           // We should normally close this position...
           // So we check if we are currently in profit:
@@ -435,12 +438,19 @@ public:
           }          
         }
 
-        // if(pdir < 0.0 || trend < 0.0 || pind < 0.0)
+        // if(profit<0.0 && sig1 < -0.5)
         // {
-        //   closePosition();
+        //   updateStopLoss(bid - getCurrentSpread());
         // }
 
-        if(sig0 > 0.5 && sig1 > 0.5 && _needAveraging && profit <= 0.0
+        // if(pdir < 0.0) // || pind < 0.0  || trend < 0.0
+        // {
+        //   // closePosition();
+        //   updateStopLoss(bid - getCurrentSpread());
+        //   return;
+        // }
+
+        if(sig0 > 0.5 && _needAveraging && profit <= 0.0
           && (_entryPrice-getCurrentPrice())> _averagingCount*_volatility/5.0) {
           // We need to check if we are far away enough from the entry price:
           // Perform dollar cost averating:
@@ -449,7 +459,7 @@ public:
         }
       }
       else {
-        if(sig0 > 0.5 || sig1 > 0.5)
+        if(sig0 > 0.5)
         {
           // We should normally close this position...
           // So we check if we are currently in profit:
@@ -465,12 +475,20 @@ public:
           }          
         }
 
-        // if(pdir > 0.0 || trend > 0.0 || pind > 0.0)
+
+        // if(profit<0.0 && sig1 > 0.5)
         // {
-        //   closePosition();
+        //   updateStopLoss(bid + getCurrentSpread());
         // }
 
-        if(sig0 < -0.5 && sig1 < -0.5 && _needAveraging && profit <= 0.0
+        // if(pdir > 0.0) // || pind > 0.0 || trend > 0.0
+        // {
+        //   // closePosition();
+        //   updateStopLoss(bid + getCurrentSpread());
+        //   return;
+        // }
+
+        if(sig0 < -0.5 && _needAveraging && profit <= 0.0
           && (getCurrentPrice()-_entryPrice)> _averagingCount*_volatility/5.0) {
           // We need to check if we are far away enough from the entry price:
           // Perform dollar cost averating:
@@ -566,6 +584,7 @@ public:
     _entryPrice = getCurrentPrice();
     _entryTime = TimeCurrent();
     _sigLevel = 0;
+    _prevProfit = 0.0;
 
     logDEBUG(TimeCurrent() << ": Entry price: " << _entryPrice)
 
