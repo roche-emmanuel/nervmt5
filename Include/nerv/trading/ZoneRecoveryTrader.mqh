@@ -138,7 +138,7 @@ public:
     ArraySetAsSeries(_ma20Val,true);
     ArraySetAsSeries(_sigVal,true);
 
-    _riskLevel = 0.004;
+    _riskLevel = 0.001;
   }
 
   /*
@@ -648,36 +648,6 @@ public:
           toggleHedge(latest_price.ask);
         }
       }
-
-      // if(isBuy && bid > (_zoneHigh + _targetProfit))
-      // {
-      //   // Update the stoploss of the position:
-      //   double nsl = bid - MathMin((bid-_zoneHigh)/2.0,_trail);
-      //   if( nsl > getStopLoss())
-      //   {
-      //     updateSLTP(nsl);
-      //   } 
-      // }
-
-      // if(!isBuy && bid < (_zoneLow - _targetProfit))
-      // {
-      //   // Update the stoploss of the position:
-      //   double nsl = bid + MathMin((_zoneLow-bid)/2.0,_trail);
-      //   if( nsl < getStopLoss())
-      //   {
-      //     updateSLTP(nsl);
-      //   }
-      // }
-
-      // if(!isBuy && bid > _zoneHigh) 
-      // {
-      //   toggleHedge(ORDER_TYPE_BUY,latest_price.ask);
-      // }
-
-      // if(isBuy && bid < _zoneLow) 
-      // {
-      //   toggleHedge(ORDER_TYPE_SELL,latest_price.bid);
-      // }
     }
     else {
       // Retrieve raw volatility:
