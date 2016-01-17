@@ -23,6 +23,9 @@ protected:
   // Heiken Ashi entry indicator:
   int _ehaHandle;
 
+  //  secondary signal:
+  int _s2haHandle;
+
   // Moving average handle:
   int _ma20Handle;
 
@@ -65,6 +68,16 @@ protected:
   // maximum number of confidence values:
   int _confidenceCount;
 
+  // current signal level:
+  int _sigLevel;
+
+  // sub signal handles
+  int _sigHandles[];
+
+  ENUM_TIMEFRAMES _sigPeriods[];
+
+  datetime _entryTime;
+
 public:
   /*
     Class constructor.
@@ -94,20 +107,30 @@ public:
     _ehaHandle=iCustom(_symbol,ehaPeriod,"nerv\\HeikenAshi");
     CHECK(_ehaHandle>=0,"Invalid Entry Heiken Ashi handle");
 
+    _s2haHandle=iCustom(_symbol,s2haPeriod,"nerv\\HeikenAshi");
+    CHECK(_s2haHandle>=0,"Invalid Entry Heiken Ashi handle");
+
     _statMACount = 500;
     _statATRCount = 500;
     _confidenceCount = 100;
 
     _fastMACount = 5;
     _entryHACount = 4;
+
     _volatilityThreshold = 0.5;
     _lotSize = 0.0;
     _volatility = 0.0;
     _averagingCount = 0;
+    _sigLevel = 0;
 
     ArraySetAsSeries(_atrVal,true);
     ArraySetAsSeries(_ma20Val,true);
     ArraySetAsSeries(_sigVal,true);
+
+    ArrayResize( _sigHandles, 1 );
+    ArrayResize( _sigPeriods, 1 );
+    _sigHandles[0] = _s2haHandle;
+    _sigPeriods[0] = s2haPeriod;
 
     _riskLevel = 0.1;
   }
@@ -139,6 +162,7 @@ public:
     IndicatorRelease(_phaHandle);
     IndicatorRelease(_ehaHandle);
     IndicatorRelease(_ma20Handle);
+    IndicatorRelease(_s2haHandle);
   }
   
   /*
@@ -242,6 +266,51 @@ public:
     return sig;
   }
   
+
+  /*
+  Function: getSubSignal
+  
+  Retrieve the current entry/exit signal in the range [-1,1]
+  */
+  bool getSubSignal()
+  {
+    int len = ArraySize(_sigHandles);
+    if(_sigLevel>=len)
+      return false; // No more possibility.
+
+    int handle = _sigHandles[_sigLevel];
+    ENUM_TIMEFRAMES period = _sigPeriods[_sigLevel];
+
+    // check if we passed the time check:
+    int dur = nvGetPeriodDuration(period);
+
+    if((TimeCurrent() - _entryTime) < dur)
+    {
+      return false;
+    }
+
+    if(_averagingCount==5)
+    {
+      return false;
+    }
+      
+    // Finally we need to check for an entry signal on the entry
+    // Heiken Ashi:
+    double val[];
+    CHECK_RET(CopyBuffer(handle,4,1,1,val)==1,0.0,"Cannot copy entry HA buffer 4");      
+
+    // Compute the mean value of the entry signal:
+    double sig = -(val[0]-0.5)*2.0; // signal will be in the range [-1,1]
+    if((isLong() && sig>0) || (isShort() && sig<0.0))
+    {
+      logDEBUG(TimeCurrent() << ": Signaling sub sig "<<_sigLevel)
+      _sigLevel++;
+      return true;
+    }
+
+    return false;
+  }
+
   /*
   Function: getVolatilityLevel
   
@@ -381,6 +450,12 @@ public:
         }        
       }
 
+      // Check if we have a sub signal:
+      if(getSubSignal())
+      {
+        logDEBUG(TimeCurrent() <<": performing dollar averaging for sub signal")
+        dollarCostAverage();
+      }
 
       // if(isBuy && bid > (_zoneHigh + _targetProfit))
       // {
@@ -460,6 +535,8 @@ public:
     _lotSize = lot;
     _volatility = volatility;
     _entryPrice = getCurrentPrice();
+    _entryTime = TimeCurrent();
+    _sigLevel = 0;
 
     logDEBUG(TimeCurrent() << ": Entry price: " << _entryPrice)
 
