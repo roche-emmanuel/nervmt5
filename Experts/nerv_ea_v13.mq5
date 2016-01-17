@@ -34,8 +34,10 @@ int OnInit()
 
   // mtrader.addTrader(new nvMATrader("EURUSD"));
   mtrader.addTrader(new nvZoneRecoveryTrader("EURUSD",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
-  // mtrader.addTrader(new nvZoneRecoveryTrader("GBPUSD",PERIOD_D1,PERIOD_M15,PERIOD_H4,PERIOD_H1,PERIOD_M15));
-
+  // mtrader.addTrader(new nvZoneRecoveryTrader("USDJPY",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
+  //mtrader.addTrader(new nvZoneRecoveryTrader("GBPUSD",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
+  // mtrader.addTrader(new nvZoneRecoveryTrader("USDJPY",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
+  
   // Initialize the timer:
   CHECK_RET(EventSetTimer(gTimerPeriod),0,"Cannot initialize timer");
   return 0;
