@@ -20,12 +20,6 @@ protected:
   // Heiken Ashi primary indicator:
   int _phaHandle;
 
-  // Heiken Ashi entry indicator:
-  int _ehaHandle;
-
-  //  secondary signal:
-  int _s2haHandle;
-
   // Moving average handle:
   int _ma20Handle;
 
@@ -41,8 +35,6 @@ protected:
   // Number of MA values to consider when computing the mean slope:
   int _fastMACount;
   
-  int _entryHACount;
-
   // Normalized volatility threshold:
   double _volatilityThreshold;
 
@@ -74,6 +66,10 @@ protected:
   // sub signal handles
   int _sigHandles[];
 
+  // counts used for the entry/exit signals:
+  int _sigEntryMeanCounts[];
+  int _sigExitMeanCounts[];
+
   ENUM_TIMEFRAMES _sigPeriods[];
 
   datetime _entryTime;
@@ -88,7 +84,9 @@ public:
     ENUM_TIMEFRAMES phaPeriod, 
     ENUM_TIMEFRAMES maPeriod,
     ENUM_TIMEFRAMES ehaPeriod,
-    ENUM_TIMEFRAMES s2haPeriod
+    ENUM_TIMEFRAMES s2haPeriod,
+    ENUM_TIMEFRAMES s3haPeriod,
+    ENUM_TIMEFRAMES s4haPeriod
     )
     :nvSecurityTrader(symbol)
   {
@@ -104,18 +102,16 @@ public:
     _ma20Handle=iMA(_symbol,maPeriod,20,0,MODE_EMA,PRICE_CLOSE);
     CHECK(_ma20Handle>=0,"Invalid Moving average handle");
 
-    _ehaHandle=iCustom(_symbol,ehaPeriod,"nerv\\HeikenAshi");
-    CHECK(_ehaHandle>=0,"Invalid Entry Heiken Ashi handle");
-
-    _s2haHandle=iCustom(_symbol,s2haPeriod,"nerv\\HeikenAshi");
-    CHECK(_s2haHandle>=0,"Invalid Entry Heiken Ashi handle");
+    appendSignal(ehaPeriod, 4, 3);
+    appendSignal(s2haPeriod, 1, 1);
+    appendSignal(s3haPeriod, 1, 1);
+    appendSignal(s4haPeriod, 1, 1);
 
     _statMACount = 500;
     _statATRCount = 500;
     _confidenceCount = 100;
 
     _fastMACount = 5;
-    _entryHACount = 4;
 
     _volatilityThreshold = 0.5;
     _lotSize = 0.0;
@@ -126,11 +122,6 @@ public:
     ArraySetAsSeries(_atrVal,true);
     ArraySetAsSeries(_ma20Val,true);
     ArraySetAsSeries(_sigVal,true);
-
-    ArrayResize( _sigHandles, 1 );
-    ArrayResize( _sigPeriods, 1 );
-    _sigHandles[0] = _s2haHandle;
-    _sigPeriods[0] = s2haPeriod;
 
     _riskLevel = 0.1;
   }
@@ -160,9 +151,29 @@ public:
     IndicatorRelease(_patrHandle);
     IndicatorRelease(_atrHandle);
     IndicatorRelease(_phaHandle);
-    IndicatorRelease(_ehaHandle);
     IndicatorRelease(_ma20Handle);
-    IndicatorRelease(_s2haHandle);
+
+    int len = ArraySize(_sigHandles);
+    for(int i=0;i<len;++i)
+    {
+      IndicatorRelease(_sigHandles[i]);      
+    }
+  }
+  
+  /*
+  Function: appendSignal
+  
+  Append a signal to the list
+  */
+  void appendSignal(ENUM_TIMEFRAMES period, int entryCount, int exitCount)
+  {
+    int h=iCustom(_symbol,period,"nerv\\HeikenAshi");
+    CHECK(h>=0,"Invalid Entry Heiken Ashi handle");
+
+    nvAppendArrayElement(_sigHandles,h);
+    nvAppendArrayElement(_sigPeriods,period); 
+    nvAppendArrayElement(_sigEntryMeanCounts,entryCount); 
+    nvAppendArrayElement(_sigExitMeanCounts,exitCount); 
   }
   
   /*
@@ -250,16 +261,23 @@ public:
   
   Retrieve the current entry/exit signal in the range [-1,1]
   */
-  double getSignal()
+  double getSignal(int id = 0, bool entry = true)
   {
     // Finally we need to check for an entry signal on the entry
     // Heiken Ashi:
-    CHECK_RET(CopyBuffer(_ehaHandle,4,1,_entryHACount,_sigVal)==_entryHACount,0.0,"Cannot copy entry HA buffer 4");      
+    int count = entry ? _sigEntryMeanCounts[id] : _sigExitMeanCounts[id];
+    int handle = _sigHandles[id];
+
+    CHECK_RET(CopyBuffer(handle,4,1,count,_sigVal)==count,0.0,"Cannot copy entry HA buffer 4");      
+    CHECK_RET(ArraySize( _sigVal )==count,0.0,"Invalid sig array size");
 
     // Compute the mean value of the entry signal:
     double sig = nvGetMeanEstimate(_sigVal);
     sig = -(sig-0.5)*2.0; // signal will be in the range [-1,1]
     
+    if(id>0 || !entry)
+      return sig; // Do not perform any ending test.
+
     if((sig < 0.0 && _sigVal[0]==0.0) || (sig>0.0 && _sigVal[0]==1.0))
       return 0.0;
 
@@ -385,7 +403,8 @@ public:
     double pind = getPriceIndication();
 
     // Get the current signal:
-    double sig = getSignal();
+    double sig0 = getSignal(0, hasPosition());
+    double sig1 = getSignal(1, hasPosition());
 
     // Retrieve volatility level:
     double level = getVolatilityLevel();
@@ -400,7 +419,7 @@ public:
       // We need to consider only the signal value at first:
       if(isBuy)
       {
-        if(sig < - 0.5)
+        if(sig0 < - 0.5 || sig1 < -0.5)
         {
           // We should normally close this position...
           // So we check if we are currently in profit:
@@ -416,7 +435,12 @@ public:
           }          
         }
 
-        if(sig > 0.5 && _needAveraging && profit <= 0.0
+        // if(pdir < 0.0 || trend < 0.0 || pind < 0.0)
+        // {
+        //   closePosition();
+        // }
+
+        if(sig0 > 0.5 && sig1 > 0.5 && _needAveraging && profit <= 0.0
           && (_entryPrice-getCurrentPrice())> _averagingCount*_volatility/5.0) {
           // We need to check if we are far away enough from the entry price:
           // Perform dollar cost averating:
@@ -425,7 +449,7 @@ public:
         }
       }
       else {
-        if(sig > 0.5)
+        if(sig0 > 0.5 || sig1 > 0.5)
         {
           // We should normally close this position...
           // So we check if we are currently in profit:
@@ -441,7 +465,12 @@ public:
           }          
         }
 
-        if(sig < -0.5 && _needAveraging && profit <= 0.0
+        // if(pdir > 0.0 || trend > 0.0 || pind > 0.0)
+        // {
+        //   closePosition();
+        // }
+
+        if(sig0 < -0.5 && sig1 < -0.5 && _needAveraging && profit <= 0.0
           && (getCurrentPrice()-_entryPrice)> _averagingCount*_volatility/5.0) {
           // We need to check if we are far away enough from the entry price:
           // Perform dollar cost averating:
@@ -497,20 +526,20 @@ public:
       // that we can put at risk:
 
       // Check if we should buy or sell:
-      if(pdir>0.0 && trend>0.0 && pind>0.0 && sig>0.0)
+      if(pdir>0.0 && trend>0.0 && pind>0.0 && sig0>0.0 && sig1>0.0)
          // && level>_volatilityThreshold)
       {
         // In that case we should place a buy order,
-        double conf = computeNormalizedConfidence(pdir*trend*pind*sig);
-        logDEBUG(TimeCurrent() << ": Should open long position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol<<", conf="<<conf)
+        double conf = computeNormalizedConfidence(pdir*trend*pind*sig0);
+        logDEBUG(TimeCurrent() << ": Should open long position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig0="<<sig0<<", vol="<<vol<<", conf="<<conf)
         openPosition(ORDER_TYPE_BUY,vol,1.0); //conf);
       }
 
-      if(pdir<0.0 && trend<0.0 && pind<0.0 && sig<0.0) 
+      if(pdir<0.0 && trend<0.0 && pind<0.0 && sig0<0.0 && sig1<0.0) 
          // && level>_volatilityThreshold)
       {
-        double conf = computeNormalizedConfidence(pdir*trend*pind*sig);
-        logDEBUG(TimeCurrent() << ": Should open short position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol<<", conf="<<conf)
+        double conf = computeNormalizedConfidence(pdir*trend*pind*sig0);
+        logDEBUG(TimeCurrent() << ": Should open short position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig0="<<sig0<<", vol="<<vol<<", conf="<<conf)
         openPosition(ORDER_TYPE_SELL,vol,1.0); //conf);
       }
     }

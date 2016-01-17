@@ -223,6 +223,16 @@ public:
   }
   
   /*
+  Function: closePosition
+  
+  Close the current position if any
+  */
+  void closePosition()
+  {
+    closePosition(_security);
+  }
+  
+  /*
   Function: getPositionProfit
   
   Retrieve the current profit for the current position if any.
