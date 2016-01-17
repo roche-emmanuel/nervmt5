@@ -59,6 +59,12 @@ protected:
   // Latest position entry:
   double _entryPrice;
 
+  // previous confidence values array:
+  double _confidenceVals[];
+
+  // maximum number of confidence values:
+  int _confidenceCount;
+
 public:
   /*
     Class constructor.
@@ -88,6 +94,7 @@ public:
 
     _statMACount = 500;
     _statATRCount = 500;
+    _confidenceCount = 100;
 
     _fastMACount = 4;
     _entryHACount = 3;
@@ -99,6 +106,8 @@ public:
     ArraySetAsSeries(_atrVal,true);
     ArraySetAsSeries(_ma20Val,true);
     ArraySetAsSeries(_sigVal,true);
+
+    _riskLevel = 0.1;
   }
 
   /*
@@ -260,6 +269,33 @@ public:
   }
 
 
+  /*
+  Function: computeNormalizedConfidence
+  
+  Compute a normalized confidence value
+  */
+  double computeNormalizedConfidence(double conf)
+  {
+    conf = MathAbs(conf);
+
+    nvAppendArrayElement(_confidenceVals,conf,_confidenceCount);
+
+    if(ArraySize( _confidenceVals ) < 10)
+    {
+      // just return the raw confidence for now:
+      return conf;
+    }
+
+    // Start building statistics:
+    double cmean = nvGetMeanEstimate(_confidenceVals);
+    double cdev = nvGetStdDevEstimate(_confidenceVals, cmean);
+
+    // Normalize the confidence we just got:
+    conf = (conf-cmean)/cdev;
+
+    // return the sigmoid to get in the range [0,1]
+    return nvSigmoid(conf);
+  }
   
   virtual void update(datetime ctime)
   {        
@@ -388,15 +424,17 @@ public:
          // && level>_volatilityThreshold)
       {
         // In that case we should place a buy order,
-        logDEBUG(TimeCurrent() << ": Should open long position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol)
-        openPosition(ORDER_TYPE_BUY,vol);
+        double conf = computeNormalizedConfidence(pdir*trend*pind*sig);
+        logDEBUG(TimeCurrent() << ": Should open long position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol<<", conf="<<conf)
+        openPosition(ORDER_TYPE_BUY,vol,conf);
       }
 
       if(pdir<0.0 && trend<0.0 && pind<0.0 && sig<0.0) 
          // && level>_volatilityThreshold)
       {
-        logDEBUG(TimeCurrent() << ": Should open short position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol)
-        openPosition(ORDER_TYPE_SELL,vol);
+        double conf = computeNormalizedConfidence(pdir*trend*pind*sig);
+        logDEBUG(TimeCurrent() << ": Should open short position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig="<<sig<<", vol="<<vol<<", conf="<<conf)
+        openPosition(ORDER_TYPE_SELL,vol,conf);
       }
     }
   }
@@ -406,9 +444,9 @@ public:
   
   Method used to open a position
   */
-  void openPosition(ENUM_ORDER_TYPE otype, double volatility)
+  void openPosition(ENUM_ORDER_TYPE otype, double volatility, double confidence)
   {
-    double totalLot = evaluateLotSize(volatility/nvGetPointSize(_symbol),1.0);
+    double totalLot = evaluateLotSize(volatility/nvGetPointSize(_symbol),confidence);
     double lot = nvNormalizeLotSize(totalLot/5.0,_symbol);
 
     if(lot<0.01) {
