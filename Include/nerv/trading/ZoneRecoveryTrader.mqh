@@ -86,6 +86,8 @@ protected:
   double _minGain;
   int _bounceCount;
 
+  double _initialBalance;
+
 public:
   /*
     Class constructor.
@@ -118,6 +120,9 @@ public:
     appendSignal(s2haPeriod, 1, 1); // 15min
     appendSignal(s3haPeriod, 1, 1); // 30min
     appendSignal(s4haPeriod, 1, 1); // 1hour
+
+    _initialBalance = nvGetBalance();
+    logDEBUG("Initial balance: "<<_initialBalance);
 
     _statMACount = 500;
     _statATRCount = 500;
@@ -506,7 +511,14 @@ public:
   }
 
   virtual void update(datetime ctime)
-  {        
+  {
+
+    // Test dynamic risk level adaptation:
+    double bal = nvGetBalance();
+
+    // _riskLevel = 0.001*MathExp(bal/_initialBalance);
+    // _riskLevel = MathMin(0.002*(bal/_initialBalance)*(bal/_initialBalance),0.03);
+
     MqlTick latest_price;
     CHECK(SymbolInfoTick(_symbol,latest_price),"Cannot retrieve latest price.")
     double bid = latest_price.bid;
@@ -624,7 +636,7 @@ public:
       if(getSubSignal())
       {
         logDEBUG(TimeCurrent() <<": performing dollar averaging for sub signal")
-        dollarCostAverage();
+        dollarCostAverage(_sigLevel/3.0);
       }
 
       if(!_inRecovery)
@@ -734,7 +746,7 @@ public:
   Method used to perform dollar cost averaging when we already have an
   opened position
   */
-  void dollarCostAverage()
+  void dollarCostAverage(double added = 0.0)
   {
     if(_averagingCount==5) {
       logDEBUG("Cannot perform dollar cost averaging anymore.")
@@ -753,7 +765,8 @@ public:
     // Add to the currently opened position:
     ENUM_ORDER_TYPE otype = isLong() ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
 
-    sendDealOrder(_security, otype, _lotSize, 0.0, 0.0, 0.0);
+    double lot = nvNormalizeLotSize((1.0+added)*_lotSize,_symbol);
+    sendDealOrder(_security, otype, lot, 0.0, 0.0, 0.0);
 
     // Assign the absolute stoploss:
     // double oprice = getOpenPrice();
