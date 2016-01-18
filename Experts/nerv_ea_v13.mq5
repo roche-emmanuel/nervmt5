@@ -37,8 +37,8 @@ int OnInit()
   
   // Good results:
   // mtrader.addTrader(new nvZoneRecoveryTrader("EURUSD",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M10,PERIOD_M20,PERIOD_M30));
-  mtrader.addTrader(new nvZoneRecoveryTrader("EURUSD",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
-  // mtrader.addTrader(new nvZoneRecoveryTrader("EURJPY",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
+  // mtrader.addTrader(new nvZoneRecoveryTrader("EURUSD",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
+  mtrader.addTrader(new nvZoneRecoveryTrader("EURJPY",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
   // mtrader.addTrader(new nvZoneRecoveryTrader("EURHUF",PERIOD_D1,PERIOD_M5,PERIOD_H4,PERIOD_H1,PERIOD_M5,PERIOD_M15,PERIOD_M30,PERIOD_H1));
   
   // Bad results for now:

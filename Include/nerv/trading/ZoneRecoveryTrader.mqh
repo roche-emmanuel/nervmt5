@@ -132,7 +132,7 @@ public:
     _totalLost = 0.0;
 
     _inRecovery = false;
-    _volatilityThreshold = 0.5;
+    _volatilityThreshold = 0.0;
     _lotSize = 0.0;
     _volatility = 0.0;
     _averagingCount = 0;
@@ -681,8 +681,8 @@ public:
       // that we can put at risk:
 
       // Check if we should buy or sell:
-      if(pdir>0.0 && trend>0.3 && pind>0.0 && sig0>0.0 && sig1>0.0)
-         // && level>_volatilityThreshold)
+      if(pdir>0.0 && trend>0.3 && pind>0.0 && sig0>0.0 && sig1>0.0
+          && level>_volatilityThreshold)
       {
         // In that case we should place a buy order,
         double conf = computeNormalizedConfidence(pdir*trend*pind*sig0);
@@ -690,8 +690,8 @@ public:
         openPosition(ORDER_TYPE_BUY,vol,1.0); //conf);
       }
 
-      if(pdir<0.0 && trend<-0.3 && pind<0.0 && sig0<0.0 && sig1<0.0) 
-         // && level>_volatilityThreshold)
+      if(pdir<0.0 && trend<-0.3 && pind<0.0 && sig0<0.0 && sig1<0.0
+          && level>_volatilityThreshold)
       {
         double conf = computeNormalizedConfidence(pdir*trend*pind*sig0);
         logDEBUG(TimeCurrent() << ": Should open short position with pdir="<<pdir<<", trend="<<trend<<", pind="<<pind<<", sig0="<<sig0<<", vol="<<vol<<", conf="<<conf)
