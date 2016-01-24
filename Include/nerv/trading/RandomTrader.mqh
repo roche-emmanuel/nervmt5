@@ -9,8 +9,6 @@ Base class representing a trader
 */
 class nvRandomTrader : public nvSecurityTrader {
 protected:
-  int _ticket;
-
   // Random generator:
   SimpleRNG rnd;
   datetime _lastTime;
@@ -24,7 +22,6 @@ public:
     : nvSecurityTrader(symbol)
   {
     logDEBUG("Creating RandomTrader")
-    _ticket = -1;
     
     // rnd.SetSeedFromSystemTime();
     rnd.SetSeed(123);

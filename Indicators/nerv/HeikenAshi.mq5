@@ -14,7 +14,7 @@
 #property indicator_buffers 5
 #property indicator_plots   1
 #property indicator_type1   DRAW_COLOR_CANDLES
-#property indicator_color1  DodgerBlue, Red
+#property indicator_color1  Red, DodgerBlue
 #property indicator_label1  "Heiken Ashi Open;Heiken Ashi High;Heiken Ashi Low;Heiken Ashi Close"
 //--- indicator buffers
 double ExtOBuffer[];
@@ -84,11 +84,11 @@ int OnCalculate(const int rates_total,
       //--- set candle color
       if(haOpen<haClose) {
         // logDEBUG(time[i]<<": nervHA dir: "<<0.0)
-        ExtColorBuffer[i]=0.0; // set color DodgerBlue
+        ExtColorBuffer[i]=1.0; // set color DodgerBlue
       }
       else {
         // logDEBUG(time[i]<<": nervHA dir: "<<1.0)
-        ExtColorBuffer[i]=1.0; // set color Red
+        ExtColorBuffer[i]=0.0; // set color Red
       }               
      }
 //--- done

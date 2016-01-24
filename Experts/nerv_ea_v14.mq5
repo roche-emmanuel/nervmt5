@@ -14,6 +14,7 @@ and then use those predictions to place orders.
 #include <nerv/core.mqh>
 #include <nerv/trading/MultiTrader.mqh>
 #include <nerv/trading/RandomTrader.mqh>
+#include <nerv/trading/HATrader.mqh>
 // #include <nerv/trading/RandomALRTrader.mqh>
 // #include <nerv/trading/HAZRTrader.mqh>
 // #include <nerv/trading/ScalperTrader.mqh>
@@ -37,7 +38,9 @@ int OnInit()
   mtrader = new nvMultiTrader((ENUM_TIMEFRAMES)Period());
 
   // add a random trader:
-  mtrader.addTrader(new nvRandomTrader("EURUSD"));
+  // mtrader.addTrader(new nvRandomTrader("EURUSD"));
+  mtrader.addTrader(new nvHATrader("EURUSD"));
+
   // mtrader.addTrader(new nvRandomALRTrader("EURUSD"));
   // mtrader.addTrader(new nvRandomALRTrader("USDJPY"));
   // mtrader.addTrader(new nvScalperTrader("EURUSD"));
