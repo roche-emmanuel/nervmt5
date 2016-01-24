@@ -16,6 +16,7 @@ and then use those predictions to place orders.
 #include <nerv/trading/RandomTrader.mqh>
 #include <nerv/trading/HATrader.mqh>
 #include <nerv/trading/HATraderV2.mqh>
+#include <nerv/trading/HATraderV3.mqh>
 
 // #include <nerv/trading/RandomALRTrader.mqh>
 // #include <nerv/trading/HAZRTrader.mqh>
@@ -42,7 +43,8 @@ int OnInit()
   // add a random trader:
   // mtrader.addTrader(new nvRandomTrader("EURUSD"));
   // mtrader.addTrader(new nvHATrader("EURUSD"));
-  mtrader.addTrader(new nvHATraderV2("EURUSD"));
+  // mtrader.addTrader(new nvHATraderV2("EURUSD"));
+  mtrader.addTrader(new nvHATraderV3("EURUSD"));
 
   // mtrader.addTrader(new nvRandomALRTrader("EURUSD"));
   // mtrader.addTrader(new nvRandomALRTrader("USDJPY"));

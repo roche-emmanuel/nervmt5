@@ -609,7 +609,16 @@ bool nvOpenPosition(string symbol, int otype, double lot,
   if(price==0.0)
   {
     // Use the current market bid or ask price:
-    price = otype==ORDER_TYPE_BUY ? nvGetAsk(symbol) : nvGetBid(symbol);
+    double bid = nvGetBid(symbol);
+    price = otype==ORDER_TYPE_BUY ? nvGetAsk(symbol) : bid;
+    if(sl!=0.0)
+    {
+      sl = otype==ORDER_TYPE_BUY ? bid-sl : bid+sl;
+    }
+    if(tp!=0.0)
+    {
+      tp = otype==ORDER_TYPE_BUY ? bid+tp : bid-tp;
+    }
   }
 
   int numd = (int)SymbolInfoInteger(symbol,SYMBOL_DIGITS);

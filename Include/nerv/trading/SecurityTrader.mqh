@@ -10,6 +10,7 @@ class nvSecurityTrader : public nvObject
 {
 protected:
   string _symbol;
+  double _psize;
 
   double _riskLevel;
   double _traderWeight;
@@ -23,8 +24,9 @@ public:
     logDEBUG("Creating Security Trader for "<<symbol)
 
     _symbol = symbol;
+    _psize = nvGetPointSize(_symbol);
     
-    _riskLevel = 0.03;
+    _riskLevel = 0.02;
     _traderWeight = 1.0;
   }
 
@@ -58,6 +60,11 @@ public:
     return nvOpenPosition(_symbol,otype,lot,sl,tp,price);
   }
 
+  void setRiskLevel(double risk)
+  {
+    _riskLevel = risk;
+  }
+
   bool closePosition()
   {
     return nvClosePosition(_symbol);
@@ -84,6 +91,16 @@ public:
       return PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL;
     }
     return false;
+  }
+
+  /*
+  Function: evaluateLotSize
+  
+  Main method of this class used to evaluate the lot size that should be used for a potential trade.
+  */
+  double evaluateLotSize(double numLostPoints, double confidence)
+  {
+    return nvEvaluateLotSize(_symbol, numLostPoints, _riskLevel, _traderWeight, confidence);
   }
 
   /*
