@@ -2,6 +2,7 @@
 #include <nerv/trading/SecurityTrader.mqh>
 #include <nerv/trading/HASignal.mqh>
 #include <nerv/trading/VolatilityRange.mqh>
+#include <nerv/trading/RSISignal.mqh>
 
 /*
 Class: nvHATraderV3
@@ -11,12 +12,14 @@ This version 3 of the HA Trader will introduce a signal
 */
 class nvHATraderV3 : public nvSecurityTrader {
 protected:
+  nvHASignal* _HA0;
   nvHASignal* _HA1;
   nvHASignal* _HA2;
   nvHASignal* _HA3;
   nvHASignal* _HA4;
 
   nvVolatilityRange* _vrange;
+  nvRSISignal*_rsi;
 
   double _lastDir;
   int _dur;
@@ -35,10 +38,13 @@ public:
     : nvSecurityTrader(symbol)
   {
     logDEBUG("Creating HATrader")
+    _HA0 = new nvHASignal(symbol,PERIOD_MN1);
     _HA1 = new nvHASignal(symbol,PERIOD_D1);
     _HA2 = new nvHASignal(symbol,PERIOD_H4);
     _HA3 = new nvHASignal(symbol,PERIOD_M30);
     _HA4 = new nvHASignal(symbol,PERIOD_M5);
+    
+    _rsi = new nvRSISignal(symbol,PERIOD_M30);
 
     _vrange = new nvVolatilityRange(symbol,PERIOD_M30);
 
@@ -113,12 +119,8 @@ public:
 
   virtual void onTick()
   {
-    double sig1 = _HA1.getSignal();
-    double sig2 = _HA2.getSignal();
-    double sig3 = _HA3.getSignal();
-    double sig4 = _HA4.getSignal();
 
-    // Close th current position if needed:
+    // Close the current position if needed:
     if(hasPosition())
     {
       // if(_lastDir*sig3 < 0.0)
@@ -126,26 +128,32 @@ public:
       //   close();
       // }
       
-      // double bid = nvGetBid(_symbol);
+      double bid = nvGetBid(_symbol);
       
-      // if(_stopLoss == 0.0)
-      // {
-      //   if(isLong() && bid > (_entryPrice + _trailOffset))
-      //   {
-      //     _stopLoss = bid - _trail;
-      //     logDEBUG("Added stoploss at "<<_stopLoss<<" for LONG position.")
-      //   }
+      if(_stopLoss == 0.0)
+      {
+        if(isLong() && bid > (_entryPrice + _trailOffset))
+        {
+          _stopLoss = bid - _trail;
+          logDEBUG("Added stoploss at "<<_stopLoss<<" for LONG position.")
+        }
 
-      //   if(isShort() && bid < (_entryPrice - _trailOffset))
-      //   {
-      //     _stopLoss = bid + _trail;
-      //     logDEBUG("Added stoploss at "<<_stopLoss<<" for SHORT position.")
-      //   }
-      // }
+        if(isShort() && bid < (_entryPrice - _trailOffset))
+        {
+          _stopLoss = bid + _trail;
+          logDEBUG("Added stoploss at "<<_stopLoss<<" for SHORT position.")
+        }
+      }
 
-      // checkStopLoss();
+      checkStopLoss();
       return;
     }
+
+    double sig1 = _HA1.getSignal();
+    double sig2 = _HA2.getSignal();
+    double sig3 = _HA3.getSignal();
+    double sig4 = _HA4.getSignal();
+    double rsi = _rsi.getSignal();
 
     datetime ctime = TimeCurrent();
     if((ctime-_lastTime)<_dur)
@@ -170,8 +178,10 @@ public:
       // Get the current range:
       double range = _vrange.getVolatility();
 
-      double sl = range/4.0;
-      double tp = range/2.0;
+      double sl = range*2.0;
+      
+      _trailOffset = range/4.0;
+      _trail = range/4.0;
 
       // Evaluate an appropriate lot size given the sl value:
       double lot = evaluateLotSize(sl/_psize,1.0);
@@ -183,7 +193,7 @@ public:
 
       int otype = newDir > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
       double bid = nvGetBid(_symbol);
-      openPosition(otype,lot,sl,tp);
+      openPosition(otype,lot);
 
       _lastDir = newDir;
       _entryPrice = otype==ORDER_TYPE_BUY ? nvGetAsk(_symbol) : nvGetBid(_symbol);

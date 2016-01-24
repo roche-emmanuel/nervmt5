@@ -45,6 +45,8 @@ int OnInit()
   // mtrader.addTrader(new nvHATrader("EURUSD"));
   // mtrader.addTrader(new nvHATraderV2("EURUSD"));
   mtrader.addTrader(new nvHATraderV3("EURUSD"));
+  // mtrader.addTrader(new nvHATraderV3("EURJPY"));
+  // mtrader.addTrader(new nvHATraderV3("USDJPY"));
 
   // mtrader.addTrader(new nvRandomALRTrader("EURUSD"));
   // mtrader.addTrader(new nvRandomALRTrader("USDJPY"));
