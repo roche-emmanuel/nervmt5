@@ -1,43 +1,36 @@
 #include <nerv/core.mqh>
-
 #include <nerv/trading/SecurityTrader.mqh>
+#include <nerv/math/SimpleRNG.mqh>
 
 /*
 Class: nvRandomTrader
 
 Base class representing a trader 
 */
-class nvRandomTrader : public nvSecurityTrader
-{
+class nvRandomTrader : public nvSecurityTrader {
 protected:
+  int _ticket;
+
   // Random generator:
   SimpleRNG rnd;
+  datetime _lastTime;
+  int _delay;
 
 public:
   /*
     Class constructor.
   */
   nvRandomTrader(string symbol)
-    :nvSecurityTrader(symbol)
+    : nvSecurityTrader(symbol)
   {
+    logDEBUG("Creating RandomTrader")
+    _ticket = -1;
+    
     // rnd.SetSeedFromSystemTime();
     rnd.SetSeed(123);
-  }
 
-  /*
-    Copy constructor
-  */
-  nvRandomTrader(const nvRandomTrader& rhs) : nvSecurityTrader("")
-  {
-    this = rhs;
-  }
-
-  /*
-    assignment operator
-  */
-  void operator=(const nvRandomTrader& rhs)
-  {
-    THROW("No copy assignment.")
+    _lastTime = 0;
+    _delay = (int)(120 + 3600*rnd.GetUniform());
   }
 
   /*
@@ -45,28 +38,31 @@ public:
   */
   ~nvRandomTrader()
   {
-    logDEBUG("Deleting SecurityTrader")
+    logDEBUG("Deleting RandomTrader")
+  }
+
+  virtual void update(datetime ctime)
+  {
+
   }
   
-  virtual double getSignal(datetime ctime)
+  virtual void onTick()
   {
-    double pred = (rnd.GetUniform()-0.5)*2.0;
-    logDEBUG(TimeCurrent() <<": signal = "<<pred);
-    
-    pred = pred>0.0 ? 1.0 : -1.0;
-    return pred;
-  }
+    datetime ctime = TimeCurrent();
+    if((ctime-_lastTime)<_delay)
+      return;
 
-  virtual void checkPosition()
-  {
-    if(!hasPosition(_security))
-      return; // nothing to do.
+    _delay = (int)(120 + 3600*rnd.GetUniform());
+    _lastTime = ctime;
 
-    // We close the position if the equity becomes too low:
-    double eq = nvGetEquity();
-    double balance = nvGetBalance();
-    if(eq/balance < 0.94) {
-      closePosition(_security);
+    // Close th current position if any:
+    if(hasPosition())
+    {
+      closePosition();
     }
+
+    // if we are not in a position, we open a new one randomly:
+    int otype = (rnd.GetUniform()-0.5) > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+    openPosition(otype,0.01);
   }
 };

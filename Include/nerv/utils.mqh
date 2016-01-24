@@ -596,3 +596,99 @@ datetime nvGetBarTime(string symbol, ENUM_TIMEFRAMES period, datetime time)
   
   return barTime[0];
 }
+
+// Method used to send an order:
+bool nvOpenPosition(string symbol, int otype, double lot, 
+  double sl = 0.0, double tp = 0.0, double price = 0.0, 
+  int slippage = 0)
+{
+
+  MqlTradeRequest mrequest;
+
+  //bool isBuy = otype==ORDER_TYPE_BUY;
+  if(price==0.0)
+  {
+    // Use the current market bid or ask price:
+    price = otype==ORDER_TYPE_BUY ? nvGetAsk(symbol) : nvGetBid(symbol);
+  }
+
+  int numd = (int)SymbolInfoInteger(symbol,SYMBOL_DIGITS);
+
+  price = NormalizeDouble(price,numd);
+  sl = NormalizeDouble(sl,numd);
+  tp = NormalizeDouble(tp,numd);
+  lot = nvNormalizeVolume(lot,symbol);
+
+
+  ZeroMemory(mrequest);
+  mrequest.action = TRADE_ACTION_DEAL;                             // type of action to take
+  mrequest.price = price;   // order price
+  mrequest.sl = sl;         // Stop Loss
+  mrequest.tp = tp;         // take profit
+  mrequest.symbol = symbol;                         // currency pair
+  mrequest.volume = lot;                                           // number of lots to trade
+  mrequest.magic = 12345;                                      // Order Magic Number
+  mrequest.type = (ENUM_ORDER_TYPE)otype;                          // Buy Order
+  mrequest.type_filling = ORDER_FILLING_FOK;                       // Order execution type
+  mrequest.deviation=slippage;                                           // Deviation from current price
+
+  // TODO: Check that the tp is valid in case of buy ?
+
+  //--- send Order
+  MqlTradeResult mresult;
+
+  // CHECK(OrderSend(mrequest,mresult),"Invalid result of OrderSend()");
+  if(!OrderSend(mrequest,mresult))
+  {
+    logERROR("Invalid result of OrderSend(): retcode:"<<mresult.retcode);
+    return false;
+  }
+
+  if(mresult.retcode!=TRADE_RETCODE_DONE)
+  {
+    logERROR("Invalid send order result retcode: "<<mresult.retcode);
+    return false;
+  }
+
+  return true;
+}
+
+bool nvClosePosition(string symbol)
+{
+  if(PositionSelect(symbol))
+  {
+    // Close the current position:
+    bool isBuy = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
+    int otype = isBuy ? ORDER_TYPE_SELL : ORDER_TYPE_BUY;
+    double volume = PositionGetDouble(POSITION_VOLUME);
+
+    // Send a deal order:
+    return nvOpenPosition(symbol,otype,volume);
+  }
+  
+  return false;
+}
+
+double nvGetBid(string symbol)
+{
+  MqlTick tick;
+  CHECK_RET(SymbolInfoTick(symbol,tick),0.0,"Cannot retrieve latest tick for symbol "<<symbol)
+  return tick.bid;
+}
+
+double nvGetAsk(string symbol)
+{
+  MqlTick tick;
+  CHECK_RET(SymbolInfoTick(symbol,tick),0.0,"Cannot retrieve latest tick for symbol "<<symbol)
+  return tick.ask;
+}
+
+// Method called to normalize a lot size given its symbol.
+double nvNormalizeVolume(double lot, string symbol)
+{
+  double maxlot = SymbolInfoDouble(symbol,SYMBOL_VOLUME_MAX);
+  double step = SymbolInfoDouble(symbol,SYMBOL_VOLUME_STEP);
+  lot = MathFloor( lot/step ) * step;
+  return MathMin(maxlot,lot);
+}
+
