@@ -68,6 +68,24 @@ public:
     return PositionSelect(_symbol);
   }
   
+  bool isLong()
+  {
+    if(hasPosition())
+    {
+      return PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY;
+    }
+    return false;
+  }
+
+  bool isShort()
+  {
+    if(hasPosition())
+    {
+      return PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_SELL;
+    }
+    return false;
+  }
+
   /*
   Function: update
   
@@ -83,4 +101,6 @@ public:
   {
 
   }
+
+
 };

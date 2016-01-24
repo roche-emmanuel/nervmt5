@@ -15,6 +15,8 @@ and then use those predictions to place orders.
 #include <nerv/trading/MultiTrader.mqh>
 #include <nerv/trading/RandomTrader.mqh>
 #include <nerv/trading/HATrader.mqh>
+#include <nerv/trading/HATraderV2.mqh>
+
 // #include <nerv/trading/RandomALRTrader.mqh>
 // #include <nerv/trading/HAZRTrader.mqh>
 // #include <nerv/trading/ScalperTrader.mqh>
@@ -31,7 +33,7 @@ int OnInit()
   logDEBUG("Initializing Nerv Multi Expert.")
 
   nvLogManager* lm = nvLogManager::instance();
-  string fname = "nerv_ea_v01.log";
+  string fname = "nerv_ea_v14.log";
   nvFileLogger* logger = new nvFileLogger(fname);
   lm.addSink(logger);
 
@@ -39,7 +41,8 @@ int OnInit()
 
   // add a random trader:
   // mtrader.addTrader(new nvRandomTrader("EURUSD"));
-  mtrader.addTrader(new nvHATrader("EURUSD"));
+  // mtrader.addTrader(new nvHATrader("EURUSD"));
+  mtrader.addTrader(new nvHATraderV2("EURUSD"));
 
   // mtrader.addTrader(new nvRandomALRTrader("EURUSD"));
   // mtrader.addTrader(new nvRandomALRTrader("USDJPY"));
