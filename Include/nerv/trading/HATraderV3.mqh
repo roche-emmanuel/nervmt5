@@ -38,7 +38,7 @@ public:
     : nvSecurityTrader(symbol)
   {
     logDEBUG("Creating HATrader")
-    _HA0 = new nvHASignal(symbol,PERIOD_MN1);
+    _HA0 = new nvHASignal(symbol,PERIOD_W1);
     _HA1 = new nvHASignal(symbol,PERIOD_D1);
     _HA2 = new nvHASignal(symbol,PERIOD_H4);
     _HA3 = new nvHASignal(symbol,PERIOD_M30);
@@ -51,11 +51,13 @@ public:
     _lastDir = 0.0;
     _lastTime = 0;
     _stopLoss = 0.0;
-    _dur = 5*60;
+    _dur = 0; //5*60;
 
     double psize = nvGetPointSize(_symbol);
     _trailOffset = 2000.0*psize;
     _trail = 1000.0*psize;
+
+    setRiskLevel(0.1);
   }
 
   /*
@@ -64,6 +66,7 @@ public:
   ~nvHATraderV3()
   {
     logDEBUG("Deleting HATrader")
+    RELEASE_PTR(_HA0);
     RELEASE_PTR(_HA1);
     RELEASE_PTR(_HA2);
     RELEASE_PTR(_HA3);
@@ -149,6 +152,7 @@ public:
       return;
     }
 
+    double sig0 = _HA0.getSignal();
     double sig1 = _HA1.getSignal();
     double sig2 = _HA2.getSignal();
     double sig3 = _HA3.getSignal();
@@ -164,11 +168,11 @@ public:
     _lastTime = ctime;
 
     double newDir = 0.0;
-    if(sig1>0.0 && sig2>0.0 && sig3>0.0 && sig4>0.0)
+    if(sig0>0.0 && sig1>0.0 && sig2>0.0 && sig3>0.0 && sig4>0.0)
     {
       newDir = 1.0;
     }
-    if(sig1<0.0 && sig2<0.0 && sig3<0.0 && sig4<0.0)
+    if(sig0<0.0 && sig1<0.0 && sig2<0.0 && sig3<0.0 && sig4<0.0)
     {
       newDir = -1.0;
     }
@@ -178,9 +182,9 @@ public:
       // Get the current range:
       double range = _vrange.getVolatility();
 
-      double sl = range*2.0;
+      double sl = range*4.0;
       
-      _trailOffset = range/4.0;
+      _trailOffset = range/2.0;
       _trail = range/4.0;
 
       // Evaluate an appropriate lot size given the sl value:
