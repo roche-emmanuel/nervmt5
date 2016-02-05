@@ -1,4 +1,5 @@
 #include <nerv/core.mqh>
+#include <nerv/utils.mqh>
 #include <nerv/core/Object.mqh>
 
 /*
