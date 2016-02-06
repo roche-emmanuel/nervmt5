@@ -64,6 +64,8 @@ public:
   ~nvPatternTrader()
   {
     logDEBUG("Deleting PatternTrader")
+    logDEBUG("Final tick count: "<<_tickCount);
+    logDEBUG("Final pattern count: "<<ArraySize( _patterns ));
   }
   
   // Reset the pattern lists.
@@ -185,7 +187,7 @@ public:
     recognizePattern(pat);
 
     // Then we can append this new pattern.
-    nvAppendArrayElement(_patterns,pat);
+    nvAppendArrayElement(_patterns,pat,_maxPatternCount);
   }
 
   double getSimilarity(Pattern* cur, Pattern* ref)
@@ -208,7 +210,7 @@ public:
 
     // Iterate on the existing pattern list, and compare each pattern:
     int len = ArraySize( _patterns );
-    logDEBUG("Pattern count: "<<len);
+    // logDEBUG("Pattern count: "<<len);
 
     double sim;
 
@@ -240,8 +242,9 @@ public:
       double good = mean*pat.meanPred>0.0 ? 1.0 : 0.0;
       nvAppendArrayElement(_accuracy,good);
       double acc = nvGetMeanEstimate(_accuracy);
+      int nsamples = ArraySize( _accuracy );
 
-      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0))
+      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples << " samples.")
     }
   }
 
