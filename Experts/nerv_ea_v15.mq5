@@ -19,7 +19,7 @@ if we should enter a trade.
 
 
 input bool gUseTicks = true; // Specify if we should use tick data or bar data
-input int  gInputSize = 10; // The input packet size to consider
+input int  gInputSize = 1; // The input packet size to consider
 
 
 nvPatternTrader* ptrader = NULL;
@@ -51,5 +51,8 @@ void OnDeinit(const int reason)
 // OnTick handler:
 void OnTick()
 {
-  ptrader.onTick();
+  MqlTick tick;
+  CHECK(SymbolInfoTick(Symbol(),tick),"Cannot retrieve the latest tick");
+
+  ptrader.onTick(tick.time, (tick.bid+tick.ask)*0.5);
 }
