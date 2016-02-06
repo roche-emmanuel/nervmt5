@@ -51,7 +51,7 @@ public:
     setPatternLength(30);
     setPredictionOffset(20);
     setPredictionLength(10);
-    setMaxPatternCount(100000);
+    setMaxPatternCount(5000);
     setSimilarityLevel(70.0);
 
     // Assume that the input period is given in number of minutes:
@@ -66,6 +66,7 @@ public:
     logDEBUG("Deleting PatternTrader")
     logDEBUG("Final tick count: "<<_tickCount);
     logDEBUG("Final pattern count: "<<ArraySize( _patterns ));
+    reset();
   }
   
   // Reset the pattern lists.
