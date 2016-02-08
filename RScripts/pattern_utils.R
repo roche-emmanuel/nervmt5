@@ -2,6 +2,7 @@
 library(data.table)
 library(plyr)
 library(fasttime)
+library(pracma)
 
 # Method used to load tick data from a raw file
 # the pmode argument (price mode) will tell us if we want to get the
@@ -93,21 +94,36 @@ generatePatterns <- function(arr,patlen = 30, predOffset = 20, predRange = 10)
   list(patterns=pmat,predMaxi=maxi,predMini=mini,predMean=mean,ref=ref)
 }
 
-# Method used to select the k closest neighboors  of a pattern from a pattern pool
-# will return the row indices of the selected reference patterns
-# the similarity value give us the threshold to consider for the norm change in the pattern
-findReferencePatterns(pattern, pool, norms, sim = 70.0)
+# will return the percentage of variations between all the patterns provided and the reference pattern:
+computePatternVariations <- function(pattern, pool)
 {
   # pool should be a matrix, so we can retrieve the number of rows:
   npat <- nrow(pool)
 
-  # THe number of cols in the pool should also match the number of elements in the pattern:
+  # The number of cols in the pool should also match the number of elements in the pattern:
   plen <- length(pattern)
   if(plen != ncol(pool))
   {
     stop("Mismatch in pattern length and pool size.")
   }
   
+  # replicate the pattern on as many rows as required:
+  pmat <- matrix(rep(pattern, each=npat),nrow=npat)
   
+  # Now substract the matrices:
+  diff <- pool - pmat
+
+  # Compute the norm of each row:
+  norms <- apply(diff,1,Norm)
+  
+  # Get the norm of the input pattern:
+  nval <- Norm(pattern)
+  
+  # Divide the diff norms by the pattern norm, and then multiply by 100.0 to get the percent change
+  vars <- 100.0 * norms / nval
+  
+  # Now we return the variations:
+  vars
 }
+
 
