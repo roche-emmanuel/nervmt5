@@ -44,7 +44,7 @@ void OnStart()
   string filename = "EURUSD_tick_2015_01.csv";
 
   int handle = FileOpen(filename, FILE_READ | FILE_ANSI | FILE_TXT);
-  int numTicks = 10000;
+  int numTicks = 30000+30+1+10+20;
   string sep = ",";
   ushort u_sep = StringGetCharacter(sep,0);
 
@@ -76,5 +76,5 @@ void OnStart()
 
   RELEASE_PTR(trader);
 
-  logDEBUG("Done executing PatternTrader test in "<<(endTime-startTime)<<" seconds.");
+  logDEBUG("Done executing PatternTrader test in "<<(int)(endTime-startTime)<<" seconds.");
 }

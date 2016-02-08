@@ -211,7 +211,7 @@ public:
     
 
     // Then we can append this new pattern.
-    nvAppendArrayElement(_patterns,pat,_maxPatternCount);
+    nvAppendArrayObject(_patterns,pat,_maxPatternCount);
   }
 
   double getVariation(Pattern* cur, Pattern* ref, double p = 2.0)
@@ -265,7 +265,7 @@ public:
       // double mean = nvGetMeanEstimate(meanPreds);
       double mean = nvGetWeightedMean(meanPreds,weights);
 
-      logDEBUG("Computed mean prediction: "<<mean<<", from "<<len<<" similar patterns");
+      // logDEBUG("Computed mean prediction: "<<mean<<", from "<<len<<" similar patterns");
 
       // Now we can compare that with the actual prediction we have:
       double good = mean*pat.meanPred>0.0 ? 1.0 : 0.0;
