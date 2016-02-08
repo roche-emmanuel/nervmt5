@@ -2,6 +2,8 @@
 library(data.table)
 library(plyr)
 library(fasttime)
+library(pracma)
+library(TTR)
 
 # Method used to load tick data from a raw file
 # the pmode argument (price mode) will tell us if we want to get the
@@ -93,21 +95,113 @@ generatePatterns <- function(arr,patlen = 30, predOffset = 20, predRange = 10)
   list(patterns=pmat,predMaxi=maxi,predMini=mini,predMean=mean,ref=ref)
 }
 
-# Method used to select the k closest neighboors  of a pattern from a pattern pool
-# will return the row indices of the selected reference patterns
-# the similarity value give us the threshold to consider for the norm change in the pattern
-findReferencePatterns(pattern, pool, norms, sim = 70.0)
+# will return the percentage of variations between all the patterns provided and the reference pattern:
+computePatternVariations <- function(pattern, pool)
 {
   # pool should be a matrix, so we can retrieve the number of rows:
   npat <- nrow(pool)
 
-  # THe number of cols in the pool should also match the number of elements in the pattern:
+  # The number of cols in the pool should also match the number of elements in the pattern:
   plen <- length(pattern)
   if(plen != ncol(pool))
   {
     stop("Mismatch in pattern length and pool size.")
   }
   
+  # replicate the pattern on as many rows as required:
+  pmat <- matrix(rep(pattern, each=npat),nrow=npat)
   
+  # Now substract the matrices:
+  diff <- pool - pmat
+
+  # Compute the norm of each row:
+  norms <- apply(diff,1,Norm)
+  
+  # Get the norm of the input pattern:
+  nval <- Norm(pattern)
+  
+  # Divide the diff norms by the pattern norm, and then multiply by 100.0 to get the percent change
+  vars <- 100.0 * norms / nval
+  
+  # Now we return the variations:
+  vars
 }
 
+# Method used to select the most similar patterns in the given pool,
+# the varLevel is given in percent of variation acceptable
+selectSimilarPatterns <- function(pattern, pool, predMean, varLevel=30.0)
+{
+  # First we have to compute the variations observed in the given pool:
+  vars <- computePatternVariations(pattern, pool)
+  
+  # Now we should order those variation values:
+  #idx <- sort.int(vars,decreasing = F, index.return = T)
+  
+  # Now we keep only the indices that are under the given threshold:
+  goodvars <- vars < varLevel
+  
+  # keep only the selected vars:
+  vars <- vars[goodvars]
+  
+  # we also keep only the selected predictions:
+  mean <- predMean[goodvars]
+  
+  list(vars=vars, means=mean)
+}
+
+# Method used to compute the accuracy of the prediction given a pattern dataset
+computeAccuracy <- function(data, startPat = 5001, endPat = 10000, poolSize = 5000, varLevel = 30.0, minSims = 0)
+{
+  accuracy <- numeric(0)
+  macc <- numeric(0)
+  
+  for(i in startPat:endPat)
+  {
+    # select the similar patterns:
+    sims <- selectSimilarPatterns(data$patterns[i,],data$patterns[(i-poolSize):(i-1),],data$predMean[(i-poolSize):(i-1)],varLevel)
+    
+    if(length(sims$means) > minSims)
+    {
+      # compute the mean of the predictions:
+      pred <- mean(sims$means)
+      
+      # now compare that with the actual value for this pattern:
+      realMean <- data$predMean[i]
+      
+      if(pred*realMean > 0.0)
+      {
+        accuracy <- c(accuracy,1.0)
+      }
+      else
+      {
+        accuracy <- c(accuracy,0.0)
+      }
+      
+      m <- mean(accuracy)*100.0
+      acc <- sprintf("%.2f%%",m)
+      comp <- sprintf("%.0f%%",100.0*(i-startPat)/(endPat-startPat))
+      
+      macc <- c(macc,m)
+      print(paste0("Accuracy = ",acc," with ",length(accuracy)," samples. Completed=",comp))
+    }
+  }
+  
+  accuracy
+}
+
+computeProgressiveMean <- function(vals)
+{
+    len <- length(vals)
+    res <- c(1:len)
+    for(i in 1:len)
+    {
+      res[i] <- mean(vals[1:i])
+    }
+    
+    res
+}
+
+computeEMA <- function(vals,period = 250)
+{
+  EMA(vals,n = period)
+}
