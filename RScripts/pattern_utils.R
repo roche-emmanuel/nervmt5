@@ -126,4 +126,64 @@ computePatternVariations <- function(pattern, pool)
   vars
 }
 
+# Method used to select the most similar patterns in the given pool,
+# the varLevel is given in percent of variation acceptable
+selectSimilarPatterns <- function(pattern, pool, predMean, varLevel=30.0)
+{
+  # First we have to compute the variations observed in the given pool:
+  vars <- computePatternVariations(pattern, pool)
+  
+  # Now we should order those variation values:
+  #idx <- sort.int(vars,decreasing = F, index.return = T)
+  
+  # Now we keep only the indices that are under the given threshold:
+  goodvars <- vars < varLevel
+  
+  # keep only the selected vars:
+  vars <- vars[goodvars]
+  
+  # we also keep only the selected predictions:
+  mean <- predMean[goodvars]
+  
+  list(vars=vars, means=mean)
+}
 
+# Method used to compute the accuracy of the prediction given a pattern dataset
+computeAccuracy <- function(data, startPat = 5001, endPat = 10000, poolSize = 5000, varLevel = 30.0, minSims = 0)
+{
+  accuracy <- numeric(0)
+  macc <- numeric(0)
+  
+  for(i in startPat:endPat)
+  {
+    # select the similar patterns:
+    sims <- selectSimilarPatterns(data$patterns[i,],data$patterns[(i-poolSize):(i-1),],data$predMean[(i-poolSize):(i-1)],varLevel)
+    
+    if(length(sims$means) > minSims)
+    {
+      # compute the mean of the predictions:
+      pred <- mean(sims$means)
+      
+      # now compare that with the actual value for this pattern:
+      realMean <- data$predMean[i]
+      
+      if(pred*realMean > 0.0)
+      {
+        accuracy <- c(accuracy,1.0)
+      }
+      else
+      {
+        accuracy <- c(accuracy,0.0)
+      }
+      
+      m <- mean(accuracy)*100.0
+      acc <- sprintf("%.2f%%",m)
+      comp <- sprintf("%.0f%%",100.0*(i-startPat)/(endPat-startPat))
+      
+      macc <- c(macc,m)
+      print(paste0("Accuracy = ",acc," with ",length(accuracy)," samples. Completed=",comp))
+    }
+  }
+  
+  accuracy
+}
