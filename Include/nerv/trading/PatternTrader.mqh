@@ -1,4 +1,5 @@
 #include <nerv/core.mqh>
+#include <nerv/utils.mqh>
 #include <nerv/trading/SecurityTrader.mqh>
 
 // Helper pattern class:
@@ -8,6 +9,7 @@ public:
   double maxPred;
   double minPred;
   double meanPred;
+  double norm;
 };
 
 /*
@@ -30,12 +32,16 @@ protected:
 
   double _rawInputs[];
 
-  double _similarityLevel;
+  double _varLevel;
 
+  int _minPatternCount;
   int _maxPatternCount;
   Pattern* _patterns[];
 
   double _accuracy[];
+
+  double _tmp[];
+
 public:
   /*
     Class constructor.
@@ -52,7 +58,8 @@ public:
     setPredictionOffset(20);
     setPredictionLength(10);
     setMaxPatternCount(5000);
-    setSimilarityLevel(70.0);
+    setMinPatternCount(5000);
+    setVariationLevel(30.0);
 
     // Assume that the input period is given in number of minutes:
     _dur = inputPeriod*60;
@@ -66,6 +73,10 @@ public:
     logDEBUG("Deleting PatternTrader")
     logDEBUG("Final tick count: "<<_tickCount);
     logDEBUG("Final pattern count: "<<ArraySize( _patterns ));
+
+    logDEBUG("Writing accuracy with "<<ArraySize(_accuracy)<<" samples.");
+    nvWriteVector(_accuracy,"accuracy.csv");
+
     reset();
   }
   
@@ -84,6 +95,11 @@ public:
     ArrayResize( _accuracy, 0 );
   }
 
+  void setMinPatternCount(int npat)
+  {
+    _minPatternCount = npat;
+  }
+
   void setMaxPatternCount(int count)
   {
     _maxPatternCount = count;
@@ -94,6 +110,7 @@ public:
   {
     _patternLength = len;
     reset();
+    ArrayResize( _tmp, _patternLength );
   }
 
   void setPredictionOffset(int offset)
@@ -108,9 +125,9 @@ public:
     reset();
   }
 
-  void setSimilarityLevel(double level)
+  void setVariationLevel(double level)
   {
-    _similarityLevel = level;
+    _varLevel = level;
     // reset();
   }
 
@@ -161,6 +178,7 @@ public:
     pat.maxPred = maxi;
     pat.minPred = mini;
     pat.meanPred = mean;
+    pat.norm = pnorm(pat.features,2.0);
 
     return pat;
   }
@@ -185,24 +203,28 @@ public:
 
     // If we have a new pattern then we can try to recognize it in
     // the history:
-    recognizePattern(pat);
+    int npat = ArraySize( _patterns );
+    if(npat >= _minPatternCount )
+    {
+      recognizePattern(pat);  
+    }
+    
 
     // Then we can append this new pattern.
     nvAppendArrayElement(_patterns,pat,_maxPatternCount);
   }
 
-  double getSimilarity(Pattern* cur, Pattern* ref)
+  double getVariation(Pattern* cur, Pattern* ref, double p = 2.0)
   {
     CHECK_RET(cur && ref,0.0,"Invalid patterns");
-    double sims[];
-    ArrayResize( sims, _patternLength );
 
+    double result = 0.0;
     for(int i=0;i<_patternLength;++i)
     {
-      sims[i] = 100.0 - MathAbs(percentChange(ref.features[i],cur.features[i]));      
+      result += MathPow(MathAbs(cur.features[i] - ref.features[i]),p);
     }
 
-    return nvGetMeanEstimate(sims);
+    return 100.0*MathPow(result,1.0/p)/cur.norm;
   }
 
   void recognizePattern(Pattern* pat)
@@ -213,21 +235,25 @@ public:
     int len = ArraySize( _patterns );
     // logDEBUG("Pattern count: "<<len);
 
-    double sim;
+    double var;
 
     double maxPreds[];
     double minPreds[];
     double meanPreds[];
-
+    double weights[];
+    double w;
+    
     for(int i=0;i<len;++i)
     {
-      sim = getSimilarity(pat,_patterns[i]);
-      if(sim>_similarityLevel)
+      var = getVariation(pat,_patterns[i]);
+      if(var<_varLevel)
       {
         // We should consider this history pattern.
         nvAppendArrayElement(maxPreds,_patterns[i].maxPred);
         nvAppendArrayElement(minPreds,_patterns[i].minPred);
         nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
+        w = 1.0/MathMax(1.0,var);
+        nvAppendArrayElement(weights,w);
       }
     }
 
@@ -236,7 +262,9 @@ public:
     if(len>0)
     {
       // Compute the mean of the prediction means!
-      double mean = nvGetMeanEstimate(meanPreds);
+      // double mean = nvGetMeanEstimate(meanPreds);
+      double mean = nvGetWeightedMean(meanPreds,weights);
+
       logDEBUG("Computed mean prediction: "<<mean<<", from "<<len<<" similar patterns");
 
       // Now we can compare that with the actual prediction we have:

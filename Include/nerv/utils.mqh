@@ -6,6 +6,34 @@ double nvSigmoid(double val, double lambda = 1.0)
   return 1.0/(1.0 + MathExp(-lambda*val));
 }
 
+void nvWriteVector(double &arr[], string filename)
+{
+  int handle = FileOpen(filename, FILE_WRITE | FILE_TXT | FILE_ANSI);
+
+  CHECK(handle != INVALID_HANDLE, "Could not open file " << filename << " for writing.");
+
+  int len = ArraySize(arr);
+
+  for (int i = 0; i < len; ++i)
+  {
+    FileWriteString(handle, ((string)arr[i]) + "\n");
+  }
+
+  FileClose(handle);
+}
+// Compute the p-norm of a vector:
+double pnorm(double & arr[], double p = 2.0)
+{
+  int len = ArraySize( arr );
+  double result = 0.0;
+  for(int i = 0; i<len; ++i)
+  {
+    result += MathPow(MathAbs(arr[i]),p);
+  }
+
+  return MathPow(result,1.0/p);
+}
+
 double nvEvaluateLotSize(string symbol, double numLostPoints, double risk, double weight, double confidence)
 {
   CHECK_RET(0.0<=weight && weight <= 1.0,0.0,"Invalid trader weight: "<<weight);
@@ -466,6 +494,22 @@ int nvGetPeriodIndex(ENUM_TIMEFRAMES period)
  
   THROW("Unsupported period value " << EnumToString(period));
   return 0;
+}
+
+double nvGetWeightedMean(double &x[], double &w[])
+{
+  int num = ArraySize( x );
+  CHECK_RET(num==ArraySize( w ),0.0,"Mismatch with weight length.");
+
+  double wsum = 0.0;
+  double mean = 0.0;
+  for(int i=0;i<num;++i)
+  {
+    mean += x[i]*w[i];
+    wsum += w[i];
+  }
+
+  return mean/wsum;
 }
 
 // Compute the mean of a sample array
