@@ -3,6 +3,7 @@ library(data.table)
 library(plyr)
 library(fasttime)
 library(pracma)
+library(TTR)
 
 # Method used to load tick data from a raw file
 # the pmode argument (price mode) will tell us if we want to get the
@@ -186,4 +187,21 @@ computeAccuracy <- function(data, startPat = 5001, endPat = 10000, poolSize = 50
   }
   
   accuracy
+}
+
+computeProgressiveMean <- function(vals)
+{
+    len <- length(vals)
+    res <- c(1:len)
+    for(i in 1:len)
+    {
+      res[i] <- mean(vals[1:i])
+    }
+    
+    res
+}
+
+computeEMA <- function(vals,period = 250)
+{
+  EMA(vals,n = period)
 }
