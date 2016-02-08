@@ -253,6 +253,7 @@ public:
         nvAppendArrayElement(minPreds,_patterns[i].minPred);
         nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
         w = 1.0/MathMax(1.0,var);
+        w = w*w;
         nvAppendArrayElement(weights,w);
       }
     }
