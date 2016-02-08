@@ -44,12 +44,14 @@ void OnStart()
   string filename = "EURUSD_tick_2015_01.csv";
 
   int handle = FileOpen(filename, FILE_READ | FILE_ANSI | FILE_TXT);
-  int numTicks = 30000+30+1+10+20;
+  // int numTicks = 30000+30+1+10+20;
+  int numTicks = 120000+30+1+10+20;
   string sep = ",";
   ushort u_sep = StringGetCharacter(sep,0);
 
 
   nvPatternTrader* trader = new nvPatternTrader("EURUSD",true,1);
+  trader.setVariationLevel(15.0);
 
   double bid,ask;
   string line;
@@ -70,6 +72,10 @@ void OnStart()
     ask = StringToDouble(elems[2]);
 
     trader.addInput((bid+ask)*0.5);
+    if(i%200==0)
+    {
+      logDEBUG("Done "<<StringFormat("%.2f%%",100.0*(double)i/(double)numTicks));
+    }
   }
 
   datetime endTime = TimeLocal();
