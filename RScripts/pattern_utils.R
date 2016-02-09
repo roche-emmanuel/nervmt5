@@ -152,6 +152,8 @@ selectSimilarPatterns <- function(pattern, pool, predMean, varLevel=30.0)
 # Method used to compute the accuracy of the prediction given a pattern dataset
 computeAccuracy <- function(data, startPat = 5001, endPat = 10000, poolSize = 5000, varLevel = 30.0, minSims = 0)
 {
+  startTime <- Sys.time()
+  
   accuracy <- numeric(0)
   macc <- numeric(0)
   
@@ -163,7 +165,13 @@ computeAccuracy <- function(data, startPat = 5001, endPat = 10000, poolSize = 50
     if(length(sims$means) > minSims)
     {
       # compute the mean of the predictions:
-      pred <- mean(sims$means)
+      # pred <- mean(sims$means)
+      # instead of computing a simple mean of the predictions we use the distance as a weight:
+      w <- sims$vars
+      w[w<1.0] <- 1.0
+      w <- 1.0 / w
+      
+      pred <- sum(w*sims$means) / sum(w)
       
       # now compare that with the actual value for this pattern:
       realMean <- data$predMean[i]
@@ -185,6 +193,10 @@ computeAccuracy <- function(data, startPat = 5001, endPat = 10000, poolSize = 50
       print(paste0("Accuracy = ",acc," with ",length(accuracy)," samples. Completed=",comp))
     }
   }
+  
+  endTime <- Sys.time()
+  
+  print(paste0("Execution done in ",(endTime - startTime)," seconds"))
   
   accuracy
 }
