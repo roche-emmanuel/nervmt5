@@ -54,6 +54,9 @@ void OnStart()
   nvPatternTrader* trader = new nvPatternTrader("EURUSD",true,1);
   trader.setVariationLevel(20.0);
   // trader.setVariationLevel(15.0);
+  
+  // First we try with no spread at all:
+  trader.setMeanSpread(0.00007);
 
   double bid,ask;
   string line;

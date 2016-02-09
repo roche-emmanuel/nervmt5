@@ -11,6 +11,7 @@ public:
   double meanPred;
   double norm;
   datetime time;
+  double refPrice;
 };
 
 /*
@@ -40,12 +41,19 @@ protected:
   Pattern* _patterns[];
 
   double _accuracy[];
+  double _deals[];
 
   double _tmp[];
 
   // Pattern distance weights:
   double _pw[];
   double _pwSum;
+
+  // current profit:
+  double _profit;
+
+  // Mean spread value:
+  double _meanSpread;
 
 public:
   /*
@@ -58,6 +66,7 @@ public:
     _tickCount = -1;
     _lastTime = 0;
     _rawInputSize = -1;
+    _profit = 0.0;
 
     setPatternLength(30);
     setPredictionOffset(20);
@@ -65,6 +74,7 @@ public:
     setMaxPatternCount(5000);
     setMinPatternCount(5000);
     setVariationLevel(30.0);
+    setMeanSpread(0.0001);
 
     // Assume that the input period is given in number of minutes:
     _dur = inputPeriod*60;
@@ -82,9 +92,18 @@ public:
     logDEBUG("Writing accuracy with "<<ArraySize(_accuracy)<<" samples.");
     nvWriteVector(_accuracy,"accuracy.csv");
 
+    logDEBUG("Writing deals with "<<ArraySize(_deals)<<" samples.");
+    nvWriteVector(_deals,"deals.csv");
+
     reset();
   }
   
+  // Set the mean spread value:
+  void setMeanSpread(double spread)
+  {
+    _meanSpread = spread;
+  }
+
   // Reset the pattern lists.
   void reset()
   {
@@ -98,6 +117,7 @@ public:
 
     _rawInputSize = _patternLength + 1 + _predictionOffset + _predictionLength;
     ArrayResize( _accuracy, 0 );
+    ArrayResize( _deals, 0 );
   }
 
   double computeNorm(Pattern *pat, double p = 2.0)
@@ -222,6 +242,7 @@ public:
     
     // Assign the current time to this pattern:
     pat.time = ctime;
+    pat.refPrice = ref;
 
     return pat;
   }
@@ -323,7 +344,24 @@ public:
       double acc = nvGetMeanEstimate(_accuracy);
       int nsamples = ArraySize( _accuracy );
 
-      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples << " samples.")
+      // Compute the profit that we can observe:
+      double p = 0.0;
+      if(mean>0.0)
+      {
+        // We enter a long position:
+        p = pat.refPrice*pat.meanPred/100.0;
+      }
+      else 
+      {
+        p = -pat.refPrice*pat.meanPred/100.0; 
+      }
+
+      p = ((double)(int)(p*100000))/100000.0;
+
+      _profit += (p - _meanSpread);
+      nvAppendArrayElement(_deals,p);
+
+      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples << " samples. Estimated profit: "<<StringFormat("%.5f",_profit)<<" points.")
     }
   }
 
