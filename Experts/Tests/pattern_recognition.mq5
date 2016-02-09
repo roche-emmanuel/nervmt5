@@ -73,7 +73,18 @@ void OnStart()
     bid = StringToDouble(elems[1]);
     ask = StringToDouble(elems[2]);
 
-    trader.addInput((bid+ask)*0.5);
+    // convert the time string to time value:
+    // "2015.01.01 22:04:23.564"
+
+    // logDEBUG("Substr 1 is: "<< StringSubstr(elems[0],0,16))
+    
+    datetime ctime = StringToTime(StringSubstr(elems[0],0,16));
+    int secs = (int)(StringToDouble(StringSubstr(elems[0],17,6))+0.5); 
+
+    ctime += secs;
+    // logDEBUG("Detected time: "<< ctime)
+
+    trader.addInput((bid+ask)*0.5,ctime);
     if(i%200==0)
     {
       logDEBUG("Done "<<StringFormat("%.2f%%",100.0*(double)i/(double)numTicks));

@@ -10,6 +10,7 @@ public:
   double minPred;
   double meanPred;
   double norm;
+  datetime time;
 };
 
 /*
@@ -177,7 +178,7 @@ public:
     return 100.0*(currentVal-startVal)/MathAbs(startVal);
   }
 
-  Pattern* generatePattern()
+  Pattern* generatePattern(datetime ctime)
   {
     int len = ArraySize( _rawInputs );
     if(len<_rawInputSize)
@@ -215,13 +216,17 @@ public:
     pat.maxPred = maxi;
     pat.minPred = mini;
     pat.meanPred = mean;
+
     // pat.norm = pnorm(pat.features,2.0);
     pat.norm = computeNorm(pat,2.0);
+    
+    // Assign the current time to this pattern:
+    pat.time = ctime;
 
     return pat;
   }
 
-  void addInput(double value)
+  void addInput(double value, datetime ctime)
   {
     // This is where we store the data to prepare for pattern generation:
     // For now we store simply the value in a window array:
@@ -235,7 +240,7 @@ public:
     nvAppendArrayElement(_rawInputs, value, _rawInputSize);
 
     // Now if we have enough raw inputs, we can generate a new pattern:
-    Pattern* pat = generatePattern();
+    Pattern* pat = generatePattern(ctime);
     if(pat==NULL)
       return; // nothing to do.
 
@@ -283,7 +288,8 @@ public:
     double meanPreds[];
     double weights[];
     double w;
-    
+    double delta;
+
     for(int i=0;i<len;++i)
     {
       var = getVariation(pat,_patterns[i]);
@@ -294,7 +300,9 @@ public:
         nvAppendArrayElement(minPreds,_patterns[i].minPred);
         nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
         w = 1.0/MathMax(1.0,var);
-        w = w*w*w;
+        delta = 1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
+
+        w = w*w*w*delta;
         nvAppendArrayElement(weights,w);
       }
     }
@@ -330,7 +338,7 @@ public:
       if(_tickCount%_inputPeriod==0)
       {
         // logDEBUG("Adding input tick at tick count = "<<_tickCount)
-        addInput(value);
+        addInput(value,ctime);
       }
     }
     else
@@ -339,7 +347,7 @@ public:
       {
         _lastTime = ctime;
         logDEBUG("Adding input bar at time "<<_lastTime)
-        addInput(value);
+        addInput(value,ctime);
       }
     }
   }
