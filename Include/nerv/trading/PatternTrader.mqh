@@ -42,6 +42,10 @@ protected:
 
   double _tmp[];
 
+  // Pattern distance weights:
+  double _pw[];
+  double _pwSum;
+
 public:
   /*
     Class constructor.
@@ -95,6 +99,32 @@ public:
     ArrayResize( _accuracy, 0 );
   }
 
+  double computeNorm(Pattern *pat, double p = 2.0)
+  {
+    double result = 0.0;
+    for(int i=0;i<_patternLength;++i)
+    {
+      result += MathPow(MathAbs(pat.features[i]),p)*_pw[i];
+    }
+
+    result /= _pwSum;
+
+    return MathPow(result,1.0/p);
+  }
+
+  double computeDeltaNorm(Pattern *pat1, Pattern *pat2, double p = 2.0)
+  {
+    double result = 0.0;
+    for(int i=0;i<_patternLength;++i)
+    {
+      result += MathPow(MathAbs(pat1.features[i] - pat2.features[i]),p)*_pw[i];
+    }
+
+    result /= _pwSum;
+
+    return MathPow(result,1.0/p);
+  }
+
   void setMinPatternCount(int npat)
   {
     _minPatternCount = npat;
@@ -111,6 +141,13 @@ public:
     _patternLength = len;
     reset();
     ArrayResize( _tmp, _patternLength );
+    ArrayResize( _pw, _patternLength );
+    _pwSum = 0.0;
+    for(int i = 0; i<_patternLength;++i)
+    {
+      _pw[i] = 1.0/MathLog(1.0 + _patternLength - i);
+      _pwSum += _pw[i];
+    }
   }
 
   void setPredictionOffset(int offset)
@@ -178,7 +215,8 @@ public:
     pat.maxPred = maxi;
     pat.minPred = mini;
     pat.meanPred = mean;
-    pat.norm = pnorm(pat.features,2.0);
+    // pat.norm = pnorm(pat.features,2.0);
+    pat.norm = computeNorm(pat,2.0);
 
     return pat;
   }
@@ -218,13 +256,16 @@ public:
   {
     CHECK_RET(cur && ref,0.0,"Invalid patterns");
 
-    double result = 0.0;
-    for(int i=0;i<_patternLength;++i)
-    {
-      result += MathPow(MathAbs(cur.features[i] - ref.features[i]),p);
-    }
+    double dnorm = computeDeltaNorm(cur,ref,p);
+    return 100.0*dnorm/cur.norm;
+    
+    // double result = 0.0;
+    // for(int i=0;i<_patternLength;++i)
+    // {
+    //   result += MathPow(MathAbs(cur.features[i] - ref.features[i]),p);
+    // }
 
-    return 100.0*MathPow(result,1.0/p)/cur.norm;
+    // return 100.0*MathPow(result,1.0/p)/cur.norm;
   }
 
   void recognizePattern(Pattern* pat)
