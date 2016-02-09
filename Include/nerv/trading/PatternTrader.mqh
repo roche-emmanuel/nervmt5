@@ -12,6 +12,7 @@ public:
   double norm;
   datetime time;
   double refPrice;
+  int index;
 };
 
 /*
@@ -26,6 +27,8 @@ protected:
   int _tickCount;
   datetime _lastTime;
   int _dur;
+  int _patternCount;
+
 
   int _rawInputSize;
   int _patternLength;
@@ -55,6 +58,8 @@ protected:
   // Mean spread value:
   double _meanSpread;
 
+  double _gainTarget;
+
 public:
   /*
     Class constructor.
@@ -67,6 +72,7 @@ public:
     _lastTime = 0;
     _rawInputSize = -1;
     _profit = 0.0;
+    _patternCount = 0;
 
     setPatternLength(30);
     setPredictionOffset(20);
@@ -75,6 +81,9 @@ public:
     setMinPatternCount(5000);
     setVariationLevel(30.0);
     setMeanSpread(0.0001);
+
+    // Required estimation gain in number of points:
+    setGainTarget(0.0002);
 
     // Assume that the input period is given in number of minutes:
     _dur = inputPeriod*60;
@@ -102,6 +111,12 @@ public:
   void setMeanSpread(double spread)
   {
     _meanSpread = spread;
+  }
+
+  // Specify the gain target
+  void setGainTarget(double thres)
+  {
+    _gainTarget = thres;
   }
 
   // Reset the pattern lists.
@@ -243,6 +258,7 @@ public:
     // Assign the current time to this pattern:
     pat.time = ctime;
     pat.refPrice = ref;
+    pat.index = _patternCount++;
 
     return pat;
   }
@@ -302,6 +318,16 @@ public:
     int len = ArraySize( _patterns );
     // logDEBUG("Pattern count: "<<len);
 
+    // Important note:
+    // When recognizing a pattern we cannot use the patterns that 
+    // were generated just before it...
+    // To generate a pattern, we need
+    // patternLength+1+predOffset+predRange values.
+    // This pattern is then only available in real condition when on the final
+    // pattern, thus the offset is predOffset+predRange
+    // for security, we will consider the pattern as usable only when we are strictly under this offset value.
+    int offset = _predictionOffset+_predictionLength+2;
+
     double var;
 
     double maxPreds[];
@@ -310,23 +336,27 @@ public:
     double weights[];
     double w;
     double delta;
+    int maxIdx = pat.index-offset;
 
     for(int i=0;i<len;++i)
     {
-      var = getVariation(pat,_patterns[i]);
-      if(var<_varLevel)
+      if(_patterns[i].index<maxIdx)
       {
-        // We should consider this history pattern.
-        nvAppendArrayElement(maxPreds,_patterns[i].maxPred);
-        nvAppendArrayElement(minPreds,_patterns[i].minPred);
-        nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
-        w = 1.0/MathMax(1.0,var);
-        delta = 1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
+        var = getVariation(pat,_patterns[i]);
+        if(var<_varLevel)
+        {
+          // We should consider this history pattern.
+          nvAppendArrayElement(maxPreds,_patterns[i].maxPred);
+          nvAppendArrayElement(minPreds,_patterns[i].minPred);
+          nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
+          w = 1.0/MathMax(1.0,var);
+          delta = 1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
 
-        w = w*w*w*delta;
-        nvAppendArrayElement(weights,w);
+          w = w*w*w*delta;
+          nvAppendArrayElement(weights,w);
+        }        
       }
-    }
+    }    
 
     // Check if we have some patterns:
     len = ArraySize(maxPreds);
@@ -335,6 +365,16 @@ public:
       // Compute the mean of the prediction means!
       // double mean = nvGetMeanEstimate(meanPreds);
       double mean = nvGetWeightedMean(meanPreds,weights);
+
+      // We would like to target a gain of _gainTarget
+      // So we need to convert that in percent:
+      double target = 100.0*_gainTarget/pat.refPrice;
+
+      if(MathAbs(mean) < target)
+      {
+        // We do not enter a position here.
+        return;
+      }
 
       // logDEBUG("Computed mean prediction: "<<mean<<", from "<<len<<" similar patterns");
 

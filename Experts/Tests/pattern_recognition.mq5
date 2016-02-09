@@ -56,7 +56,8 @@ void OnStart()
   // trader.setVariationLevel(15.0);
   
   // First we try with no spread at all:
-  trader.setMeanSpread(0.00007);
+  trader.setMeanSpread(0.0001);
+  trader.setGainTarget(0.00015);
 
   double bid,ask;
   string line;
