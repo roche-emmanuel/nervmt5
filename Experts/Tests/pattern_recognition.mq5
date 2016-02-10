@@ -45,19 +45,22 @@ void OnStart()
 
   int handle = FileOpen(filename, FILE_READ | FILE_ANSI | FILE_TXT);
   // int numTicks = 30000+30+1+10+20;
-  int numTicks = 60000+30+1+10+20;
+  // int numTicks = 60000+30+1+10+20;
+  int numTicks = 200000+30+1+10+20;
   // int numTicks = 120000+30+1+10+20;
   string sep = ",";
   ushort u_sep = StringGetCharacter(sep,0);
 
 
   nvPatternTrader* trader = new nvPatternTrader("EURUSD",true,1);
-  trader.setVariationLevel(20.0);
+  trader.setVariationLevel(30.0);
+  // trader.setVariationLevel(20.0);
   // trader.setVariationLevel(15.0);
   
   // First we try with no spread at all:
   trader.setMeanSpread(0.0001);
-  trader.setGainTarget(0.00015);
+  // trader.setGainTarget(0.00015);
+  trader.setGainTarget(0.0001);
 
   double bid,ask;
   string line;
