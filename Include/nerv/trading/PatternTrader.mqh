@@ -401,7 +401,11 @@ public:
       _profit += (p - _meanSpread);
       nvAppendArrayElement(_deals,p);
 
-      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples << " samples. Estimated profit: "<<StringFormat("%.5f",_profit)<<" points.")
+      double meanp = _profit/nsamples;
+
+      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples 
+        << " samples. Estimated profit: "<<StringFormat("%.5f",_profit)<<" points ("
+        << "mean profit: "<<meanp<<")");
     }
   }
 
