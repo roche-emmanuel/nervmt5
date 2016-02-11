@@ -181,8 +181,8 @@ public:
     _pwSum = 0.0;
     for(int i = 0; i<_patternLength;++i)
     {
-      // _pw[i] = 1.0/MathLog(1.0 + _patternLength - i);
-      _pw[i] = 0.5 + 0.5 * ((double)i)/((double)(_patternLength-1));
+      _pw[i] = 1.0/MathLog(1.0 + _patternLength - i);
+      // _pw[i] = 0.5 + 0.5 * ((double)i)/((double)(_patternLength-1));
       _pwSum += _pw[i];
     }
   }
@@ -353,7 +353,8 @@ public:
           w = 1.0/MathMax(1.0,var);
           delta = 1.0; //1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
 
-          w = w*w*w*delta;
+          // w = w*w*w*delta;
+          w = w*delta;
           nvAppendArrayElement(weights,w);
         }        
       }
