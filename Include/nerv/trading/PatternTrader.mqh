@@ -353,8 +353,8 @@ public:
           w = 1.0/MathMax(1.0,var);
           delta = 1.0; //1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
 
-          // w = w*w*w*delta;
-          w = w*delta;
+          w = w*w*w*delta;
+          // w = w*delta;
           nvAppendArrayElement(weights,w);
         }        
       }
