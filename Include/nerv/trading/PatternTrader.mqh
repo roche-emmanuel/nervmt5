@@ -350,7 +350,7 @@ public:
           nvAppendArrayElement(minPreds,_patterns[i].minPred);
           nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
           w = 1.0/MathMax(1.0,var);
-          delta = 1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
+          delta = 1.0; //1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
 
           w = w*w*w*delta;
           nvAppendArrayElement(weights,w);
@@ -405,7 +405,7 @@ public:
 
       logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples 
         << " samples. Estimated profit: "<<StringFormat("%.5f",_profit)<<" points ("
-        << "mean profit: "<<meanp<<")");
+        << "mean profit: "<<StringFormat("%.8f",meanp)<<")");
     }
   }
 
