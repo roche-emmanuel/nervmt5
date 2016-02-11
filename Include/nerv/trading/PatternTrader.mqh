@@ -181,7 +181,8 @@ public:
     _pwSum = 0.0;
     for(int i = 0; i<_patternLength;++i)
     {
-      _pw[i] = 1.0/MathLog(1.0 + _patternLength - i);
+      // _pw[i] = 1.0/MathLog(1.0 + _patternLength - i);
+      _pw[i] = 0.5 + 0.5 * ((double)i)/((double)(_patternLength-1));
       _pwSum += _pw[i];
     }
   }
