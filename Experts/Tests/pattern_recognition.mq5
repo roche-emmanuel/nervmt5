@@ -62,6 +62,12 @@ void OnStart()
   // trader.setGainTarget(0.00015);
   trader.setGainTarget(0.0001);
 
+  trader.setPatternLength(40);
+  trader.setPredictionOffset(20);
+  trader.setPredictionLength(10);
+  trader.setMaxPatternCount(10000);
+  trader.setMinPatternCount(10000);
+
   double bid,ask;
   string line;
   string elems[];
