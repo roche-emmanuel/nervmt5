@@ -7,7 +7,7 @@ output: html_document
 
 # Synopsis
 
-In this analysis, we analyze the mean reversion property of pre-fabricated Forex currency pairs. We start with **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012.
+In this analysis, we analyze the mean reversion property of pre-fabricated Forex currency pairs. We start with **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012. This analysis is based on the original study provided in **Algoritmic trading winning strategies**.
 
 
 # Data preprocessing
@@ -111,7 +111,65 @@ lambda <- reg$coefficients[[2]]
 halflife = -log(2)/lambda
 ```
 
-So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`.
+So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`. This result is not exactly the same as what was mentioned in the original study (eg. 115 days) but in fact most of the previous results are somewhat different too.
+
+## Simple linear Mean-Reverting strategy
+
+Using the previous halflife value we compute the moving standard deviation of the price:
+
+```{r}
+# build an helper function to perform moving computations:
+mov_apply <- function(x, n, callback){
+    k = length(x);
+    result = rep(NA, k);
+    for(i in 1 : (k - n + 1)){
+        result[i+n-1] <- callback(x[i :  (i + n - 1)]);
+    }    
+    return(result);
+}
+
+lag <- function(x,k)
+{
+  return(c(rep(NA,k),x[1:length(x)-k]))
+}
+
+movingAvg <- function(x,n)
+{
+  return (mov_apply(x,n,mean))
+}
+
+movingStd <- function(x,n)
+{
+  return (mov_apply(x,n,sd))
+}
+
+# Setting lookback to the halflife value:
+lb <- halflife
+
+# Compute the market value we should hold:
+mktVal <- -(prices - movingAvg(prices, lb)) / movingStd(prices,lb);
+
+# Compute the daily profit and loss value:
+pnl <- lag(mktVal, 1) * (prices - lag(prices,1)) / lag(prices,1)
+
+# head(pnl,200)
+```
+
+Now we can plot the cummulative profit and loss:
+
+```{r}
+
+# Remove the NA values and replace them with 0:
+pnl[is.na(pnl)] <- 0
+
+cumpnl <- cumsum(pnl)
+nvals <- length(cumpnl)
+
+plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cummulative Profit and Loss")
+```
+
+
+
 
 
 
