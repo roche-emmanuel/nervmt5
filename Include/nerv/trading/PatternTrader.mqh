@@ -10,6 +10,9 @@ public:
   double minPred;
   double meanPred;
   double norm;
+  datetime time;
+  double refPrice;
+  int index;
 };
 
 /*
@@ -24,6 +27,8 @@ protected:
   int _tickCount;
   datetime _lastTime;
   int _dur;
+  int _patternCount;
+
 
   int _rawInputSize;
   int _patternLength;
@@ -39,12 +44,21 @@ protected:
   Pattern* _patterns[];
 
   double _accuracy[];
+  double _deals[];
 
   double _tmp[];
 
   // Pattern distance weights:
   double _pw[];
   double _pwSum;
+
+  // current profit:
+  double _profit;
+
+  // Mean spread value:
+  double _meanSpread;
+
+  double _gainTarget;
 
 public:
   /*
@@ -57,6 +71,8 @@ public:
     _tickCount = -1;
     _lastTime = 0;
     _rawInputSize = -1;
+    _profit = 0.0;
+    _patternCount = 0;
 
     setPatternLength(30);
     setPredictionOffset(20);
@@ -64,6 +80,10 @@ public:
     setMaxPatternCount(5000);
     setMinPatternCount(5000);
     setVariationLevel(30.0);
+    setMeanSpread(0.0001);
+
+    // Required estimation gain in number of points:
+    setGainTarget(0.0002);
 
     // Assume that the input period is given in number of minutes:
     _dur = inputPeriod*60;
@@ -81,9 +101,24 @@ public:
     logDEBUG("Writing accuracy with "<<ArraySize(_accuracy)<<" samples.");
     nvWriteVector(_accuracy,"accuracy.csv");
 
+    logDEBUG("Writing deals with "<<ArraySize(_deals)<<" samples.");
+    nvWriteVector(_deals,"deals.csv");
+
     reset();
   }
   
+  // Set the mean spread value:
+  void setMeanSpread(double spread)
+  {
+    _meanSpread = spread;
+  }
+
+  // Specify the gain target
+  void setGainTarget(double thres)
+  {
+    _gainTarget = thres;
+  }
+
   // Reset the pattern lists.
   void reset()
   {
@@ -97,6 +132,7 @@ public:
 
     _rawInputSize = _patternLength + 1 + _predictionOffset + _predictionLength;
     ArrayResize( _accuracy, 0 );
+    ArrayResize( _deals, 0 );
   }
 
   double computeNorm(Pattern *pat, double p = 2.0)
@@ -146,6 +182,7 @@ public:
     for(int i = 0; i<_patternLength;++i)
     {
       _pw[i] = 1.0/MathLog(1.0 + _patternLength - i);
+      // _pw[i] = 0.5 + 0.5 * ((double)i)/((double)(_patternLength-1));
       _pwSum += _pw[i];
     }
   }
@@ -177,7 +214,7 @@ public:
     return 100.0*(currentVal-startVal)/MathAbs(startVal);
   }
 
-  Pattern* generatePattern()
+  Pattern* generatePattern(datetime ctime)
   {
     int len = ArraySize( _rawInputs );
     if(len<_rawInputSize)
@@ -215,13 +252,19 @@ public:
     pat.maxPred = maxi;
     pat.minPred = mini;
     pat.meanPred = mean;
+
     // pat.norm = pnorm(pat.features,2.0);
     pat.norm = computeNorm(pat,2.0);
+    
+    // Assign the current time to this pattern:
+    pat.time = ctime;
+    pat.refPrice = ref;
+    pat.index = _patternCount++;
 
     return pat;
   }
 
-  void addInput(double value)
+  void addInput(double value, datetime ctime)
   {
     // This is where we store the data to prepare for pattern generation:
     // For now we store simply the value in a window array:
@@ -235,7 +278,7 @@ public:
     nvAppendArrayElement(_rawInputs, value, _rawInputSize);
 
     // Now if we have enough raw inputs, we can generate a new pattern:
-    Pattern* pat = generatePattern();
+    Pattern* pat = generatePattern(ctime);
     if(pat==NULL)
       return; // nothing to do.
 
@@ -276,6 +319,16 @@ public:
     int len = ArraySize( _patterns );
     // logDEBUG("Pattern count: "<<len);
 
+    // Important note:
+    // When recognizing a pattern we cannot use the patterns that 
+    // were generated just before it...
+    // To generate a pattern, we need
+    // patternLength+1+predOffset+predRange values.
+    // This pattern is then only available in real condition when on the final
+    // pattern, thus the offset is predOffset+predRange
+    // for security, we will consider the pattern as usable only when we are strictly under this offset value.
+    int offset = _predictionOffset+_predictionLength+2;
+
     double var;
 
     double maxPreds[];
@@ -283,21 +336,29 @@ public:
     double meanPreds[];
     double weights[];
     double w;
-    
+    double delta;
+    int maxIdx = pat.index-offset;
+
     for(int i=0;i<len;++i)
     {
-      var = getVariation(pat,_patterns[i]);
-      if(var<_varLevel)
+      if(_patterns[i].index<maxIdx)
       {
-        // We should consider this history pattern.
-        nvAppendArrayElement(maxPreds,_patterns[i].maxPred);
-        nvAppendArrayElement(minPreds,_patterns[i].minPred);
-        nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
-        w = 1.0/MathMax(1.0,var);
-        w = w*w*w;
-        nvAppendArrayElement(weights,w);
+        var = getVariation(pat,_patterns[i]);
+        if(var<_varLevel)
+        {
+          // We should consider this history pattern.
+          nvAppendArrayElement(maxPreds,_patterns[i].maxPred);
+          nvAppendArrayElement(minPreds,_patterns[i].minPred);
+          nvAppendArrayElement(meanPreds,_patterns[i].meanPred);
+          w = 1.0/MathMax(1.0,var);
+          delta = 1.0; //1.0/MathMax(1.0,MathAbs((double)(int)(pat.time - _patterns[i].time)));
+
+          w = w*w*w*delta;
+          // w = w*delta;
+          nvAppendArrayElement(weights,w);
+        }        
       }
-    }
+    }    
 
     // Check if we have some patterns:
     len = ArraySize(maxPreds);
@@ -307,6 +368,16 @@ public:
       // double mean = nvGetMeanEstimate(meanPreds);
       double mean = nvGetWeightedMean(meanPreds,weights);
 
+      // We would like to target a gain of _gainTarget
+      // So we need to convert that in percent:
+      double target = 100.0*_gainTarget/pat.refPrice;
+
+      if(MathAbs(mean) < target)
+      {
+        // We do not enter a position here.
+        return;
+      }
+
       // logDEBUG("Computed mean prediction: "<<mean<<", from "<<len<<" similar patterns");
 
       // Now we can compare that with the actual prediction we have:
@@ -315,7 +386,28 @@ public:
       double acc = nvGetMeanEstimate(_accuracy);
       int nsamples = ArraySize( _accuracy );
 
-      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples << " samples.")
+      // Compute the profit that we can observe:
+      double p = 0.0;
+      if(mean>0.0)
+      {
+        // We enter a long position:
+        p = pat.refPrice*pat.meanPred/100.0;
+      }
+      else 
+      {
+        p = -pat.refPrice*pat.meanPred/100.0; 
+      }
+
+      p = ((double)(int)(p*100000))/100000.0;
+
+      _profit += (p - _meanSpread);
+      nvAppendArrayElement(_deals,p);
+
+      double meanp = _profit/nsamples;
+
+      logDEBUG("Current accuracy: "<< StringFormat("%.2f%%",acc*100.0) << " with "<<nsamples 
+        << " samples. Estimated profit: "<<StringFormat("%.5f",_profit)<<" points ("
+        << "mean profit: "<<StringFormat("%.8f",meanp)<<")");
     }
   }
 
@@ -330,7 +422,7 @@ public:
       if(_tickCount%_inputPeriod==0)
       {
         // logDEBUG("Adding input tick at tick count = "<<_tickCount)
-        addInput(value);
+        addInput(value,ctime);
       }
     }
     else
@@ -339,7 +431,7 @@ public:
       {
         _lastTime = ctime;
         logDEBUG("Adding input bar at time "<<_lastTime)
-        addInput(value);
+        addInput(value,ctime);
       }
     }
   }
