@@ -1,13 +1,13 @@
 ---
-title: "Analysis of Forex currency mean reversion"
+title: "Analysis of simple Forex currency mean reversion"
 author: "Emmanuel ROCHE"
-date: "13/3/2016"
+date: "13/03/2016"
 output: html_document
 ---
 
 # Synopsis
 
-In this analysis, we analyze the mean reversion property of pre-fabricated Forex currency pairs. We start with **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012. This analysis is based on the original study provided in **Algoritmic trading winning strategies**.
+In this analysis, we analyze the mean reversion property of pre-fabricated Forex currency pairs. We start with **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**.
 
 
 # Data preprocessing
@@ -169,7 +169,7 @@ plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", 
 ```
 
 
-
+The results observed here are highly similar to those presented in the original paper. Except that here we do not end with a positive profit value.
 
 
 
