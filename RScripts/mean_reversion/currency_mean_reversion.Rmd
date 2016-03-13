@@ -1,0 +1,117 @@
+---
+title: "Analysis of Forex currency mean reversion"
+author: "Emmanuel ROCHE"
+date: "13/3/2016"
+output: html_document
+---
+
+# Synopsis
+
+In this analysis, we analyze the mean reversion property of pre-fabricated Forex currency pairs. We start with **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012.
+
+
+# Data preprocessing
+
+We start with loading the appropriate dataset. We use the 1 minute data covering 01-2015 for this initial analysis:
+
+```{r cache=TRUE}
+#data <- read.csv("../RData/inputs/2015_01/USDCAD_M1_2015_01.csv")
+data <- read.csv("USDCAD_D1_2007_07_2012_03.csv")
+
+# assign appropriate names to this dataset columns:
+names(data) <- c("date","time","open","high","low","close","volume")
+
+# print some of the data:
+head(data)
+```
+
+
+We have `r dim(data)[1]` observations available, but note that, this dataset we are only interested in the close prices for the time being, so we keep only that column:
+
+```{r}
+prices <- data$close
+
+# let's now plot the data:
+
+nob <- length(prices)
+plot(1:nob,prices, type="l", col="blue", xlab="Time", ylab="Excahgne rate", main="USDCAD exchange rate")
+
+```
+
+# Results
+
+## ADF test
+
+Now we can perform the ADF test, for this we will use the tseries package, containing the **adf.test** function.
+
+```{r}
+library(tseries)
+
+# With the default number of lag coefficients:
+tres1 <- adf.test(prices)
+tres1
+
+# Now with only 1 lag coefficient:
+tres2 <- adf.test(prices,"s",k=1)
+tres2
+```
+
+In both test cases the p.values are quite high (respectively `r sprintf("%.3f",tres1$p.value)` and `r sprintf("%.3f",tres2$p.value)`) so we cannot reject the null hypothesis, and this currency is not stationary (which is of course expected).
+
+## Hust exponent computation
+
+We use the **pracma** package to compute the Hurst exponent. Note that we compute the Hurst exponent for the **log prices** serie.
+
+```{r}
+library(pracma)
+hres1 <- hurstexp(log(prices))
+```
+
+The most "interesting value" in the previous list is the **Theoretical Hurst exponent** : `r sprintf("%.4f",hres1$Ht)`. Given this value is would seem that the currency pair analyzed in this period exibited a small trending tendancy.
+
+
+## Variance ratio test
+
+To check the statistical significance of this Hurst exponent value, we perform a **variance ratio** test. We will use the **vrtest** package to acheive this:
+
+```{r}
+library(vrtest)
+nob <- length(prices)
+lret <- log(prices[2:nob]) - log(prices[1:(nob-1)])
+lres1 <- Lo.Mac(lret, kvec = 2)
+lres1
+```
+
+The previous statistics indicate that we have `r sprintf("%.2f%%",-lres1$Stats[1]*100)` chances that the return values follow a random walk (??? Not really sure what those numbers mean in fact), so we cannot discard this hypothesis.
+
+As described from [this page](http://stackoverflow.com/questions/14186547/vrtest-package-extended-text-answers) we can compute the p-value of this statistic usign the Boot.test function:
+
+```{r}
+Boot.test(lret, kvec=c(2,5), nboot=500,wild="Normal")
+```
+
+Right now, I cannot make any sense of those results unfortunately.
+
+## Half-life of mean reversion
+
+
+To determine the half-life $\lambda$ of our time serie we run a regression fit with $y(t) - y(t-1)$ as the dependent variable and $y(t-1)$ as the independent variable.
+
+```{r}
+nob <- length(prices)
+xval <- prices[1:(nob-1)] 
+dy <- prices[2:nob] - prices[1:(nob-1)]
+reg <- lm(dy ~ xval)
+
+plot(xval, dy, col='blue')
+abline(reg,col='red')
+
+# Now we can generate the value of the half-life:
+lambda <- reg$coefficients[[2]]
+halflife = -log(2)/lambda
+```
+
+So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`.
+
+
+
