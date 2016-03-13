@@ -217,3 +217,17 @@ computeEMA <- function(vals,period = 250)
 {
   EMA(vals,n = period)
 }
+
+computeSum <- function(vals, spread = 0.00007)
+{
+  len <- length(vals)
+  res <- c(1:len)
+  for(i in 1:len)
+  {
+    res[i] <- sum(vals[1:i]) - i*spread
+  }
+  
+  res
+}
+
+
