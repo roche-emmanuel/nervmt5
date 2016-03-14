@@ -1,175 +1,117 @@
 ---
-title: "Analysis Forex currencies cointegration"
+title: "Analysis of time series cointegration"
 author: "Emmanuel ROCHE"
-date: "13/03/2016"
+date: "14/03/2016"
 output: html_document
 ---
 
 # Synopsis
 
-In this report, we analyze the mean reversion of cointegrated. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**.
+In this report, we analyze the mean reversion of cointegrated time series. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**. 
 
 
 # Data preprocessing
 
-We start with loading the appropriate dataset. We use the 1 minute data covering 01-2015 for this initial analysis:
+We retrieve the input datasets using the **quantmod** package. Here we are interested in the EWA and EWC Exchange Traded Funds (ETFs).
 
-```{r cache=TRUE}
-#data <- read.csv("../RData/inputs/2015_01/USDCAD_M1_2015_01.csv")
-data <- read.csv("USDCAD_D1_2007_07_2012_03.csv")
+```{r fig.align='center'}
+library(quantmod)
 
-# assign appropriate names to this dataset columns:
-names(data) <- c("date","time","open","high","low","close","volume")
+options("getSymbols.warning4.0"=FALSE)
 
-# print some of the data:
-head(data)
+## Lets get first data  for EWA and EWC from yahoo finance and extract adjusted close prices
+getSymbols(c("EWA","EWC"))
+ewaAdj <- unclass(EWA$EWA.Adjusted)
+ewcAdj <- unclass(EWC$EWC.Adjusted)
+
+# let's plot those close prices:
+nob <- length(ewaAdj)
+plot(1:nob, ewaAdj, type="l", col="blue", ylim=c(5, 40), xlab="Time", ylab="ETF value", main="EWA and EWC exchange rates")
+lines(1:nob, ewcAdj, type="l", col="red")
 ```
 
+We have here `r length(ewaAdj)` samples for EWA and `r length(ewcAdj)` samples for EWC. For sake of completion, let's also display the candle chart for one for those symbols:
 
-We have `r dim(data)[1]` observations available, but note that, this dataset we are only interested in the close prices for the time being, so we keep only that column:
-
-```{r}
-prices <- data$close
-
-# let's now plot the data:
-
-nob <- length(prices)
-plot(1:nob,prices, type="l", col="blue", xlab="Time", ylab="Excahgne rate", main="USDCAD exchange rate")
-
+```{r fig.align='center'}
+candleChart(EWA)
 ```
+
+According to the previous graph, the input data covers a period from 03/01/2007 to the current date.
 
 # Results
 
-## ADF test
+To visually check the cointegration we can display a scatter plot of EWC against EWA:
 
-Now we can perform the ADF test, for this we will use the tseries package, containing the **adf.test** function.
-
-```{r}
-library(tseries)
-
-# With the default number of lag coefficients:
-tres1 <- adf.test(prices)
-tres1
-
-# Now with only 1 lag coefficient:
-tres2 <- adf.test(prices,"s",k=1)
-tres2
+```{r fig.align='center'}
+plot(ewaAdj, ewcAdj,col="steelblue", xlab="EWA value", ylab="EWC value", main="Scatter plot of EWC vs EWA")
 ```
 
-In both test cases the p.values are quite high (respectively `r sprintf("%.3f",tres1$p.value)` and `r sprintf("%.3f",tres2$p.value)`) so we cannot reject the null hypothesis, and this currency is not stationary (which is of course expected).
+Now to perform the cointegration of the 2 series we first prepare an helper function, this implementation is inspired from [Deniz's Notes](http://denizstij.blogspot.fr/2013/11/cointegration-tests-adf-and-johansen.html). This method will take as input the 2 series we are trying to co-integrate and return the statistic value, the p-value and the hedge ratio extracted from the regression.
 
-## Hust exponent computation
+Also note that we use the **fUnitRoots** package to compute the ADF test value.
 
-We use the **pracma** package to compute the Hurst exponent. Note that we compute the Hurst exponent for the **log prices** serie.
 
-```{r}
-library(pracma)
-hres1 <- hurstexp(log(prices))
+```{r message=F, warning=F}
+library(fUnitRoots)
 ```
 
-The most "interesting value" in the previous list is the **Theoretical Hurst exponent** : `r sprintf("%.4f",hres1$Ht)`. Given this value is would seem that the currency pair analyzed in this period exibited a small trending tendancy.
-
-
-## Variance ratio test
-
-To check the statistical significance of this Hurst exponent value, we perform a **variance ratio** test. We will use the **vrtest** package to acheive this:
-
 ```{r}
-library(vrtest)
-nob <- length(prices)
-lret <- log(prices[2:nob]) - log(prices[1:(nob-1)])
-lres1 <- Lo.Mac(lret, kvec = 2)
-lres1
-```
-
-The previous statistics indicate that we have `r sprintf("%.2f%%",-lres1$Stats[1]*100)` chances that the return values follow a random walk (??? Not really sure what those numbers mean in fact), so we cannot discard this hypothesis.
-
-As described from [this page](http://stackoverflow.com/questions/14186547/vrtest-package-extended-text-answers) we can compute the p-value of this statistic usign the Boot.test function:
-
-```{r}
-Boot.test(lret, kvec=c(2,5), nboot=500,wild="Normal")
-```
-
-Right now, I cannot make any sense of those results unfortunately.
-
-## Half-life of mean reversion
-
-
-To determine the half-life $\lambda$ of our time serie we run a regression fit with $y(t) - y(t-1)$ as the dependent variable and $y(t-1)$ as the independent variable.
-
-```{r}
-nob <- length(prices)
-xval <- prices[1:(nob-1)] 
-dy <- prices[2:nob] - prices[1:(nob-1)]
-reg <- lm(dy ~ xval)
-
-plot(xval, dy, col='blue')
-abline(reg,col='red')
-
-# Now we can generate the value of the half-life:
-lambda <- reg$coefficients[[2]]
-halflife = -log(2)/lambda
-```
-
-So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`. This result is not exactly the same as what was mentioned in the original study (eg. 115 days) but in fact most of the previous results are somewhat different too.
-
-## Simple linear Mean-Reverting strategy
-
-Using the previous halflife value we compute the moving standard deviation of the price:
-
-```{r}
-# build an helper function to perform moving computations:
-mov_apply <- function(x, n, callback){
-    k = length(x);
-    result = rep(NA, k);
-    for(i in 1 : (k - n + 1)){
-        result[i+n-1] <- callback(x[i :  (i + n - 1)]);
-    }    
-    return(result);
+CADF <-function(aAdj, bAdj, type="nc") {
+  lenA <- length(aAdj)
+  lenB <- length(bAdj)
+  
+  # We expect both time series to have the same length:
+  if(lenA != lenB) 
+  {
+    stop(paste("Mismatch in input series lengths:",lenA,"!=",lenB))
+  }
+  
+  regA <-lm(aAdj~bAdj+0)
+   
+  print(regA)
+  regB <- lm(bAdj~aAdj+0)
+  print(regB)
+   
+  coA <- adfTest(regA$residuals, type=type)
+  coB <- adfTest(regB$residuals, type=type)   
+   
+  # Lets choice most negative
+  if (coA@test$statistic < coB@test$statistic){
+    cat("\nSerie A is dependent on serie B")
+    p <- coA@test$p.value
+    s <- coA@test$statistic
+    coeff <- regA$coefficients[[1]]
+  }else {
+    cat("\nSerie B is dependent on serie A")
+    p <- coB@test$p.value
+    s <- coB@test$statistic    
+    coeff <- regB$coefficients[[1]]
+  }   
+  
+  cat("\n p-value",p," statistics:",s," hedgeRatio:",coeff)     
+  return(c(s,p,coeff))
 }
-
-lag <- function(x,k)
-{
-  return(c(rep(NA,k),x[1:length(x)-k]))
-}
-
-movingAvg <- function(x,n)
-{
-  return (mov_apply(x,n,mean))
-}
-
-movingStd <- function(x,n)
-{
-  return (mov_apply(x,n,sd))
-}
-
-# Setting lookback to the halflife value:
-lb <- halflife
-
-# Compute the market value we should hold:
-mktVal <- -(prices - movingAvg(prices, lb)) / movingStd(prices,lb);
-
-# Compute the daily profit and loss value:
-pnl <- lag(mktVal, 1) * (prices - lag(prices,1)) / lag(prices,1)
-
-# head(pnl,200)
 ```
 
-Now we can plot the cummulative profit and loss:
+Now compute the cointegration of EWA anc EWC (note: not sure why we should use type="nc" here and not type="c" ?)
 
 ```{r}
-
-# Remove the NA values and replace them with 0:
-pnl[is.na(pnl)] <- 0
-
-cumpnl <- cumsum(pnl)
-nvals <- length(cumpnl)
-
-plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cummulative Profit and Loss")
+res <- CADF(ewaAdj,ewcAdj, type="nc")
+res
 ```
 
+From the previous result is seems we can reject the null hypothesis with a propability of `r sprintf("%.2f%%",1.0 - res[2])`. We now plot the residual EWC - hedgeRatio*EWA to see if the result is stationary:
 
-The results observed here are highly similar to those presented in the original paper. Except that here we do not end with a positive profit value.
+```{r fig.align='center'}
+
+residual <- ewcAdj - res[3]*ewaAdj
+mval <- mean(residual)
+
+plot(residual,type="l",col="blue", main="Stationarity of residuals\nfrom linear regression between EWC and EWA")
+abline(h=mval,col="red")
+```
+
+We can confirm here that the first part of this plot is similar to what is provided in the original study.
 
 
 

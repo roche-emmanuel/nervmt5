@@ -122,6 +122,8 @@ xval <- prices[1:(nob-1)]
 dy <- prices[2:nob] - prices[1:(nob-1)]
 reg <- lm(dy ~ xval)
 
+#print(reg)
+
 plot(xval, dy, col='blue')
 abline(reg,col='red')
 
