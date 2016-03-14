@@ -1,5 +1,5 @@
 ---
-title: "Analysis of simple Forex currency mean reversion"
+title: "Analysis Forex currencies cointegration"
 author: "Emmanuel ROCHE"
 date: "13/03/2016"
 output: html_document
@@ -7,14 +7,15 @@ output: html_document
 
 # Synopsis
 
-In this report, we analyze the mean reversion property of a pre-fabricated Forex currency pair, namely, we focus here on **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012. The input data was retriever with  **TickDownloader**. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**.
+In this report, we analyze the mean reversion of cointegrated. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**.
 
 
 # Data preprocessing
 
-We start with loading the appropriate dataset. (Daily data was generated from tick data by the TickDownloader software itself)
+We start with loading the appropriate dataset. We use the 1 minute data covering 01-2015 for this initial analysis:
 
 ```{r cache=TRUE}
+#data <- read.csv("../RData/inputs/2015_01/USDCAD_M1_2015_01.csv")
 data <- read.csv("USDCAD_D1_2007_07_2012_03.csv")
 
 # assign appropriate names to this dataset columns:
@@ -37,8 +38,6 @@ plot(1:nob,prices, type="l", col="blue", xlab="Time", ylab="Excahgne rate", main
 
 ```
 
-We see from this plot that we have roughtly the same shape as in the original study, but it also seems that we have more data points (we only have about 1200 points in the source paper).
-
 # Results
 
 ## ADF test
@@ -59,29 +58,11 @@ tres2
 
 In both test cases the p.values are quite high (respectively `r sprintf("%.3f",tres1$p.value)` and `r sprintf("%.3f",tres2$p.value)`) so we cannot reject the null hypothesis, and this currency is not stationary (which is of course expected).
 
-As a validation step we can recompute the ADF test result using the **fUnitRoots** package:
-
-```{r message=F, warning=F}
-library(fUnitRoots)
-
-adfTest(prices, type="ct")
-```
-
-
-The results computed with the fUnitRoots package with type="ct" correspond to what we computed in the tseries package. Yet, we don't want to consider the time trend in the regression, so we should recompute the Dickey-Fuller statistic with only the constant component (eg. type = "c"):
-
-```{r}
-ares1 <- adfTest(prices, type="c")
-ares1
-```
-
-We note here that we still cannot reject the null hypothesis, since our p-value is of about `r sprintf("%.4f",ares1@test$p.value)`.
-
 ## Hust exponent computation
 
 We use the **pracma** package to compute the Hurst exponent. Note that we compute the Hurst exponent for the **log prices** serie.
 
-```{r message=F, warning=F}
+```{r}
 library(pracma)
 hres1 <- hurstexp(log(prices))
 ```
@@ -130,7 +111,7 @@ lambda <- reg$coefficients[[2]]
 halflife = -log(2)/lambda
 ```
 
-So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`. This result is not exactly the same as what was mentioned in the original study (eg. 115 days) but we already noticed that we had more data points in our input anyway so this could explain the differences we have.
+So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`. This result is not exactly the same as what was mentioned in the original study (eg. 115 days) but in fact most of the previous results are somewhat different too.
 
 ## Simple linear Mean-Reverting strategy
 
@@ -169,8 +150,7 @@ lb <- halflife
 mktVal <- -(prices - movingAvg(prices, lb)) / movingStd(prices,lb);
 
 # Compute the daily profit and loss value:
-# pnl <- lag(mktVal, 1) * (prices - lag(prices,1)) / lag(prices,1)
-pnl <- lag(mktVal, 1) * (prices - lag(prices,1))
+pnl <- lag(mktVal, 1) * (prices - lag(prices,1)) / lag(prices,1)
 
 # head(pnl,200)
 ```
@@ -185,45 +165,11 @@ pnl[is.na(pnl)] <- 0
 cumpnl <- cumsum(pnl)
 nvals <- length(cumpnl)
 
-plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cumulative Profit and Loss")
+plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cummulative Profit and Loss")
 ```
 
 
-The results observed here are highly similar to those presented in the original paper. Except that here we do not end with a positive profit value. Also note that we do not normalize the prices when computing the P&L
-
-One additional step that we can take here is to integrate the transaction costs in this computation. We will use here a typical transaction cost value of $\delta =$ 0.0001 (This is to be considered as a very optimistic cost value). We will thus apply the formula: 
-
-$$ PL_t = mktVal_{t-1} * (price_t - price_{t-1}) - |mktVal_t-mktVal_{t-1}| * \delta$$
+The results observed here are highly similar to those presented in the original paper. Except that here we do not end with a positive profit value.
 
 
 
-```{r}
-
-tcost = 0.0001
-
-# recompute the profit and loss taking the transaction cost into account:
-pnl2 <- lag(mktVal, 1) * (prices - lag(prices,1)) - abs(mktVal - lag(mktVal,1)) * tcost
-
-pnl2[is.na(pnl2)] <- 0
-
-cumpnl <- cumsum(pnl2)
-nvals <- length(cumpnl)
-
-plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cumulative Profit and Loss\nwith transaction costs")
-```
-
-There is no visual change in the previous plot, does this means that the transaction costs will have negligeable effect ?
-
-Let's first draw the transaction cost only:
-
-```{r}
-
-costs <- abs(mktVal - lag(mktVal,1)) * tcost
-costs[is.na(costs)] <- 0
-
-nvals <- length(costs)
-
-plot(1:nvals, costs, type='l', col='blue', xlab="Days", ylab="Transaction costs", main="Transaction costs")
-```
-
-So it seems the transaction costs are correct, but they are very small, so this could indeed be negligeable here.
