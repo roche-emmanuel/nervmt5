@@ -12,7 +12,7 @@ void OnStart()
 
   logDEBUG("Initializing PatternTrader test");
 
-  string filename = "EURUSD_tick_2015_01.csv";
+  string filename = "EURUSD_M1_2014_2015.csv";
 
   int handle = FileOpen(filename, FILE_READ | FILE_ANSI | FILE_TXT);
   // int numTicks = 30000+30+1+10+20;
@@ -24,7 +24,7 @@ void OnStart()
 
 
   nvPatternTrader* trader = new nvPatternTrader("EURUSD",true,1);
-  trader.setVariationLevel(20.0);
+  trader.setVariationLevel(30.0);
   // trader.setVariationLevel(20.0);
   // trader.setVariationLevel(15.0);
   
@@ -34,12 +34,12 @@ void OnStart()
   trader.setGainTarget(0.0001);
 
   trader.setPatternLength(40);
-  trader.setPredictionOffset(20);
-  trader.setPredictionLength(10);
-  trader.setMaxPatternCount(10000);
-  trader.setMinPatternCount(10000);
+  trader.setPredictionOffset(5);
+  trader.setPredictionLength(5);
+  trader.setMaxPatternCount(50000);
+  trader.setMinPatternCount(50000);
 
-  double bid,ask;
+  double cprice;;
   string line;
   string elems[];
 
@@ -49,26 +49,23 @@ void OnStart()
   {
     line = FileReadString(handle);
     // logDEBUG("Read line: "<<line);
+    // format is: 2014.01.01,22:00,1.37553,1.37553,1.37552,1.37552,2
 
     int len = StringSplit(line,u_sep,elems); 
-    CHECK(len==5,"Invalid number of elements!");
+    CHECK(len==7,"Invalid number of elements: "<<len);
 
     // We only keep the time tag and the prediction:
-    bid = StringToDouble(elems[1]);
-    ask = StringToDouble(elems[2]);
+    cprice = StringToDouble(elems[5]);
 
     // convert the time string to time value:
     // "2015.01.01 22:04:23.564"
 
     // logDEBUG("Substr 1 is: "<< StringSubstr(elems[0],0,16))
     
-    datetime ctime = StringToTime(StringSubstr(elems[0],0,16));
-    int secs = (int)(StringToDouble(StringSubstr(elems[0],17,6))+0.5); 
-
-    ctime += secs;
+    datetime ctime = StringToTime(elems[0]+" "+elems[1]);
     // logDEBUG("Detected time: "<< ctime)
 
-    trader.addInput((bid+ask)*0.5,ctime);
+    trader.addInput(cprice,ctime);
     if(i%200==0)
     {
       logDEBUG("Done "<<StringFormat("%.2f%%",100.0*(double)i/(double)numTicks));
