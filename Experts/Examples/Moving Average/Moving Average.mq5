@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
 //|                                              Moving Averages.mq5 |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2009-2013, MetaQuotes Software Corp."
+#property copyright "Copyright 2009-2016, MetaQuotes Software Corp."
 #property link      "http://www.mql5.com"
 #property version   "1.00"
 
@@ -14,7 +14,11 @@ input double DecreaseFactor     = 3;       // Descrease factor
 input int    MovingPeriod       = 12;      // Moving Average period
 input int    MovingShift        = 6;       // Moving Average shift
 //---
-int   ExtHandle=0;
+int    ExtHandle=0;
+bool   ExtHedging=false;
+CTrade ExtTrade;
+
+#define MA_MAGIC 1234501
 //+------------------------------------------------------------------+
 //| Calculate optimal lot size                                       |
 //+------------------------------------------------------------------+
@@ -109,14 +113,12 @@ void CheckForOpen(void)
      }
 //--- additional checking
    if(signal!=WRONG_VALUE)
-      if(TerminalInfoInteger(TERMINAL_TRADE_ALLOWED))
-         if(Bars(_Symbol,_Period)>100)
-           {
-            CTrade trade;
-            trade.PositionOpen(_Symbol,signal,TradeSizeOptimized(),
+     {
+      if(TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) && Bars(_Symbol,_Period)>100)
+         ExtTrade.PositionOpen(_Symbol,signal,TradeSizeOptimized(),
                                SymbolInfoDouble(_Symbol,signal==ORDER_TYPE_SELL ? SYMBOL_BID:SYMBOL_ASK),
                                0,0);
-           }
+     }
 //---
   }
 //+------------------------------------------------------------------+
@@ -150,27 +152,54 @@ void CheckForClose(void)
       signal=true;
 //--- additional checking
    if(signal)
-      if(TerminalInfoInteger(TERMINAL_TRADE_ALLOWED))
-         if(Bars(_Symbol,_Period)>100)
-           {
-            CTrade trade;
-            trade.PositionClose(_Symbol,3);
-           }
+     {
+      if(TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) && Bars(_Symbol,_Period)>100)
+         ExtTrade.PositionClose(_Symbol,3);
+     }
 //---
+  }
+//+------------------------------------------------------------------+
+//| Position select depending on netting or hedging                  |
+//+------------------------------------------------------------------+
+bool SelectPosition()
+  {
+   bool res=false;
+//---
+   if(ExtHedging)
+     {
+      uint total=PositionsTotal();
+      for(uint i=0; i<total; i++)
+        {
+         string position_symbol=PositionGetSymbol(i);
+         if(_Symbol==position_symbol && MA_MAGIC==PositionGetInteger(POSITION_MAGIC))
+           {
+            res=true;
+            break;
+           }
+        }
+     }
+   else
+      res=PositionSelect(_Symbol);
+//---
+   return(res);
   }
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit(void)
   {
-//---
+//--- prepare trade class to control positions if hedging mode is active
+   ExtHedging=((ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE)==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING);
+   ExtTrade.SetExpertMagicNumber(MA_MAGIC);
+   ExtTrade.SetMarginMode();
+//--- Moving Average indicator
    ExtHandle=iMA(_Symbol,_Period,MovingPeriod,MovingShift,MODE_SMA,PRICE_CLOSE);
    if(ExtHandle==INVALID_HANDLE)
      {
       printf("Error creating MA indicator");
       return(INIT_FAILED);
      }
-//---
+//--- ok
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -179,7 +208,7 @@ int OnInit(void)
 void OnTick(void)
   {
 //---
-   if(PositionSelect(_Symbol))
+   if(SelectPosition())
       CheckForClose();
    else
       CheckForOpen();

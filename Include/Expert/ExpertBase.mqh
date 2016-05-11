@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                   ExpertBase.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Trade\SymbolInfo.mqh>
@@ -73,6 +73,7 @@ protected:
    ENUM_TIMEFRAMES   m_period;         // work timeframe
    double            m_adjusted_point; // "weight" 2/4 of a point
    CAccountInfo      m_account;        // object-deposit
+   ENUM_ACCOUNT_MARGIN_MODE m_margin_mode; // netting or hedging
    ENUM_TYPE_TREND   m_trend_type;     // identifier of trend
    bool              m_every_tick;     // flag of starting the analysis from current (incomplete) bar
    //--- timeseries
@@ -108,6 +109,7 @@ public:
    bool              Symbol(string name);
    bool              Period(ENUM_TIMEFRAMES value);
    void              Magic(ulong value) { m_magic=value; }
+   void              SetMarginMode(void) { m_margin_mode=(ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE); }
    //--- method of verification of settings
    virtual bool      ValidationSettings();
    //--- methods of creating the indicator and timeseries
@@ -130,11 +132,13 @@ protected:
    //--- method of getting index of bar the analysis starts with
    virtual int       StartIndex(void) { return((m_every_tick?0:1)); }
    virtual bool      CompareMagic(ulong magic) { return(m_magic==magic);   }
+   bool              IsHedging(void) const { return(m_margin_mode==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
 void CExpertBase::CExpertBase(void) : m_magic(0),
+                                      m_margin_mode(ACCOUNT_MARGIN_MODE_RETAIL_NETTING),
                                       m_init_phase(INIT_PHASE_FIRST),
                                       m_other_symbol(false),
                                       m_symbol(NULL),
@@ -202,13 +206,13 @@ bool CExpertBase::Init(CSymbolInfo *symbol,ENUM_TIMEFRAMES period,double point)
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_FIRST)
      {
-      printf(__FUNCTION__+": attempt of re-initialization");
+      Print(__FUNCTION__+": attempt of re-initialization");
       return(false);
      }
 //--- check of pointer
    if(symbol==NULL)
      {
-      printf(__FUNCTION__+": error initialization");
+      Print(__FUNCTION__+": error initialization");
       return(false);
      }
 //--- initialization
@@ -217,6 +221,7 @@ bool CExpertBase::Init(CSymbolInfo *symbol,ENUM_TIMEFRAMES period,double point)
    m_adjusted_point=point;
    m_other_symbol  =false;
    m_other_period  =false;
+   SetMarginMode();
 //--- primary initialization is successful, pass to the phase of tuning
    m_init_phase=INIT_PHASE_TUNING;
 //--- ok
@@ -230,7 +235,7 @@ bool CExpertBase::Symbol(string name)
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_TUNING)
      {
-      printf(__FUNCTION__+": changing of symbol is forbidden");
+      Print(__FUNCTION__+": changing of symbol is forbidden");
       return(false);
      }
    if(m_symbol!=NULL)
@@ -254,7 +259,7 @@ bool CExpertBase::Symbol(string name)
 //--- check of pointer
    if(m_symbol==NULL)
      {
-      printf(__FUNCTION__+": error of changing of symbol");
+      Print(__FUNCTION__+": error of changing of symbol");
       return(false);
      }
    if(!m_symbol.Name(name))
@@ -275,7 +280,7 @@ bool CExpertBase::Period(ENUM_TIMEFRAMES value)
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_TUNING)
      {
-      printf(__FUNCTION__+": changing of timeframe is forbidden");
+      Print(__FUNCTION__+": changing of timeframe is forbidden");
       return(false);
      }
    if(m_period==value)
@@ -297,7 +302,7 @@ bool CExpertBase::ValidationSettings()
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_TUNING)
      {
-      printf(__FUNCTION__+": not the right time to check parameters");
+      Print(__FUNCTION__+": not the right time to check parameters");
       return(false);
      }
 //--- initial check of parameters is successful, phase of tuning is over
@@ -313,7 +318,7 @@ bool CExpertBase::SetPriceSeries(CiOpen *open,CiHigh *high,CiLow *low,CiClose *c
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_VALIDATION)
      {
-      printf(__FUNCTION__+": changing of timeseries is forbidden");
+      Print(__FUNCTION__+": changing of timeseries is forbidden");
       return(false);
      }
 //--- check pointers
@@ -322,7 +327,7 @@ bool CExpertBase::SetPriceSeries(CiOpen *open,CiHigh *high,CiLow *low,CiClose *c
       (IS_LOW_SERIES_USAGE   && low==NULL)  || 
       (IS_CLOSE_SERIES_USAGE && close==NULL))
      {
-      printf(__FUNCTION__+": NULL pointer");
+      Print(__FUNCTION__+": NULL pointer");
       return(false);
      }
    m_open =open;
@@ -340,7 +345,7 @@ bool CExpertBase::SetOtherSeries(CiSpread *spread,CiTime *time,CiTickVolume *tic
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_VALIDATION)
      {
-      printf(__FUNCTION__+": changing of timeseries is forbidden");
+      Print(__FUNCTION__+": changing of timeseries is forbidden");
       return(false);
      }
 //--- check pointers
@@ -349,7 +354,7 @@ bool CExpertBase::SetOtherSeries(CiSpread *spread,CiTime *time,CiTickVolume *tic
       (IS_TICK_VOLUME_SERIES_USAGE && tick_volume==NULL) ||
       (IS_REAL_VOLUME_SERIES_USAGE && real_volume==NULL))
      {
-      printf(__FUNCTION__+": NULL pointer");
+      Print(__FUNCTION__+": NULL pointer");
       return(false);
      }
    m_spread     =spread;
@@ -370,7 +375,7 @@ bool CExpertBase::InitIndicators(CIndicators *indicators)
 //--- check the initialization phase
    if(m_init_phase!=INIT_PHASE_VALIDATION)
      {
-      printf(__FUNCTION__+": parameters of setting are not checked");
+      Print(__FUNCTION__+": parameters of setting are not checked");
       return(false);
      }
    if(!m_other_symbol && !m_other_period)
@@ -499,20 +504,20 @@ bool CExpertBase::InitOpen(CIndicators *indicators)
 //--- create object
    if((m_open=new CiOpen)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_open))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_open;
       return(false);
      }
 //--- initialize object
    if(!m_open.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -526,20 +531,20 @@ bool CExpertBase::InitHigh(CIndicators *indicators)
 //--- create object
    if((m_high=new CiHigh)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_high))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_high;
       return(false);
      }
 //--- initialize object
    if(!m_high.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -553,20 +558,20 @@ bool CExpertBase::InitLow(CIndicators *indicators)
 //--- create object
    if((m_low=new CiLow)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_low))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_low;
       return(false);
      }
 //--- initialize object
    if(!m_low.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -580,20 +585,20 @@ bool CExpertBase::InitClose(CIndicators *indicators)
 //--- create object
    if((m_close=new CiClose)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_close))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_close;
       return(false);
      }
 //--- initialize object
    if(!m_close.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -607,20 +612,20 @@ bool CExpertBase::InitSpread(CIndicators *indicators)
 //--- create object
    if((m_spread=new CiSpread)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_spread))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_spread;
       return(false);
      }
 //--- initialize object
    if(!m_spread.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -634,20 +639,20 @@ bool CExpertBase::InitTime(CIndicators *indicators)
 //--- create object
    if((m_time=new CiTime)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_time))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_time;
       return(false);
      }
 //--- initialize object
    if(!m_time.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -661,20 +666,20 @@ bool CExpertBase::InitTickVolume(CIndicators *indicators)
 //--- create object
    if((m_tick_volume=new CiTickVolume)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_tick_volume))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_tick_volume;
       return(false);
      }
 //--- initialize object
    if(!m_tick_volume.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok
@@ -688,20 +693,20 @@ bool CExpertBase::InitRealVolume(CIndicators *indicators)
 //--- create object
    if((m_real_volume=new CiRealVolume)==NULL)
      {
-      printf(__FUNCTION__+": error creating object");
+      Print(__FUNCTION__+": error creating object");
       return(false);
      }
 //--- add object to collection
    if(!indicators.Add(m_real_volume))
      {
-      printf(__FUNCTION__+": error adding object");
+      Print(__FUNCTION__+": error adding object");
       delete m_real_volume;
       return(false);
      }
 //--- initialize object
    if(!m_real_volume.Create(m_symbol.Name(),m_period))
      {
-      printf(__FUNCTION__+": error initializing object");
+      Print(__FUNCTION__+": error initializing object");
       return(false);
      }
 //--- ok

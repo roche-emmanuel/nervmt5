@@ -1,15 +1,17 @@
 //+------------------------------------------------------------------+
 //|                                                  MACD Sample.mq5 |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
-#property copyright   "Copyright 2009-2013, MetaQuotes Software Corp."
+#property copyright   "Copyright 2009-2016, MetaQuotes Software Corp."
 #property link        "http://www.mql5.com"
-#property version     "5.20"
+#property version     "5.50"
 #property description "It is important to make sure that the expert works with a normal"
 #property description "chart and the user did not make any mistakes setting input"
 #property description "variables (Lots, TakeProfit, TrailingStop) in our case,"
 #property description "we check TakeProfit on a chart of more than 2*trend_period bars"
+
+#define MACD_MAGIC 1234502
 //---
 #include <Trade\Trade.mqh>
 #include <Trade\SymbolInfo.mqh>
@@ -107,8 +109,9 @@ CSampleExpert::~CSampleExpert(void)
 bool CSampleExpert::Init(void)
   {
 //--- initialize common information
-   m_symbol.Name(Symbol());              // symbol
-   m_trade.SetExpertMagicNumber(12345);  // magic
+   m_symbol.Name(Symbol());                  // symbol
+   m_trade.SetExpertMagicNumber(MACD_MAGIC); // magic
+   m_trade.SetMarginMode();
 //--- tuning for 3 or 5 digits
    int digits_adjust=1;
    if(m_symbol.Digits()==3 || m_symbol.Digits()==5)

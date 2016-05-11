@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                  AccountInfo.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -19,7 +19,9 @@ public:
    ENUM_ACCOUNT_TRADE_MODE TradeMode(void) const;
    string            TradeModeDescription(void) const;
    long              Leverage(void) const;
-   ENUM_ACCOUNT_STOPOUT_MODE MarginMode(void) const;
+   ENUM_ACCOUNT_STOPOUT_MODE StopoutMode(void) const;
+   string            StopoutModeDescription(void) const;
+   ENUM_ACCOUNT_MARGIN_MODE MarginMode(void) const;
    string            MarginModeDescription(void) const;
    bool              TradeAllowed(void) const;
    bool              TradeExpert(void) const;
@@ -106,12 +108,35 @@ long CAccountInfo::Leverage(void) const
 //+------------------------------------------------------------------+
 //| Get the property value "ACCOUNT_MARGIN_SO_MODE"                  |
 //+------------------------------------------------------------------+
-ENUM_ACCOUNT_STOPOUT_MODE CAccountInfo::MarginMode(void) const
+ENUM_ACCOUNT_STOPOUT_MODE CAccountInfo::StopoutMode(void) const
   {
    return((ENUM_ACCOUNT_STOPOUT_MODE)AccountInfoInteger(ACCOUNT_MARGIN_SO_MODE));
   }
 //+------------------------------------------------------------------+
 //| Get the property value "ACCOUNT_MARGIN_SO_MODE" as string        |
+//+------------------------------------------------------------------+
+string CAccountInfo::StopoutModeDescription(void) const
+  {
+   string str;
+//---
+   switch(StopoutMode())
+     {
+      case ACCOUNT_STOPOUT_MODE_PERCENT: str="Level is specified in percentage"; break;
+      case ACCOUNT_STOPOUT_MODE_MONEY  : str="Level is specified in money";      break;
+      default                          : str="Unknown stopout mode";
+     }
+//---
+   return(str);
+  }
+//+------------------------------------------------------------------+
+//| Get the property value "ACCOUNT_MARGIN_MODE"                     |
+//+------------------------------------------------------------------+
+ENUM_ACCOUNT_MARGIN_MODE CAccountInfo::MarginMode(void) const
+  {
+   return((ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE));
+  }
+//+------------------------------------------------------------------+
+//| Get the property value "ACCOUNT_MARGIN_MODE" as string           |
 //+------------------------------------------------------------------+
 string CAccountInfo::MarginModeDescription(void) const
   {
@@ -119,9 +144,10 @@ string CAccountInfo::MarginModeDescription(void) const
 //---
    switch(MarginMode())
      {
-      case ACCOUNT_STOPOUT_MODE_PERCENT: str="Level is specified in percentage"; break;
-      case ACCOUNT_STOPOUT_MODE_MONEY  : str="Level is specified in money";      break;
-      default                          : str="Unknown margin mode";
+      case ACCOUNT_MARGIN_MODE_RETAIL_NETTING: str="Netting";  break;
+      case ACCOUNT_MARGIN_MODE_EXCHANGE      : str="Exchange"; break;
+      case ACCOUNT_MARGIN_MODE_RETAIL_HEDGING: str="Hedging";  break;
+      default                                : str="Unknown margin mode";
      }
 //---
    return(str);

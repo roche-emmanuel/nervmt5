@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                    ArrayLong.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Array.mqh"
@@ -49,8 +49,8 @@ public:
    bool              Delete(const int index);
    bool              DeleteRange(int from,int to);
    //--- methods for compare arrays
-   bool              CompareArray(const long &Array[]) const;
-   bool              CompareArray(const CArrayLong *Array) const;
+   bool              CompareArray(const long &array[]) const;
+   bool              CompareArray(const CArrayLong *array) const;
    //--- methods for working with the sorted array
    bool              InsertSort(const long element);
    int               Search(const long element) const;
@@ -428,13 +428,13 @@ bool CArrayLong::DeleteRange(int from,int to)
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayLong::CompareArray(const long &Array[]) const
+bool CArrayLong::CompareArray(const long &array[]) const
   {
 //--- compare
-   if(m_data_total!=ArraySize(Array))
+   if(m_data_total!=ArraySize(array))
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i]!=Array[i])
+      if(m_data[i]!=array[i])
          return(false);
 //--- equal
    return(true);
@@ -442,16 +442,16 @@ bool CArrayLong::CompareArray(const long &Array[]) const
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayLong::CompareArray(const CArrayLong *Array) const
+bool CArrayLong::CompareArray(const CArrayLong *array) const
   {
 //--- check
-   if(!CheckPointer(Array))
+   if(!CheckPointer(array))
       return(false);
 //--- compare
-   if(m_data_total!=Array.m_data_total)
+   if(m_data_total!=array.m_data_total)
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i]!=Array.m_data[i])
+      if(m_data[i]!=array.m_data[i])
          return(false);
 //--- equal
    return(true);

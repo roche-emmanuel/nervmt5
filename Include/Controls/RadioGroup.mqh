@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                   RadioGroup.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndClient.mqh"
@@ -53,7 +53,7 @@ protected:
    virtual bool      OnVScrollHide(void);
    virtual bool      OnScrollLineDown(void);
    virtual bool      OnScrollLineUp(void);
-   virtual bool      OnChangeItem(const int index);
+   virtual bool      OnChangeItem(const int row_index);
    //--- redraw
    bool              Redraw(void);
    bool              RowState(const int index,const bool select);
@@ -349,10 +349,10 @@ bool CRadioGroup::OnScrollLineDown(void)
 //+------------------------------------------------------------------+
 //| Handler of changing a "row" state                                |
 //+------------------------------------------------------------------+
-bool CRadioGroup::OnChangeItem(const int index)
+bool CRadioGroup::OnChangeItem(const int row_index)
   {
 //--- select "row"
-   Select(index+m_offset);
+   Select(row_index+m_offset);
 //--- send notification
    EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CHANGE,m_id,0.0,m_name);
 //--- handled
