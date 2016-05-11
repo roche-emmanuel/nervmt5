@@ -128,8 +128,8 @@ public:
     if(_lastUpdateTime==0)
     {
       // This is the first initialization so we send all the training data
-      logDEBUG("Should send all the requested training samples: " << _trainSize)
-      sendMultipleInputs(time-60, _trainSize);
+      // logDEBUG("Should send all the requested training samples: " << _trainSize)
+      // sendMultipleInputs(time-60, _trainSize);
     }
 
     _lastUpdateTime = time;
@@ -142,8 +142,14 @@ public:
     datetime prevtime = time - 60;
     double cvals[];
 
+    if(prevtime < 1448928000)
+    {
+      // discard this input for now.
+      return 0.0;
+    }
+
     // retrieve the previous valid sample:
-    if(getValidSample(prevtime,cvals))
+    if(nvGetValidSample(prevtime,cvals,_inputs))
     {
       // Send the new input
       // and return the answer we get from the predictor:
@@ -163,6 +169,13 @@ public:
   double sendInput(datetime timetag, double &features[])
   {
     // We should ensure here that we never go back in time
+    if(_lastSentTimetag==timetag) 
+    {
+      // Not resending the last timetag:
+      logWARN("Detected resending of single time tag at: "<<timetag)
+      return 0.0;
+    }
+
     CHECK_RET(_lastSentTimetag<timetag,0.0,"Trying to send old timetag: "<<timetag<<"<="<<_lastSentTimetag);
     
     // Update the last sent timetag:
@@ -206,20 +219,22 @@ public:
   {
     int nsym = ArraySize(_inputs);
     string symbol;
-    datetime timetag = 0;
+    datetime timetag = time;
 
     ArrayResize( cvals, nsym+2 );
+
+    logDEBUG("Getting valid sample at time "<< (int)time)
 
     for(int i =0; i<nsym; ++i)
     {
       symbol = _inputs[i];
       MqlRates rates[];
 
-      int len = CopyRates(symbol,PERIOD_M1,time,1,rates);
+      int len = CopyRates(symbol,PERIOD_M1,timetag,1,rates);
       while(len<0)
       {
         logDEBUG("Downloading data for "<<symbol<<"...")
-        len = CopyRates(symbol,PERIOD_M1,time,1,rates);
+        len = CopyRates(symbol,PERIOD_M1,timetag,1,rates);
         Sleep(10);
       }
 
@@ -315,7 +330,7 @@ public:
 
     for(int i=0;i<num;++i) {
       // try to get a valid samples:
-      while(!getValidSample(ctime,temp)) {
+      while(!nvGetValidSample(ctime,temp,_inputs)) {
         logDEBUG("Looking for valid sample at: "<<ctime)
         if((time-ctime) > (4*3600*24)) {
           logWARN("Detected too large gap in training data: discarding pre-training.");

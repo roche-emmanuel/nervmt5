@@ -32,12 +32,12 @@ public:
    bool              IsSorted(void)          const { return(m_data_sort);  }
    int               SortMode(void)          const { return(m_sort_mode);  }
    //--- method of identifying the object
-   virtual int       Type(void) const { return(0x7779); }
+   virtual int       Type(void)              const { return(0x7779);       }
    //--- methods for working with files
    virtual bool      Save(const int file_handle);
    virtual bool      Load(const int file_handle);
    //--- method of creating an element of the list
-   virtual CObject  *CreateElement(void) { return(NULL); }
+   virtual CObject  *CreateElement(void)           { return(NULL);         }
    //--- methods of filling the list
    int               Add(CObject *new_node);
    int               Insert(CObject *new_node,int index);
@@ -201,10 +201,8 @@ int CList::Insert(CObject *new_node,int index)
          return(Add(new_node));
      }
    else
-     {
       if(GetNodeAtIndex(index)==NULL)
          return(Add(new_node));
-     }
 //--- no need to check m_curr_node
    tmp_node=m_curr_node.Prev();
    new_node.Prev(tmp_node);

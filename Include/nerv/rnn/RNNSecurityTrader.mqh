@@ -1,6 +1,6 @@
 #include <nerv/core.mqh>
 
-#include <nerv/trading/TraderBase.mqh>
+#include <nerv/rnn/TraderBase.mqh>
 #include <nerv/rnn/PredictionSignalFile.mqh>
 #include <nerv/rnn/RemoteSignal.mqh>
 #include <nerv/math.mqh>
@@ -11,7 +11,7 @@ Class: nvRNNSecurityTrader
 
 Base class representing a trader 
 */
-class nvRNNSecurityTrader : public nvTraderBase
+class nvSecurityTrader : public nvTraderBase
 {
 protected:
   // Last update time value, used to keep track
@@ -44,9 +44,10 @@ protected:
   // True if current position is a buy:
   bool _isBuy;
 
-  // Random generator:
-  SimpleRNG rnd;
+  // True if the current position has locked profit.
+  bool _profitable;
 
+  string _symbol;  
 public:
   /*
     Class constructor.
@@ -55,6 +56,8 @@ public:
     : _security(symbol)
   {
     logDEBUG("Creating Security Trader for "<<symbol)
+
+    _symbol = symbol;
 
     // Add this symbol as input:
     addInputSymbol(symbol);
@@ -71,8 +74,8 @@ public:
     // 1% of risk:
     _riskLevel = 0.01;
 
-    // rnd.SetSeedFromSystemTime();
-    rnd.SetSeed(123);
+    _isBuy = false;
+    _profitable = false;
   }
 
   /*
@@ -137,9 +140,9 @@ public:
   
   Add a predictor from a file
   */
-  void addPredictor(string file)
+  void addPredictor(string file, int minId = -1, int maxId = -1)
   {
-    nvPredictionSignal* pred = new nvPredictionSignalFile(file); //"eval_results_v36.csv"
+    nvPredictionSignal* pred = new nvPredictionSignalFile(file,minId,maxId); //"eval_results_v36.csv"
 
     // append to the list:
     nvAppendArrayElement(_predictors,pred);
@@ -187,7 +190,7 @@ public:
   Method called to update the state of this trader 
   normally once per minute
   */
-  void update(datetime ctime)
+  virtual void update(datetime ctime)
   {
     if(_lastUpdateTime>=ctime)
       return; // Nothing to process.
@@ -207,7 +210,7 @@ public:
     // going in the same direction as the previous entry signal
     // we just close the position. Otherwise, we let it running
     // with the current trailing stop lost:
-    // if(MathAbs(pred)<=_entryThreshold || pred *_lastEntrySignal <= 0.0)
+    // if(MathAbs(pred)>_entryThreshold || pred *_lastEntrySignal <= 0.0)
     // {
     //   closePosition(_security);
     // }
@@ -254,6 +257,9 @@ public:
     // Send the order:
     int otype = signal>0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
     sendDealOrder(_security, otype, lot, 0.0, sl, tp);
+
+    // Initialy not profitable.
+    _profitable = false;
   }
   
   /*
@@ -290,11 +296,11 @@ public:
     // We should not allow the trader to enter a deal with too big lot size,
     // otherwise, we could soon not be able to trade anymore.
     // So we should also apply the risk level trader weight and confidence level on this max lot size:
-    if (lotsize>5.0)
-    {
-      logDEBUG("Clamping lot size to 5.0")
-      lotsize = 5.0;
-    }
+    // if (lotsize>5.0)
+    // {
+    //   logDEBUG("Clamping lot size to 5.0")
+    //   lotsize = 5.0;
+    // }
 
     // Compute the new margin level:
     // double marginLevel = lotsize>0.0 ? 100.0*(equity+dealEquity)/(currentMargin+dealMargin) : 0.0;
@@ -309,17 +315,22 @@ public:
     return lotsize;
   }
 
+  virtual double getTrailDelta(MqlTick& last_tick)
+  {
+    return last_tick.ask - last_tick.bid;
+  }
+
+  virtual void checkPosition()
+  {
+    // No op.
+  }
+
   void onTick()
   {
     if(!hasPosition(_security))
       return; // nothing to do.
 
-    // We close the position if the equity becomes too low:
-    double eq = nvGetEquity();
-    double balance = nvGetBalance();
-    if(eq/balance < 0.94) {
-      closePosition(_security);
-    }
+    checkPosition();
 
     if(!hasPosition(_security))
       return; // nothing to do.
@@ -340,14 +351,20 @@ public:
     double threshold = 0.0; //3*spread;
     double delta = 1*spread;
 
+    double trail = getTrailDelta(last_tick);
+
+    if(trail<0.0)
+      return; // Nothing to trail.
+
     if(_isBuy)
     {
       // We are in a long position:
       // secure the gain if the current values are high enough:
       double diff = last_tick.bid - _openPrice;
-      double nsl = last_tick.bid - delta;
-      if(diff>threshold && nsl>sl) {
+      double nsl = last_tick.bid - trail;
+      if(diff>0.0 && nsl>sl) {
         updateSLTP(_security,nsl);
+        _profitable = true;
       }
       // if(diff < -maxLost*spread) 
       // {
@@ -356,9 +373,10 @@ public:
     }
     else {
       double diff = _openPrice - last_tick.ask;
-      double nsl = last_tick.bid + delta;
-      if(diff>threshold && (nsl<sl || sl==0.0)) {
+      double nsl = last_tick.bid + trail;
+      if(diff>0.0 && (nsl<sl || sl==0.0)) {
         updateSLTP(_security,nsl);
+        _profitable = true;
       }
       // if(diff < -maxLost*spread) 
       // {

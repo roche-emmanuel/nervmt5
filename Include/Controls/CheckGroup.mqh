@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                   CheckGroup.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndClient.mqh"
@@ -57,7 +57,7 @@ protected:
    virtual bool      OnVScrollHide(void);
    virtual bool      OnScrollLineDown(void);
    virtual bool      OnScrollLineUp(void);
-   virtual bool      OnChangeItem(const int index);
+   virtual bool      OnChangeItem(const int row_index);
    //--- redraw
    bool              Redraw(void);
    bool              RowState(const int index,const bool select);
@@ -215,7 +215,17 @@ bool CCheckGroup::Check(const int idx,const int value)
    if(idx>=m_values.Total())
       return(false);
 //---
-   return(m_states.Update(idx,value) && Redraw());
+   bool res=(m_states.Update(idx,value) && Redraw());
+//--- change value
+   if(res && idx<64)
+     {
+      if(m_rows[idx].Checked())
+         Value(m_value|m_values.At(idx));
+      else
+         Value(m_value&(~m_values.At(idx)));
+     }
+//---
+   return(res);
   }
 //+------------------------------------------------------------------+
 //| Makes the group visible                                          |
@@ -348,19 +358,19 @@ bool CCheckGroup::OnScrollLineDown(void)
 //+------------------------------------------------------------------+
 //| Handler of changing a "row" state                                |
 //+------------------------------------------------------------------+
-bool CCheckGroup::OnChangeItem(const int index)
+bool CCheckGroup::OnChangeItem(const int row_index)
   {
 //--- change value
-   m_states.Update(index+m_offset,m_rows[index].Checked());
-   if(index<=64)
+   m_states.Update(row_index+m_offset,m_rows[row_index].Checked());
+   if(row_index+m_offset<64)
      {
-      if(m_rows[index].Checked())
-         Value(m_value|m_values.At(index+m_offset));
+      if(m_rows[row_index].Checked())
+         Value(m_value|m_values.At(row_index+m_offset));
       else
-         Value(m_value&(~m_values.At(index+m_offset)));
+         Value(m_value&(~m_values.At(row_index+m_offset)));
      }
 //--- send notification
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CHANGE,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_CHANGE,m_id,0.0,m_name);
 //--- handled
    return(true);
   }

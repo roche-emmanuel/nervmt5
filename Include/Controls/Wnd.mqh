@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                          Wnd.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Rect.mqh"
@@ -190,7 +190,7 @@ bool CWnd::OnMouseEvent(const int x,const int y,const int flags)
          if(!IS_ACTIVE)
            {
             //--- generate event
-            EventChartCustom(CONTROLS_SELF_MESSAGE,ON_MOUSE_FOCUS_SET,m_id,0.0,m_name);
+            EventChartCustom(m_chart_id,ON_MOUSE_FOCUS_SET,m_id,0.0,m_name);
             //--- activate
             return(Activate());
            }
@@ -203,7 +203,7 @@ bool CWnd::OnMouseEvent(const int x,const int y,const int flags)
             return(OnDragProcess(x,y));
          if(IS_CLICKS_BY_PRESS)
            {
-            EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CLICK,m_id,0.0,m_name);
+            EventChartCustom(m_chart_id,ON_CLICK,m_id,0.0,m_name);
             //--- handled
             return(true);
            }
@@ -228,7 +228,7 @@ bool CWnd::OnMouseEvent(const int x,const int y,const int flags)
          //--- activate control and save state to the member
          m_mouse_flags=flags;
          //--- generate event
-         EventChartCustom(CONTROLS_SELF_MESSAGE,ON_MOUSE_FOCUS_SET,m_id,0.0,m_name);
+         EventChartCustom(m_chart_id,ON_MOUSE_FOCUS_SET,m_id,0.0,m_name);
          //--- activate
          return(Activate());
         }
@@ -568,7 +568,7 @@ bool CWnd::MouseFocusKill(const long id)
 bool CWnd::BringToTop(void)
   {
 //--- generate event
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_BRING_TO_TOP,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_BRING_TO_TOP,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -578,7 +578,7 @@ bool CWnd::BringToTop(void)
 bool CWnd::OnClick(void)
   {
 //--- send notification
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CLICK,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_CLICK,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -588,7 +588,7 @@ bool CWnd::OnClick(void)
 bool CWnd::OnDblClick(void)
   {
 //--- send notification
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_DBL_CLICK,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_DBL_CLICK,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -639,7 +639,7 @@ bool CWnd::OnDragStart(void)
 //--- disable scrolling of chart with mouse
    ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,false);
 //--- generate event
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_DRAG_START,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_DRAG_START,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -665,7 +665,7 @@ bool CWnd::OnDragEnd(void)
 //--- enable scrolling of chart with mouse
    ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,true);
 //--- generate event
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_DRAG_END,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_DRAG_END,m_id,0.0,m_name);
 //--- handled
    return(true);
   }
@@ -748,7 +748,7 @@ bool CDragWnd::OnDragProcess(const int x,const int y)
    m_mouse_x=x;
    m_mouse_y=y;
 //--- generate event
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_DRAG_PROCESS,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_DRAG_PROCESS,m_id,0.0,m_name);
 //--- handled
    return(true);
   }

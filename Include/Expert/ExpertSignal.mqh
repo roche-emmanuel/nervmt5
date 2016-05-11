@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                 ExpertSignal.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "ExpertBase.mqh"
@@ -33,6 +33,7 @@ protected:
    double            m_stop_level;     // level of placing of the "stop loss" order relatively to the open price
    double            m_take_level;     // level of placing of the "take profit" order relatively to the open price
    int               m_expiration;     // time of expiration of a pending order in bars
+   double            m_direction;      // weighted direction
 
 public:
                      CExpertSignal(void);
@@ -82,6 +83,7 @@ public:
    virtual int       LongCondition(void)                                      { return(0);     }
    virtual int       ShortCondition(void)                                     { return(0);     }
    virtual double    Direction(void);
+   void              SetDirection(void)                             { m_direction=Direction(); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -97,7 +99,8 @@ CExpertSignal::CExpertSignal(void) : m_base_price(0.0),
                                      m_price_level(0.0),
                                      m_stop_level(0.0),
                                      m_take_level(0.0),
-                                     m_expiration(0)
+                                     m_expiration(0),
+                                     m_direction(EMPTY_VALUE)
   {
   }
 //+------------------------------------------------------------------+
@@ -224,12 +227,11 @@ bool CExpertSignal::AddFilter(CExpertSignal *filter)
 bool CExpertSignal::CheckOpenLong(double &price,double &sl,double &tp,datetime &expiration)
   {
    bool   result   =false;
-   double direction=Direction();
 //--- the "prohibition" signal
-   if(direction==EMPTY_VALUE)
+   if(m_direction==EMPTY_VALUE)
       return(false);
 //--- check of exceeding the threshold value
-   if(direction>=m_threshold_open)
+   if(m_direction>=m_threshold_open)
      {
       //--- there's a signal
       result=true;
@@ -248,12 +250,11 @@ bool CExpertSignal::CheckOpenLong(double &price,double &sl,double &tp,datetime &
 bool CExpertSignal::CheckOpenShort(double &price,double &sl,double &tp,datetime &expiration)
   {
    bool   result   =false;
-   double direction=Direction();
 //--- the "prohibition" signal
-   if(direction==EMPTY_VALUE)
+   if(m_direction==EMPTY_VALUE)
       return(false);
 //--- check of exceeding the threshold value
-   if(-direction>=m_threshold_open)
+   if(-m_direction>=m_threshold_open)
      {
       //--- there's a signal
       result=true;
@@ -314,12 +315,11 @@ bool CExpertSignal::OpenShortParams(double &price,double &sl,double &tp,datetime
 bool CExpertSignal::CheckCloseLong(double &price)
   {
    bool   result   =false;
-   double direction=Direction();
 //--- the "prohibition" signal
-   if(direction==EMPTY_VALUE)
+   if(m_direction==EMPTY_VALUE)
       return(false);
 //--- check of exceeding the threshold value
-   if(-direction>=m_threshold_close)
+   if(-m_direction>=m_threshold_close)
      {
       //--- there's a signal
       result=true;
@@ -338,12 +338,11 @@ bool CExpertSignal::CheckCloseLong(double &price)
 bool CExpertSignal::CheckCloseShort(double &price)
   {
    bool   result   =false;
-   double direction=Direction();
 //--- the "prohibition" signal
-   if(direction==EMPTY_VALUE)
+   if(m_direction==EMPTY_VALUE)
       return(false);
 //--- check of exceeding the threshold value
-   if(direction>=m_threshold_close)
+   if(m_direction>=m_threshold_close)
      {
       //--- there's a signal
       result=true;

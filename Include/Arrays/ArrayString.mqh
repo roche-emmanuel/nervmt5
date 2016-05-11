@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                  ArrayString.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Array.mqh"
@@ -45,8 +45,8 @@ public:
    bool              Delete(const int index);
    bool              DeleteRange(int from,int to);
    //--- methods for comparing arrays
-   bool              CompareArray(const string &Array[]) const;
-   bool              CompareArray(const CArrayString *Array) const;
+   bool              CompareArray(const string &array[]) const;
+   bool              CompareArray(const CArrayString *array) const;
    //--- methods for working with the sorted array
    bool              InsertSort(const string element);
    int               Search(const string element) const;
@@ -99,17 +99,13 @@ int CArrayString::MemMove(const int dest,const int src,const int count)
       return(dest);
 //--- copy
    if(dest<src)
-     {
       //--- copy from left to right
       for(i=0;i<count;i++)
          m_data[dest+i]=m_data[src+i];
-     }
    else
-     {
       //--- copy from right to left
       for(i=count-1;i>=0;i--)
          m_data[dest+i]=m_data[src+i];
-     }
 //--- successful
    return(dest);
   }
@@ -424,13 +420,13 @@ bool CArrayString::DeleteRange(int from,int to)
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayString::CompareArray(const string &Array[]) const
+bool CArrayString::CompareArray(const string &array[]) const
   {
 //--- compare
-   if(m_data_total!=ArraySize(Array))
+   if(m_data_total!=ArraySize(array))
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i]!=Array[i])
+      if(m_data[i]!=array[i])
          return(false);
 //--- equal
    return(true);
@@ -438,16 +434,16 @@ bool CArrayString::CompareArray(const string &Array[]) const
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayString::CompareArray(const CArrayString *Array) const
+bool CArrayString::CompareArray(const CArrayString *array) const
   {
 //--- check
-   if(!CheckPointer(Array))
+   if(!CheckPointer(array))
       return(false);
 //--- compare
-   if(m_data_total!=Array.m_data_total)
+   if(m_data_total!=array.m_data_total)
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i]!=Array.m_data[i])
+      if(m_data[i]!=array.m_data[i])
          return(false);
 //--- equal
    return(true);
@@ -632,13 +628,17 @@ int CArrayString::SearchLess(const string element) const
 //+------------------------------------------------------------------+
 int CArrayString::SearchGreatOrEqual(const string element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos<m_data_total;pos++)
-      if(m_data[pos]>=element)
-         return(pos);
+   if((pos=SearchGreat(element))!=-1)
+     {
+      if(pos!=0 && m_data[pos-1]==element)
+         return(pos-1);
+      return(pos);
+     }
 //--- not found
    return(-1);
   }
@@ -648,13 +648,17 @@ int CArrayString::SearchGreatOrEqual(const string element) const
 //+------------------------------------------------------------------+
 int CArrayString::SearchLessOrEqual(const string element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos>=0;pos--)
-      if(m_data[pos]<=element)
-         return(pos);
+   if((pos=SearchLess(element))!=-1)
+     {
+      if(pos!=m_data_total-1 && m_data[pos+1]==element)
+         return(pos+1);
+      return(pos);
+     }
 //--- not found
    return(-1);
   }

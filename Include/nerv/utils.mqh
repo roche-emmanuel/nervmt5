@@ -745,3 +745,93 @@ double nvNormalizeVolume(double lot, string symbol)
   return MathMin(maxlot,lot);
 }
 
+// Method used to retrieve a valid row sample for a given list of symbols:
+bool nvGetValidSample(datetime& time, double &cvals[], string &inputs[])
+{
+  int nsym = ArraySize(inputs);
+  string symbol;
+  datetime timetag = time;
+
+  ArrayResize( cvals, nsym+2 );
+
+  logDEBUG("Getting valid sample at time "<< (int)time)
+
+  for(int i =0; i<nsym; ++i)
+  {
+    symbol = inputs[i];
+    MqlRates rates[];
+
+    int len = CopyRates(symbol,PERIOD_M1,timetag,1,rates);
+    while(len<0)
+    {
+      logDEBUG("Downloading data for "<<symbol<<"...")
+      len = CopyRates(symbol,PERIOD_M1,timetag,1,rates);
+      Sleep(10);
+    }
+
+    CHECK_RET(len==1,false,"Invalid result for CopyRates : "<<len)
+
+    if(i==0) {
+      // Initialize the timetag value:
+      timetag = rates[0].time;
+      logDEBUG("At "<<time<<": Writing previous bar timetag="<<timetag)
+    }
+    else {
+      // Check if we still match the initial timetag, and if not, consider this as an
+      // invalid sample:
+      if(timetag!=rates[0].time) {
+        logWARN("At " << time <<": detected mismatch in sample timetags: "<<timetag <<"!="<<rates[0].time<<" for symbol "<<symbol);
+        // We will not send that sample row:
+        // but we anyway update the lastest available timetag:
+        time = MathMin(timetag,rates[0].time);
+        return false;
+      }
+    }
+
+    // Write the close price for this symbol:
+    cvals[2+i] = rates[0].close;
+  }
+
+  // Update the current time value with the retrieved timetag:
+  time = timetag;
+
+  // If we reached this point it meansthe sample is correct,
+  // Now we need to use the timetag to produce the weektime and the daytime:
+  MqlDateTime dts;
+  TimeToStruct(timetag,dts);
+
+  // If we are on sunday, we don't send the data... because the weektime would be
+  // out of range otherwise:
+  if(dts.day_of_week==0) {
+    logDEBUG("Discarding sample from sunday with timetag="<<timetag);
+    // Apply an offset on the time to ensure we don't finish in a deadlock:
+    // We want to get to the end of the previous friday;
+    // So we need to remove the following number of seconds:
+    int offset = 3600*24+dts.hour*3600+dts.min*60+dts.sec + 1; // + 1 to ensure we don't end on saturday!
+    time -= offset;
+
+    logDEBUG("Applying offset: "<<time)
+    return false;
+  }
+
+  // Ensure that we are not on saturday, as this is not expected:
+  CHECK_RET(dts.day_of_week!=6,false,"Unexpected day of week in timetag="<<timetag);
+
+  // Now continue with the feature generation:
+  double daylen = 24*60;
+  double weeklen = 5*daylen;
+  double daytime = dts.hour*60+dts.min;
+  double weektime = (dts.day_of_week-1)*daylen + daytime;
+
+  // note: we should not perform normalization ourself, this will be
+  // done by the predictor:
+  // normalize:
+  // daytime /= daylen;
+  // weektime /= weeklen;
+
+  // Fill the feature buffer:
+  cvals[0] = weektime;
+  cvals[1] = daytime;
+
+  return true;
+}

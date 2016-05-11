@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                   ArrayFloat.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Array.mqh"
@@ -42,9 +42,6 @@ public:
    //--- method of access to the array
    float             At(const int index) const;
    float operator[](const int index) const { return(At(index)); }
-   //--- methods of searching for minimum and maximum
-   int               Minimum(const int start,const int count) const { return(Minimum(m_data,start,count)); }
-   int               Maximum(const int start,const int count) const { return(Maximum(m_data,start,count)); }
    //--- methods of changing
    bool              Update(const int index,const float element);
    bool              Shift(const int index,const int shift);
@@ -52,8 +49,8 @@ public:
    bool              Delete(const int index);
    bool              DeleteRange(int from,int to);
    //--- methods for comparing arrays
-   bool              CompareArray(const float &Array[]) const;
-   bool              CompareArray(const CArrayFloat *Array) const;
+   bool              CompareArray(const float &array[]) const;
+   bool              CompareArray(const CArrayFloat *array) const;
    //--- methods for working with the sorted array
    bool              InsertSort(const float element);
    int               Search(const float element) const;
@@ -106,17 +103,13 @@ int CArrayFloat::MemMove(const int dest,const int src,const int count)
       return(dest);
 //--- copy
    if(dest<src)
-     {
       //--- copy from left to right
       for(i=0;i<count;i++)
          m_data[dest+i]=m_data[src+i];
-     }
    else
-     {
       //--- copy from right to left
       for(i=count-1;i>=0;i--)
          m_data[dest+i]=m_data[src+i];
-     }
 //--- successful
    return(dest);
   }
@@ -431,13 +424,13 @@ bool CArrayFloat::DeleteRange(int from,int to)
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayFloat::CompareArray(const float &Array[]) const
+bool CArrayFloat::CompareArray(const float &array[]) const
   {
 //--- compare
-   if(m_data_total!=ArraySize(Array))
+   if(m_data_total!=ArraySize(array))
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i]!=Array[i])
+      if(m_data[i]!=array[i])
          return(false);
 //--- equal
    return(true);
@@ -445,15 +438,15 @@ bool CArrayFloat::CompareArray(const float &Array[]) const
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayFloat::CompareArray(const CArrayFloat *Array) const
+bool CArrayFloat::CompareArray(const CArrayFloat *array) const
   {
 //--- check
-   if(!CheckPointer(Array)) return(false);
+   if(!CheckPointer(array)) return(false);
 //--- compare
-   if(m_data_total!=Array.m_data_total)
+   if(m_data_total!=array.m_data_total)
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i]!=Array.m_data[i])
+      if(m_data[i]!=array.m_data[i])
          return(false);
 //--- equal
    return(true);
@@ -641,13 +634,18 @@ int CArrayFloat::SearchLess(const float element) const
 //+------------------------------------------------------------------+
 int CArrayFloat::SearchGreatOrEqual(const float element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos<m_data_total;pos++)
-      if(m_data[pos]>=element)
-         return(pos);
+   if((pos=SearchGreat(element))!=-1)
+     {
+      //--- compare with delta
+      if(pos!=0 && MathAbs(m_data[pos-1]-element)<=m_delta)
+         return(pos-1);
+      return(pos);
+     }
 //--- not found
    return(-1);
   }
@@ -657,13 +655,18 @@ int CArrayFloat::SearchGreatOrEqual(const float element) const
 //+------------------------------------------------------------------+
 int CArrayFloat::SearchLessOrEqual(const float element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos>=0;pos--)
-      if(m_data[pos]<=element)
-         return(pos);
+   if((pos=SearchLess(element))!=-1)
+     {
+      //--- compare with delta
+      if(pos!=m_data_total-1 && MathAbs(m_data[pos+1]-element)<=m_delta)
+         return(pos+1);
+      return(pos);
+     }
 //--- not found
    return(-1);
   }

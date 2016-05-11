@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                    OrderInfo.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -18,6 +18,7 @@ protected:
    ENUM_ORDER_STATE  m_state;
    datetime          m_expiration;
    double            m_volume_curr;
+   double            m_price_open;
    double            m_stop_loss;
    double            m_take_profit;
 
@@ -80,6 +81,7 @@ COrderInfo::COrderInfo(void) : m_ticket(ULONG_MAX),
                                m_state(WRONG_VALUE),
                                m_expiration(0),
                                m_volume_curr(0.0),
+                               m_price_open(0.0),
                                m_stop_loss(0.0),
                                m_take_profit(0.0)
   {
@@ -201,7 +203,7 @@ long COrderInfo::Magic(void) const
 //+------------------------------------------------------------------+
 long COrderInfo::PositionId(void) const
   {
-   return(HistoryOrderGetInteger(m_ticket,ORDER_POSITION_ID));
+   return(OrderGetInteger(ORDER_POSITION_ID));
   }
 //+------------------------------------------------------------------+
 //| Get the property value "ORDER_VOLUME_INITIAL"                    |
@@ -459,9 +461,13 @@ bool COrderInfo::SelectByIndex(const int index)
   {
    ulong ticket=OrderGetTicket(index);
    if(ticket==0)
+     {
+      m_ticket=ULONG_MAX;
       return(false);
+     }
+   m_ticket=ticket;
 //---
-   return(Select(ticket));
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Stored order's current state                                     |
@@ -472,6 +478,7 @@ void COrderInfo::StoreState(void)
    m_state      =State();
    m_expiration =TimeExpiration();
    m_volume_curr=VolumeCurrent();
+   m_price_open =PriceOpen();
    m_stop_loss  =StopLoss();
    m_take_profit=TakeProfit();
   }
@@ -480,10 +487,12 @@ void COrderInfo::StoreState(void)
 //+------------------------------------------------------------------+
 bool COrderInfo::CheckState(void)
   {
-   if(m_type==OrderType() && m_state==State() && 
+   if(m_type==OrderType()             &&
+      m_state==State()                && 
       m_expiration ==TimeExpiration() &&
-      m_volume_curr==VolumeCurrent() &&
-      m_stop_loss==StopLoss() && 
+      m_volume_curr==VolumeCurrent()  &&
+      m_price_open==PriceOpen()       &&
+      m_stop_loss==StopLoss()         && 
       m_take_profit==TakeProfit())
       return(false);
 //---

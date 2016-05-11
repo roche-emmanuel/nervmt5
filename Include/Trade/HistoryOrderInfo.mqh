@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                             HistoryOrderInfo.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -85,7 +85,7 @@ datetime CHistoryOrderInfo::TimeSetup(void) const
 //+------------------------------------------------------------------+
 ulong CHistoryOrderInfo::TimeSetupMsc(void) const
   {
-   return(OrderGetInteger(ORDER_TIME_SETUP_MSC));
+   return(HistoryOrderGetInteger(m_ticket,ORDER_TIME_SETUP_MSC));
   }
 //+------------------------------------------------------------------+
 //| Get the property value "ORDER_TIME_DONE"                         |
@@ -99,7 +99,7 @@ datetime CHistoryOrderInfo::TimeDone(void) const
 //+------------------------------------------------------------------+
 ulong CHistoryOrderInfo::TimeDoneMsc(void) const
   {
-   return(OrderGetInteger(ORDER_TIME_DONE_MSC));
+   return(HistoryOrderGetInteger(m_ticket,ORDER_TIME_DONE_MSC));
   }
 //+------------------------------------------------------------------+
 //| Get the property value "ORDER_TYPE"                              |

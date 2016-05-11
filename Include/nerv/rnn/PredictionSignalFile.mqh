@@ -18,7 +18,7 @@ public:
   /*
     Class constructor.
   */
-  nvPredictionSignalFile(string filename)
+  nvPredictionSignalFile(string filename, int minId = -1, int maxId = -1)
   {
     logDEBUG("Reading predictions from file: " << filename)
     int handle = FileOpen(filename,FILE_READ | FILE_CSV | FILE_ANSI);
@@ -47,11 +47,17 @@ public:
       int len = StringSplit(line,u_sep,elems); 
       CHECK(len==4,"Invalid number of elements!");
 
-      // We only keep the time tag and the prediction:
-      int ival = (int)StringToInteger(elems[0]);
-      nvAppendArrayElement(_timetags,ival);
-      double dval = StringToDouble(elems[2]);
-      nvAppendArrayElement(_predictions,dval);
+      // Check the id:
+      int idx = (int)StringToInteger(elems[1]);
+
+      if((minId==-1 || idx >= minId) && (maxId==-1 || idx <= maxId))
+      {
+        // We only keep the time tag and the prediction:
+        int ival = (int)StringToInteger(elems[0]);
+        nvAppendArrayElement(_timetags,ival);
+        double dval = StringToDouble(elems[2]);
+        nvAppendArrayElement(_predictions,dval);        
+      }
     }
     
     //--- close the file

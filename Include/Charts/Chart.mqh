@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                       Chart.mqh  |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -171,7 +171,10 @@ CChart::~CChart(void)
 //+------------------------------------------------------------------+
 long CChart::Open(const string symbol_name,const ENUM_TIMEFRAMES timeframe)
   {
-   return(m_chart_id=ChartOpen(symbol_name,timeframe));
+   m_chart_id=ChartOpen(symbol_name,timeframe);
+   if(m_chart_id==0)
+      m_chart_id=-1;
+   return(m_chart_id);
   }
 //+------------------------------------------------------------------+
 //| Get the type of representation of chart                          |

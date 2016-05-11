@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                        Trade.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -33,6 +33,7 @@ protected:
    ulong             m_magic;           // expert magic number
    ulong             m_deviation;       // deviation default
    ENUM_ORDER_TYPE_FILLING m_type_filling;
+   ENUM_ACCOUNT_MARGIN_MODE m_margin_mode;
    //---
    ENUM_LOG_LEVELS   m_log_level;
 
@@ -46,6 +47,8 @@ public:
    string            RequestActionDescription(void)        const;
    ulong             RequestMagic(void)                    const { return(m_request.magic);             }
    ulong             RequestOrder(void)                    const { return(m_request.order);             }
+   ulong             RequestPosition(void)                 const { return(m_request.position);          }
+   ulong             RequestPositionBy(void)               const { return(m_request.position_by);       }
    string            RequestSymbol(void)                   const { return(m_request.symbol);            }
    double            RequestVolume(void)                   const { return(m_request.volume);            }
    double            RequestPrice(void)                    const { return(m_request.price);             }
@@ -88,11 +91,15 @@ public:
    void              SetExpertMagicNumber(const ulong magic)     { m_magic=magic;                       }
    void              SetDeviationInPoints(const ulong deviation) { m_deviation=deviation;               }
    void              SetTypeFilling(const ENUM_ORDER_TYPE_FILLING filling) { m_type_filling=filling;    }
+   void              SetMarginMode(void) { m_margin_mode=(ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE); }
    //--- methods for working with positions
    bool              PositionOpen(const string symbol,const ENUM_ORDER_TYPE order_type,const double volume,
                                   const double price,const double sl,const double tp,const string comment="");
    bool              PositionModify(const string symbol,const double sl,const double tp);
+   bool              PositionModify(const ulong ticket,const double sl,const double tp);
    bool              PositionClose(const string symbol,const ulong deviation=ULONG_MAX);
+   bool              PositionClose(const ulong ticket,const ulong deviation=ULONG_MAX);
+   bool              PositionCloseBy(const ulong ticket,const ulong ticket_by);
    //--- methods for working with pending orders
    bool              OrderOpen(const string symbol,const ENUM_ORDER_TYPE order_type,const double volume,
                                const double limit_price,const double price,const double sl,const double tp,
@@ -113,6 +120,7 @@ public:
    bool              SellStop(const double volume,const double price,const string symbol=NULL,const double sl=0.0,const double tp=0.0,
                               const ENUM_ORDER_TYPE_TIME type_time=ORDER_TIME_GTC,const datetime expiration=0,const string comment="");
    //--- method check
+   virtual double    CheckVolume(const string symbol,double volume,double price,ENUM_ORDER_TYPE order_type);
    virtual bool      OrderCheck(const MqlTradeRequest &request,MqlTradeCheckResult &check_result);
    virtual bool      OrderSend(const MqlTradeRequest &request,MqlTradeResult &result);
    //--- info methods
@@ -136,6 +144,9 @@ protected:
    bool              OrderTypeCheck(const string symbol);
    void              ClearStructures(void);
    bool              IsStopped(const string function);
+   bool              IsHedging(void) const { return(m_margin_mode==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING); }
+   //--- position select depending on netting or hedging
+   bool              SelectPosition(const string symbol);
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -147,6 +158,7 @@ CTrade::CTrade(void) : m_async_mode(false),
                        m_log_level(LOG_LEVEL_ERRORS)
 
   {
+   SetMarginMode();
 //--- initialize protected data
    ClearStructures();
 //--- check programm mode
@@ -181,6 +193,8 @@ void CTrade::Request(MqlTradeRequest &request) const
    request.type_time   =m_request.type_time;
    request.expiration  =m_request.expiration;
    request.comment     =m_request.comment;
+   request.position    =m_request.position;
+   request.position_by =m_request.position_by;
   }
 //+------------------------------------------------------------------+
 //| Get the trade action as string                                   |
@@ -299,15 +313,15 @@ bool CTrade::PositionOpen(const string symbol,const ENUM_ORDER_TYPE order_type,c
       return(false);
      }
 //--- setting request
-   m_request.action      =TRADE_ACTION_DEAL;
-   m_request.symbol      =symbol;
-   m_request.magic       =m_magic;
-   m_request.volume      =volume;
-   m_request.type        =order_type;
-   m_request.price       =price;
-   m_request.sl          =sl;
-   m_request.tp          =tp;
-   m_request.deviation   =m_deviation;
+   m_request.action   =TRADE_ACTION_DEAL;
+   m_request.symbol   =symbol;
+   m_request.magic    =m_magic;
+   m_request.volume   =volume;
+   m_request.type     =order_type;
+   m_request.price    =price;
+   m_request.sl       =sl;
+   m_request.tp       =tp;
+   m_request.deviation=m_deviation;
 //--- check order type
    if(!OrderTypeCheck(symbol))
       return(false);
@@ -326,14 +340,41 @@ bool CTrade::PositionModify(const string symbol,const double sl,const double tp)
 //--- check stopped
    if(IsStopped(__FUNCTION__))
       return(false);
+//--- check position existence
+   if(!SelectPosition(symbol))
+      return(false);
 //--- clean
    ClearStructures();
 //--- setting request
-   m_request.action=TRADE_ACTION_SLTP;
-   m_request.symbol=symbol;
-   m_request.magic =m_magic;
-   m_request.sl    =sl;
-   m_request.tp    =tp;
+   m_request.action  =TRADE_ACTION_SLTP;
+   m_request.symbol  =symbol;
+   m_request.magic   =m_magic;
+   m_request.sl      =sl;
+   m_request.tp      =tp;
+   m_request.position=PositionGetInteger(POSITION_TICKET);
+//--- action and return the result
+   return(OrderSend(m_request,m_result));
+  }
+//+------------------------------------------------------------------+
+//| Modify specified opened position                                 |
+//+------------------------------------------------------------------+
+bool CTrade::PositionModify(const ulong ticket,const double sl,const double tp)
+  {
+//--- check stopped
+   if(IsStopped(__FUNCTION__))
+      return(false);
+//--- check position existence
+   if(!PositionSelectByTicket(ticket))
+      return(false);
+//--- clean
+   ClearStructures();
+//--- setting request
+   m_request.action  =TRADE_ACTION_SLTP;
+   m_request.position=ticket;
+   m_request.symbol  =PositionGetString(POSITION_SYMBOL);
+   m_request.magic   =m_magic;
+   m_request.sl      =sl;
+   m_request.tp      =tp;
 //--- action and return the result
    return(OrderSend(m_request,m_result));
   }
@@ -342,9 +383,9 @@ bool CTrade::PositionModify(const string symbol,const double sl,const double tp)
 //+------------------------------------------------------------------+
 bool CTrade::PositionClose(const string symbol,const ulong deviation)
   {
-   bool   partial_close=false;
-   int    retry_count  =10;
-   uint   retcode      =TRADE_RETCODE_REJECT;
+   bool partial_close=false;
+   int  retry_count  =10;
+   uint retcode      =TRADE_RETCODE_REJECT;
 //--- check stopped
    if(IsStopped(__FUNCTION__))
       return(false);
@@ -353,7 +394,7 @@ bool CTrade::PositionClose(const string symbol,const ulong deviation)
    do
      {
       //--- check
-      if(PositionSelect(symbol))
+      if(SelectPosition(symbol))
         {
          if((ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
            {
@@ -375,14 +416,20 @@ bool CTrade::PositionClose(const string symbol,const ulong deviation)
          return(false);
         }
       //--- setting request
-      m_request.action      =TRADE_ACTION_DEAL;
-      m_request.symbol      =symbol;
-      m_request.magic       =m_magic;
-      m_request.deviation   =(deviation==ULONG_MAX) ? m_deviation : deviation;
+      m_request.action   =TRADE_ACTION_DEAL;
+      m_request.symbol   =symbol;
+      m_request.volume   =PositionGetDouble(POSITION_VOLUME);
+      m_request.magic    =m_magic;
+      m_request.deviation=(deviation==ULONG_MAX) ? m_deviation : deviation;
+      //--- hedging? just send order
+      if(IsHedging())
+        {
+         m_request.position=PositionGetInteger(POSITION_TICKET);
+         return(OrderSend(m_request,m_result));
+        }
       //--- check filling
       if(!FillingCheck(symbol))
          return(false);
-      m_request.volume=PositionGetDouble(POSITION_VOLUME);
       //--- check volume
       double max_volume=SymbolInfoDouble(symbol,SYMBOL_VOLUME_MAX);
       if(m_request.volume>max_volume)
@@ -412,6 +459,79 @@ bool CTrade::PositionClose(const string symbol,const ulong deviation)
    while(partial_close);
 //--- succeed
    return(true);
+  }
+//+------------------------------------------------------------------+
+//| Close specified opened position                                  |
+//+------------------------------------------------------------------+
+bool CTrade::PositionClose(const ulong ticket,const ulong deviation)
+  {
+//--- check stopped
+   if(IsStopped(__FUNCTION__))
+      return(false);
+//--- check position existence
+   if(!PositionSelectByTicket(ticket))
+      return(false);
+   string symbol=PositionGetString(POSITION_SYMBOL);
+//--- clean
+   ClearStructures();
+//--- check
+   if((ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE)==POSITION_TYPE_BUY)
+     {
+      //--- prepare request for close BUY position
+      m_request.type =ORDER_TYPE_SELL;
+      m_request.price=SymbolInfoDouble(symbol,SYMBOL_BID);
+     }
+   else
+     {
+      //--- prepare request for close SELL position
+      m_request.type =ORDER_TYPE_BUY;
+      m_request.price=SymbolInfoDouble(symbol,SYMBOL_ASK);
+     }
+//--- setting request
+   m_request.action   =TRADE_ACTION_DEAL;
+   m_request.position =ticket;
+   m_request.symbol   =symbol;
+   m_request.volume   =PositionGetDouble(POSITION_VOLUME);
+   m_request.magic    =m_magic;
+   m_request.deviation=(deviation==ULONG_MAX) ? m_deviation : deviation;
+//--- close position
+   PrintFormat("PositionClose #%I64d %s %.2f",ticket,EnumToString((ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE)),m_request.volume);
+   return(OrderSend(m_request,m_result));
+  }
+//+------------------------------------------------------------------+
+//| Close one position by other                                      |
+//+------------------------------------------------------------------+
+bool CTrade::PositionCloseBy(const ulong ticket,const ulong ticket_by)
+  {
+//--- check stopped
+   if(IsStopped(__FUNCTION__))
+      return(false);
+//--- check hedging mode
+   if(!IsHedging())
+      return(false);
+//--- check position existence
+   if(!PositionSelectByTicket(ticket))
+      return(false);
+   string symbol=PositionGetString(POSITION_SYMBOL);
+   ENUM_POSITION_TYPE type=(ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+   if(!PositionSelectByTicket(ticket_by))
+      return(false);
+   string symbol_by=PositionGetString(POSITION_SYMBOL);
+   ENUM_POSITION_TYPE type_by=(ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+//--- check positions
+   if(type==type_by)
+      return(false);
+   if(symbol!=symbol_by)
+      return(false);
+//--- clean
+   ClearStructures();
+//--- setting request
+   m_request.action     =TRADE_ACTION_CLOSE_BY;
+   m_request.position   =ticket;
+   m_request.position_by=ticket_by;
+   m_request.magic      =m_magic;
+//--- close position
+   return(OrderSend(m_request,m_result));
   }
 //+------------------------------------------------------------------+
 //| Installation pending order                                       |
@@ -535,7 +655,7 @@ void CTrade::PrintRequest(void) const
       return;
 //---
    string str;
-   printf("%s",FormatRequest(str,m_request));
+   PrintFormat("%s",FormatRequest(str,m_request));
   }
 //+------------------------------------------------------------------+
 //| Output full information of result to log                         |
@@ -546,7 +666,7 @@ void CTrade::PrintResult(void) const
       return;
 //---
    string str;
-   printf("%s",FormatRequestResult(str,m_request,m_result));
+   PrintFormat("%s",FormatRequestResult(str,m_request,m_result));
   }
 //+------------------------------------------------------------------+
 //| Clear structures m_request,m_result and m_check_result           |
@@ -565,7 +685,7 @@ bool CTrade::IsStopped(const string function)
    if(!IsStopped())
       return(false);
 //--- MQL5 program is stopped
-   printf("%s: MQL5 program is stopped. Trading is disabled",function);
+   PrintFormat("%s: MQL5 program is stopped. Trading is disabled",function);
    m_result.retcode=TRADE_RETCODE_CLIENT_DISABLES_AT;
    return(true);
   }
@@ -846,107 +966,146 @@ string CTrade::FormatRequest(string &str,const MqlTradeRequest &request) const
            {
             //--- request execution
             case SYMBOL_TRADE_EXECUTION_REQUEST:
-               str=StringFormat("request %s %s %s at %s",
-                                FormatOrderType(type,request.type),
-                                DoubleToString(request.volume,2),
-                                request.symbol,
-                                DoubleToString(request.price,digits));
-            //--- Is there SL or TP?
-            if(request.sl!=0.0)
-              {
-               tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
-               str+=tmp;
-              }
-            if(request.tp!=0.0)
-              {
-               tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
-               str+=tmp;
-              }
-            break;
+               if(IsHedging() && request.position!=0)
+                  str=StringFormat("request %s %s position #%I64u %s at %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.position,
+                                   request.symbol,
+                                   DoubleToString(request.price,digits));
+               else
+                  str=StringFormat("request %s %s %s at %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.symbol,
+                                   DoubleToString(request.price,digits));
+               //--- Is there SL or TP?
+               if(request.sl!=0.0)
+                 {
+                  tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
+                  str+=tmp;
+                 }
+               if(request.tp!=0.0)
+                 {
+                  tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
+                  str+=tmp;
+                 }
+               break;
             //--- instant execution
             case SYMBOL_TRADE_EXECUTION_INSTANT:
-               str=StringFormat("instant %s %s %s at %s",
-                                FormatOrderType(type,request.type),
-                                DoubleToString(request.volume,2),
-                                request.symbol,
-                                DoubleToString(request.price,digits));
-            //--- Is there SL or TP?
-            if(request.sl!=0.0)
-              {
-               tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
-               str+=tmp;
-              }
-            if(request.tp!=0.0)
-              {
-               tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
-               str+=tmp;
-              }
-            break;
+               if(IsHedging() && request.position!=0)
+                  str=StringFormat("instant %s %s position #%I64u %s at %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.position,
+                                   request.symbol,
+                                   DoubleToString(request.price,digits));
+               else
+                  str=StringFormat("instant %s %s %s at %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.symbol,
+                                   DoubleToString(request.price,digits));
+               //--- Is there SL or TP?
+               if(request.sl!=0.0)
+                 {
+                  tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
+                  str+=tmp;
+                 }
+               if(request.tp!=0.0)
+                 {
+                  tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
+                  str+=tmp;
+                 }
+               break;
             //--- market execution
             case SYMBOL_TRADE_EXECUTION_MARKET:
-               str=StringFormat("market %s %s %s",
-                                FormatOrderType(type,request.type),
-                                DoubleToString(request.volume,2),
-                                request.symbol);
-            //--- Is there SL or TP?
-            if(request.sl!=0.0)
-              {
-               tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
-               str+=tmp;
-              }
-            if(request.tp!=0.0)
-              {
-               tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
-               str+=tmp;
-              }
-            break;
+               if(IsHedging() && request.position!=0)
+                  str=StringFormat("market %s %s position #%I64u %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.position,
+                                   request.symbol);
+               else
+                  str=StringFormat("market %s %s %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.symbol);
+               //--- Is there SL or TP?
+               if(request.sl!=0.0)
+                 {
+                  tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
+                  str+=tmp;
+                 }
+               if(request.tp!=0.0)
+                 {
+                  tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
+                  str+=tmp;
+                 }
+               break;
             //--- exchange execution
             case SYMBOL_TRADE_EXECUTION_EXCHANGE:
-               str=StringFormat("exchange %s %s %s",
-                                FormatOrderType(type,request.type),
-                                DoubleToString(request.volume,2),
-                                request.symbol);
-            //--- Is there SL or TP?
-            if(request.sl!=0.0)
-              {
-               tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
-               str+=tmp;
-              }
-            if(request.tp!=0.0)
-              {
-               tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
-               str+=tmp;
-              }
-            break;
+               if(IsHedging() && request.position!=0)
+                  str=StringFormat("exchange %s %s position #%I64u %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.position,
+                                   request.symbol);
+               else
+                  str=StringFormat("exchange %s %s %s",
+                                   FormatOrderType(type,request.type),
+                                   DoubleToString(request.volume,2),
+                                   request.symbol);
+               //--- Is there SL or TP?
+               if(request.sl!=0.0)
+                 {
+                  tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
+                  str+=tmp;
+                 }
+               if(request.tp!=0.0)
+                 {
+                  tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
+                  str+=tmp;
+                 }
+               break;
            }
+         //--- end of TRADE_ACTION_DEAL processing
          break;
-         //--- setting a pending order
+      
+      //--- setting a pending order
       case TRADE_ACTION_PENDING:
          str=StringFormat("%s %s %s at %s",
                           FormatOrderType(type,request.type),
                           DoubleToString(request.volume,2),
                           request.symbol,
                           FormatOrderPrice(price,request.price,request.stoplimit,digits));
-      //--- Is there SL or TP?
-      if(request.sl!=0.0)
-        {
-         tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
-         str+=tmp;
-        }
-      if(request.tp!=0.0)
-        {
-         tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
-         str+=tmp;
-        }
-      break;
+         //--- Is there SL or TP?
+         if(request.sl!=0.0)
+           {
+            tmp=StringFormat(" sl: %s",DoubleToString(request.sl,digits));
+            str+=tmp;
+           }
+         if(request.tp!=0.0)
+           {
+            tmp=StringFormat(" tp: %s",DoubleToString(request.tp,digits));
+            str+=tmp;
+           }
+         break;
 
       //--- Setting SL/TP
       case TRADE_ACTION_SLTP:
-         str=StringFormat("modify %s (sl: %s, tp: %s)",
-                          request.symbol,
-                          DoubleToString(request.sl,digits),
-                          DoubleToString(request.tp,digits));
-      break;
+         if(IsHedging() && request.position!=0)
+            str=StringFormat("modify position #%I64u %s (sl: %s, tp: %s)",
+                             request.position,
+                             request.symbol,
+                             DoubleToString(request.sl,digits),
+                             DoubleToString(request.tp,digits));
+         else
+            str=StringFormat("modify %s (sl: %s, tp: %s)",
+                             request.symbol,
+                             DoubleToString(request.sl,digits),
+                             DoubleToString(request.tp,digits));
+         break;
 
       //--- modifying a pending order
       case TRADE_ACTION_MODIFY:
@@ -955,7 +1114,7 @@ string CTrade::FormatRequest(string &str,const MqlTradeRequest &request) const
                           FormatOrderPrice(price_new,request.price,request.stoplimit,digits),
                           DoubleToString(request.sl,digits),
                           DoubleToString(request.tp,digits));
-      break;
+         break;
 
       //--- deleting a pending order
       case TRADE_ACTION_REMOVE:
@@ -991,7 +1150,7 @@ string CTrade::FormatRequestResult(string &str,const MqlTradeRequest &request,co
          str=StringFormat("requote (%s/%s)",
                           DoubleToString(result.bid,digits),
                           DoubleToString(result.ask,digits));
-      break;
+         break;
 
       case TRADE_RETCODE_DONE:
          if(request.action==TRADE_ACTION_DEAL && 
@@ -999,9 +1158,9 @@ string CTrade::FormatRequestResult(string &str,const MqlTradeRequest &request,co
             symbol.TradeExecution()==SYMBOL_TRADE_EXECUTION_INSTANT ||
             symbol.TradeExecution()==SYMBOL_TRADE_EXECUTION_MARKET))
             str=StringFormat("done at %s",DoubleToString(result.price,digits));
-      else
-         str="done";
-      break;
+         else
+            str="done";
+         break;
 
       case TRADE_RETCODE_DONE_PARTIAL:
          if(request.action==TRADE_ACTION_DEAL && 
@@ -1011,10 +1170,10 @@ string CTrade::FormatRequestResult(string &str,const MqlTradeRequest &request,co
             str=StringFormat("done partially %s at %s",
                              DoubleToString(result.volume,2),
                              DoubleToString(result.price,digits));
-      else
-         str=StringFormat("done partially %s",
-                          DoubleToString(result.volume,2));
-      break;
+         else
+            str=StringFormat("done partially %s",
+                             DoubleToString(result.volume,2));
+         break;
 
       case TRADE_RETCODE_REJECT            : str="rejected";                        break;
       case TRADE_RETCODE_CANCEL            : str="canceled";                        break;
@@ -1052,6 +1211,44 @@ string CTrade::FormatRequestResult(string &str,const MqlTradeRequest &request,co
      }
 //--- return the result
    return(str);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double CTrade::CheckVolume(const string symbol,double volume,double price,ENUM_ORDER_TYPE order_type)
+  {
+//--- check
+   if(order_type!=ORDER_TYPE_BUY && order_type!=ORDER_TYPE_SELL)
+      return(0.0);
+   double free_margin=AccountInfoDouble(ACCOUNT_FREEMARGIN);
+   if(free_margin<=0.0)
+      return(0.0);
+//--- clean
+   ClearStructures();
+//--- setting request
+   m_request.action=TRADE_ACTION_DEAL;
+   m_request.symbol=symbol;
+   m_request.volume=volume;
+   m_request.type  =order_type;
+   m_request.price =price;
+//--- action and return the result
+   if(!::OrderCheck(m_request,m_check_result) && m_check_result.margin_free<0.0)
+     {
+      double coeff=free_margin/(free_margin-m_check_result.margin_free);
+      double lots=NormalizeDouble(volume*coeff,2);
+      if(lots<volume)
+        {
+         //--- normalize and check limits
+         double stepvol=SymbolInfoDouble(symbol,SYMBOL_VOLUME_STEP);
+         if(stepvol>0.0)
+            volume=stepvol*(MathFloor(lots/stepvol)-1);
+         //---
+         double minvol=SymbolInfoDouble(symbol,SYMBOL_VOLUME_MIN);
+         if(volume<minvol)
+            volume=0.0;
+        }
+     }
+   return(volume);
   }
 //+------------------------------------------------------------------+
 //| Checks if the m_request structure is filled correctly            |
@@ -1274,21 +1471,46 @@ bool CTrade::OrderSend(const MqlTradeRequest &request,MqlTradeResult &result)
    string fmt   ="";
 //--- action
    if(m_async_mode)
-      res=OrderSendAsync(request,result);
+      res=::OrderSendAsync(request,result);
    else
       res=::OrderSend(request,result);
 //--- check
    if(res)
      {
       if(m_log_level>LOG_LEVEL_ERRORS)
-         printf(__FUNCTION__+": %s [%s]",FormatRequest(action,request),FormatRequestResult(fmt,request,result));
+         PrintFormat(__FUNCTION__+": %s [%s]",FormatRequest(action,request),FormatRequestResult(fmt,request,result));
      }
    else
      {
       if(m_log_level>LOG_LEVEL_NO)
-         printf(__FUNCTION__+": %s [%s]",FormatRequest(action,request),FormatRequestResult(fmt,request,result));
+         PrintFormat(__FUNCTION__+": %s [%s]",FormatRequest(action,request),FormatRequestResult(fmt,request,result));
      }
 //--- return the result
+   return(res);
+  }
+//+------------------------------------------------------------------+
+//| Position select depending on netting or hedging                  |
+//+------------------------------------------------------------------+
+bool CTrade::SelectPosition(const string symbol)
+  {
+   bool res=false;
+//---
+   if(IsHedging())
+     {
+      uint total=PositionsTotal();
+      for(uint i=0; i<total; i++)
+        {
+         string position_symbol=PositionGetSymbol(i);
+         if(position_symbol==symbol && m_magic==PositionGetInteger(POSITION_MAGIC))
+           {
+            res=true;
+            break;
+           }
+        }
+     }
+   else
+      res=PositionSelect(symbol);
+//---
    return(res);
   }
 //+------------------------------------------------------------------+

@@ -52,7 +52,7 @@ void OnStart()
   datetime starttime = D'2015.12.01 00:00';
   // datetime starttime = D'2015.01.01 00:00';
   // datetime stoptime = D'2015.12.31 23:59';
-  datetime stoptime = D'2016.01.07 17:30';
+  datetime stoptime = D'2016.01.09 00:00';
   ENUM_TIMEFRAMES period = PERIOD_M1;
   // ENUM_TIMEFRAMES period = PERIOD_H1;
   string pstr = "M1";

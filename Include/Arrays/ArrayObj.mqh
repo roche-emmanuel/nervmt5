@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                     ArrayObj.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Array.mqh"
@@ -50,7 +50,7 @@ public:
    bool              DeleteRange(int from,int to);
    void              Clear(void);
    //--- method for comparing arrays
-   bool              CompareArray(const CArrayObj *Array) const;
+   bool              CompareArray(const CArrayObj *array) const;
    //--- methods for working with the sorted array
    bool              InsertSort(CObject *element);
    int               Search(const CObject *element) const;
@@ -102,7 +102,6 @@ int CArrayObj::MemMove(const int dest,const int src,const int count)
       return(dest);
 //--- copy
    if(dest<src)
-     {
       //--- copy from left to right
       for(i=0;i<count;i++)
         {
@@ -113,9 +112,7 @@ int CArrayObj::MemMove(const int dest,const int src,const int count)
          m_data[dest+i]=m_data[src+i];
          m_data[src+i]=NULL;
         }
-     }
    else
-     {
       //--- copy from right to left
       for(i=count-1;i>=0;i--)
         {
@@ -126,7 +123,6 @@ int CArrayObj::MemMove(const int dest,const int src,const int count)
          m_data[dest+i]=m_data[src+i];
          m_data[src+i]=NULL;
         }
-     }
 //--- successful
    return(dest);
   }
@@ -446,16 +442,16 @@ void CArrayObj::Clear(void)
 //+------------------------------------------------------------------+
 //| Equality comparison of two arrays                                |
 //+------------------------------------------------------------------+
-bool CArrayObj::CompareArray(const CArrayObj *Array) const
+bool CArrayObj::CompareArray(const CArrayObj *array) const
   {
 //--- check
-   if(!CheckPointer(Array))
+   if(!CheckPointer(array))
       return(false);
 //--- compare
-   if(m_data_total!=Array.m_data_total)
+   if(m_data_total!=array.m_data_total)
       return(false);
    for(int i=0;i<m_data_total;i++)
-      if(m_data[i].Compare(Array.m_data[i],0)!=0)
+      if(m_data[i].Compare(array.m_data[i],0)!=0)
          return(false);
 //--- equal
    return(true);
@@ -623,11 +619,12 @@ int CArrayObj::SearchLess(const CObject *element) const
 //+------------------------------------------------------------------+
 int CArrayObj::SearchGreatOrEqual(const CObject *element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !CheckPointer(element) || m_sort_mode==-1)
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos<m_data_total;pos++)
+   for(pos=QuickSearch(element);pos<m_data_total;pos++)
       if(m_data[pos].Compare(element,m_sort_mode)>=0)
          return(pos);
 //--- not found
@@ -639,11 +636,12 @@ int CArrayObj::SearchGreatOrEqual(const CObject *element) const
 //+------------------------------------------------------------------+
 int CArrayObj::SearchLessOrEqual(const CObject *element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !CheckPointer(element) || m_sort_mode==-1)
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos>=0;pos--)
+   for(pos=QuickSearch(element);pos>=0;pos--)
       if(m_data[pos].Compare(element,m_sort_mode)<=0)
          return(pos);
 //--- not found

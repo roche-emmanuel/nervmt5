@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                    WndClient.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndContainer.mqh"
@@ -13,12 +13,10 @@
 //+------------------------------------------------------------------+
 class CWndClient : public CWndContainer
   {
-private:
+protected:
    //--- flags
    bool              m_v_scrolled;          // "vertical scrolling is possible" flag
    bool              m_h_scrolled;          // "horizontal scrolling is possible" flag
-
-protected:
    //--- dependent controls
    CPanel            m_background;          // the "scrollbar background" object
    CScrollV          m_scroll_v;            // the vertical scrollbar object
@@ -32,14 +30,14 @@ public:
    //--- chart event handler
    virtual bool      OnEvent(const int id,const long &lparam,const double &dparam,const string &sparam);
    //--- parameters
-   bool              ColorBackground(const color value)          { return(m_background.ColorBackground(value)); }
-   bool              ColorBorder(const color value)              { return(m_background.ColorBorder(value));     }
-   bool              BorderType(const ENUM_BORDER_TYPE flag)     { return(m_background.BorderType(flag));       }
+   virtual bool      ColorBackground(const color value)          { return(m_background.ColorBackground(value)); }
+   virtual bool      ColorBorder(const color value)              { return(m_background.ColorBorder(value));     }
+   virtual bool      BorderType(const ENUM_BORDER_TYPE flag)     { return(m_background.BorderType(flag));       }
    //--- settings
-   bool              VScrolled(void) { return(m_v_scrolled); }
-   bool              VScrolled(const bool flag);
-   bool              HScrolled(void) { return(m_h_scrolled); }
-   bool              HScrolled(const bool flag);
+   virtual bool      VScrolled(void) { return(m_v_scrolled); }
+   virtual bool      VScrolled(const bool flag);
+   virtual bool      HScrolled(void) { return(m_h_scrolled); }
+   virtual bool      HScrolled(const bool flag);
    //--- ID
    virtual long      Id(const long id);
    //--- state

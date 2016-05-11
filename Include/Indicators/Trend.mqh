@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                        Trend.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "Indicator.mqh"
@@ -678,7 +678,7 @@ bool CiIchimoku::Initialize(const string symbol,const ENUM_TIMEFRAMES period,
       ((CIndicatorBuffer*)At(2)).Offset(kijun_sen);
       ((CIndicatorBuffer*)At(3)).Name("SENKOUSPANB_LINE");
       ((CIndicatorBuffer*)At(3)).Offset(kijun_sen);
-      ((CIndicatorBuffer*)At(4)).Name("CHINKOUSPAN_LINE");
+      ((CIndicatorBuffer*)At(4)).Name("CHIKOUSPAN_LINE");
       ((CIndicatorBuffer*)At(4)).Offset(-kijun_sen);
       //--- ok
       return(true);
@@ -735,7 +735,7 @@ double CiIchimoku::SenkouSpanB(const int index) const
    return(buffer.At(index));
   }
 //+------------------------------------------------------------------+
-//| Access to ChinkouSpan buffer of "Ichimoku Kinko Hyo"             |
+//| Access to ChikouSpan buffer of "Ichimoku Kinko Hyo"              |
 //+------------------------------------------------------------------+
 double CiIchimoku::ChinkouSpan(const int index) const
   {
