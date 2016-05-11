@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                       Dialog.mqh |
-//|                   Copyright 2009-2015, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "WndContainer.mqh"
@@ -503,6 +503,8 @@ bool CAppDialog::Create(const long chart,const string name,const int subwin,cons
 //--- create dependent controls
    if(!CreateButtonMinMax())
       return(false);
+//--- get subwindow offset
+   SubwinOff();
 //--- if flag is set, minimize the dialog
    if(m_minimized)
       Minimize();
@@ -533,8 +535,6 @@ bool CAppDialog::CreateCommon(const long chart,const string name,const int subwi
       m_chart.Detach();
       return(false);
      }
-//--- get subwindow offset
-   SubwinOff();
 //--- succeed
    return(true);
   }

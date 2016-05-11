@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                       Expert.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include "ExpertBase.mqh"
@@ -62,7 +62,8 @@ protected:
    CExpertTrade     *m_trade;                    // trading object
    CExpertSignal    *m_signal;                   // trading signals object
    CExpertMoney     *m_money;                    // money manager object
-   CExpertTrailing *m_trailing;                 // trailing stops object
+   CExpertTrailing  *m_trailing;                 // trailing stops object
+   bool              m_check_volume;             // check and decrease trading volume before OrderSend
    //--- indicators
    CIndicators       m_indicators;               // indicator collection to fast recalculations
    //--- market objects
@@ -81,6 +82,7 @@ public:
    //--- initialization
    bool              Init(string symbol,ENUM_TIMEFRAMES period,bool every_tick,ulong magic=0);
    void              Magic(ulong value);
+   void              CheckVolumeBeforeTrade(const bool flag) { m_check_volume=flag; }
    //--- initialization trading objects
    virtual bool      InitSignal(CExpertSignal *signal=NULL);
    virtual bool      InitTrailing(CExpertTrailing *trailing=NULL);
@@ -120,6 +122,8 @@ protected:
    virtual void      DeinitIndicators(void);
    //--- refreshing 
    virtual bool      Refresh(void);
+   //--- position select depending on netting or hedging
+   virtual bool      SelectPosition(void);
    //--- processing (main method)
    virtual bool      Processing(void);
    //--- trade open positions check
@@ -172,6 +176,7 @@ protected:
    double            LotOpenLong(double price,double sl);
    double            LotOpenShort(double price,double sl);
    double            LotReverse(double sl);
+   double            LotCheck(double volume,double price,ENUM_ORDER_TYPE order_type);
    //--- methods of working with trade history
    void              PrepareHistoryDate(void);
    void              HistoryPoint(bool from_check_trade=false);
@@ -208,6 +213,7 @@ CExpert::CExpert(void) : m_period_flags(0),
                          m_signal(NULL),
                          m_money(NULL),
                          m_trailing(NULL),
+                         m_check_volume(false),
                          m_on_tick_process(true),
                          m_on_trade_process(false),
                          m_on_timer_process(false),
@@ -215,7 +221,7 @@ CExpert::CExpert(void) : m_period_flags(0),
                          m_on_book_event_process(false),
                          m_max_orders(1)
   {
-   m_other_symbol=true;
+   m_other_symbol      =true;
    m_other_period      =true;
    m_adjusted_point    =10;
    m_period            =WRONG_VALUE;
@@ -236,7 +242,7 @@ bool CExpert::Init(string symbol,ENUM_TIMEFRAMES period,bool every_tick,ulong ma
 //--- returns false if the EA is initialized on a symbol/timeframe different from the current one
    if(symbol!=Symbol() || period!=Period())
      {
-      printf(__FUNCTION__+": wrong symbol or timeframe (must be %s:%s)",symbol,EnumToString(period));
+      PrintFormat(__FUNCTION__+": wrong symbol or timeframe (must be %s:%s)",symbol,EnumToString(period));
       return(false);
      }
 //--- initialize common information
@@ -250,6 +256,7 @@ bool CExpert::Init(string symbol,ENUM_TIMEFRAMES period,bool every_tick,ulong ma
    m_period    =period;
    m_every_tick=every_tick;
    m_magic     =magic;
+   SetMarginMode();
    if(every_tick)
       TimeframeAdd(WRONG_VALUE);            // add all periods
    else
@@ -260,27 +267,27 @@ bool CExpert::Init(string symbol,ENUM_TIMEFRAMES period,bool every_tick,ulong ma
 //--- initializing objects expert
    if(!InitTrade(magic))
      {
-      printf(__FUNCTION__+": error initialization trade object");
+      Print(__FUNCTION__+": error initialization trade object");
       return(false);
      }
    if(!InitSignal())
      {
-      printf(__FUNCTION__+": error initialization signal object");
+      Print(__FUNCTION__+": error initialization signal object");
       return(false);
      }
    if(!InitTrailing())
      {
-      printf(__FUNCTION__+": error initialization trailing object");
+      Print(__FUNCTION__+": error initialization trailing object");
       return(false);
      }
    if(!InitMoney())
      {
-      printf(__FUNCTION__+": error initialization money object");
+      Print(__FUNCTION__+": error initialization money object");
       return(false);
      }
    if(!InitParameters())
      {
-      printf(__FUNCTION__+": error initialization parameters");
+      Print(__FUNCTION__+": error initialization parameters");
       return(false);
      }
 //--- initialization for working with trade history
@@ -326,6 +333,7 @@ bool CExpert::InitTrade(ulong magic,CExpertTrade *trade=NULL)
 //--- tune trade object
    m_trade.SetSymbol(GetPointer(m_symbol));
    m_trade.SetExpertMagicNumber(magic);
+   m_trade.SetMarginMode();
 //--- set default deviation for trading in adjusted points
    m_trade.SetDeviationInPoints((ulong)(3*m_adjusted_point/m_symbol.Point()));
 //--- ok
@@ -410,19 +418,19 @@ bool CExpert::ValidationSettings(void)
 //--- Check signal parameters
    if(!m_signal.ValidationSettings())
      {
-      printf(__FUNCTION__+": error signal parameters");
+      Print(__FUNCTION__+": error signal parameters");
       return(false);
      }
 //--- Check trailing parameters
    if(!m_trailing.ValidationSettings())
      {
-      printf(__FUNCTION__+": error trailing parameters");
+      Print(__FUNCTION__+": error trailing parameters");
       return(false);
      }
 //--- Check money parameters
    if(!m_money.ValidationSettings())
      {
-      printf(__FUNCTION__+": error money parameters");
+      Print(__FUNCTION__+": error money parameters");
       return(false);
      }
 //--- ok
@@ -446,21 +454,21 @@ bool CExpert::InitIndicators(CIndicators *indicators)
    m_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
    if(!m_signal.InitIndicators(indicators_ptr))
      {
-      printf(__FUNCTION__+": error initialization indicators of signal object");
+      Print(__FUNCTION__+": error initialization indicators of signal object");
       return(false);
      }
    m_trailing.SetPriceSeries(m_open,m_high,m_low,m_close);
    m_trailing.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
    if(!m_trailing.InitIndicators(indicators_ptr))
      {
-      printf(__FUNCTION__+": error initialization indicators of trailing object");
+      Print(__FUNCTION__+": error initialization indicators of trailing object");
       return(false);
      }
    m_money.SetPriceSeries(m_open,m_high,m_low,m_close);
    m_money.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
    if(!m_money.InitIndicators(indicators_ptr))
      {
-      printf(__FUNCTION__+": error initialization indicators of money object");
+      Print(__FUNCTION__+": error initialization indicators of money object");
       return(false);
      }
 //--- ok
@@ -545,7 +553,7 @@ bool CExpert::Refresh(void)
 //--- check need processing
    TimeToStruct(m_symbol.Time(),time);
    if(m_period_flags!=WRONG_VALUE && m_period_flags!=0)
-      if((m_period_flags  &TimeframesFlags(time))==0)
+      if((m_period_flags&TimeframesFlags(time))==0)
          return(false);
    m_last_tick_time=time;
 //--- refresh indicators
@@ -554,12 +562,28 @@ bool CExpert::Refresh(void)
    return(true);
   }
 //+------------------------------------------------------------------+
+//| Position select depending on netting or hedging                  |
+//+------------------------------------------------------------------+
+bool CExpert::SelectPosition(void)
+  {
+   bool res=false;
+//---
+   if(IsHedging())
+      res=m_position.SelectByMagic(m_symbol.Name(),m_magic);
+   else
+      res=m_position.Select(m_symbol.Name());
+//---
+   return(res);
+  }
+//+------------------------------------------------------------------+
 //| Main function                                                    |
 //+------------------------------------------------------------------+
 bool CExpert::Processing(void)
   {
+//--- calculate signal direction once
+   m_signal.SetDirection();
 //--- check if open positions
-   if(m_position.Select(m_symbol.Name()))
+   if(SelectPosition())
      {
       //--- open position is available
       //--- check the possibility of reverse the position
@@ -579,7 +603,7 @@ bool CExpert::Processing(void)
    int total=OrdersTotal();
    if(total!=0)
      {
-      for(int i=total-1;i>=0;i--)
+      for(int i=total-1; i>=0; i--)
         {
          m_order.SelectByIndex(i);
          if(m_order.Symbol()!=m_symbol.Name())
@@ -723,6 +747,7 @@ bool CExpert::OpenLong(double price,double sl,double tp)
 //--- get lot for open
    double lot=LotOpenLong(price,sl);
 //--- check lot for open
+   lot=LotCheck(lot,price,ORDER_TYPE_BUY);
    if(lot==0.0)
       return(false);
 //---
@@ -738,6 +763,7 @@ bool CExpert::OpenShort(double price,double sl,double tp)
 //--- get lot for open
    double lot=LotOpenShort(price,sl);
 //--- check lot for open
+   lot=LotCheck(lot,price,ORDER_TYPE_SELL);
    if(lot==0.0)
       return(false);
 //---
@@ -806,7 +832,23 @@ bool CExpert::ReverseLong(double price,double sl,double tp)
    if(lot==0.0)
       return(false);
 //---
-   return(m_trade.Sell(lot,price,sl,tp));
+   bool result=true;
+   if(IsHedging())
+     {
+      //--- first close existing position
+      lot-=m_position.Volume();
+      result=m_trade.PositionClose(m_position.Ticket());
+     }
+   if(result)
+     {
+      lot=LotCheck(lot,price,ORDER_TYPE_SELL);
+      if(lot==0.0)
+         result=false;
+      else
+         result=m_trade.Sell(lot,price,sl,tp);
+     }
+//---
+   return(result);
   }
 //+------------------------------------------------------------------+
 //| Short position reverse                                           |
@@ -821,7 +863,23 @@ bool CExpert::ReverseShort(double price,double sl,double tp)
    if(lot==0.0)
       return(false);
 //---
-   return(m_trade.Buy(lot,price,sl,tp));
+   bool result=true;
+   if(IsHedging())
+     {
+      //--- first close existing position
+      lot-=m_position.Volume();
+      result=m_trade.PositionClose(m_position.Ticket());
+     }
+   if(result)
+     {
+      lot=LotCheck(lot,price,ORDER_TYPE_BUY);
+      if(lot==0.0)
+         result=false;
+      else
+         result=m_trade.Buy(lot,price,sl,tp);
+     }
+//---
+   return(result);
   }
 //+------------------------------------------------------------------+
 //| Check for position close or limit/stop order delete              |
@@ -883,12 +941,17 @@ bool CExpert::CheckCloseShort(void)
 //+------------------------------------------------------------------+
 bool CExpert::CloseAll(double lot)
   {
-   bool result;
+   bool result=false;
 //--- check for close operations
-   if(m_position.PositionType()==POSITION_TYPE_BUY)
-      result=m_trade.Sell(lot,0,0,0);
+   if(IsHedging())
+      result=m_trade.PositionClose(m_position.Ticket());
    else
-      result=m_trade.Buy(lot,0,0,0);
+     {
+      if(m_position.PositionType()==POSITION_TYPE_BUY)
+         result=m_trade.Sell(lot,0,0,0);
+      else
+         result=m_trade.Buy(lot,0,0,0);
+     }
    result|=DeleteOrders();
 //---
    return(result);
@@ -905,20 +968,32 @@ bool CExpert::Close(void)
 //+------------------------------------------------------------------+
 bool CExpert::CloseLong(double price)
   {
+   bool result=false;
+//---
    if(price==EMPTY_VALUE)
       return(false);
+   if(IsHedging())
+      result=m_trade.PositionClose(m_position.Ticket());
+   else
+      result=m_trade.Sell(m_position.Volume(),price,0,0);
 //---
-   return(m_trade.Sell(m_position.Volume(),price,0,0));
+   return(result);
   }
 //+------------------------------------------------------------------+
 //| Short position close                                             |
 //+------------------------------------------------------------------+
 bool CExpert::CloseShort(double price)
   {
+   bool result=false;
+//---
    if(price==EMPTY_VALUE)
       return(false);
+   if(IsHedging())
+      result=m_trade.PositionClose(m_position.Ticket());
+   else
+      result=m_trade.Buy(m_position.Volume(),price,0,0);
 //---
-   return(m_trade.Buy(m_position.Volume(),price,0,0));
+   return(result);
   }
 //+------------------------------------------------------------------+
 //| Check for trailing stop/profit position                          |
@@ -951,10 +1026,18 @@ bool CExpert::CheckTrailingStopLong(void)
 //--- check for long trailing stop operations
    if(m_trailing.CheckTrailingStopLong(GetPointer(m_position),sl,tp))
      {
+      double position_sl=m_position.StopLoss();
+      double position_tp=m_position.TakeProfit();
       if(sl==EMPTY_VALUE)
-         sl=m_position.StopLoss();
+         sl=position_sl;
+      else
+         sl=m_symbol.NormalizePrice(sl);
       if(tp==EMPTY_VALUE)
-         tp=m_position.TakeProfit();
+         tp=position_tp;
+      else
+         tp=m_symbol.NormalizePrice(tp);
+      if(sl==position_sl && tp==position_tp)
+         return(false);
       //--- long trailing stop operations
       return(TrailingStopLong(sl,tp));
      }
@@ -971,10 +1054,18 @@ bool CExpert::CheckTrailingStopShort(void)
 //--- check for short trailing stop operations
    if(m_trailing.CheckTrailingStopShort(GetPointer(m_position),sl,tp))
      {
+      double position_sl=m_position.StopLoss();
+      double position_tp=m_position.TakeProfit();
       if(sl==EMPTY_VALUE)
-         sl=m_position.StopLoss();
+         sl=position_sl;
+      else
+         sl=m_symbol.NormalizePrice(sl);
       if(tp==EMPTY_VALUE)
-         tp=m_position.TakeProfit();
+         tp=position_tp;
+      else
+         tp=m_symbol.NormalizePrice(tp);
+      if(sl==position_sl && tp==position_tp)
+         return(false);
       //--- short trailing stop operations
       return(TrailingStopShort(sl,tp));
      }
@@ -986,14 +1077,28 @@ bool CExpert::CheckTrailingStopShort(void)
 //+------------------------------------------------------------------+
 bool CExpert::TrailingStopLong(double sl,double tp)
   {
-   return(m_trade.PositionModify(m_symbol.Name(),sl,tp));
+   bool result;
+//---
+   if(IsHedging())
+      result=m_trade.PositionModify(m_position.Ticket(),sl,tp);
+   else
+      result=m_trade.PositionModify(m_symbol.Name(),sl,tp);
+//---
+   return(result);
   }
 //+------------------------------------------------------------------+
 //| Trailing stop/profit short position                              |
 //+------------------------------------------------------------------+
 bool CExpert::TrailingStopShort(double sl,double tp)
   {
-   return(m_trade.PositionModify(m_symbol.Name(),sl,tp));
+   bool result;
+//---
+   if(IsHedging())
+      result=m_trade.PositionModify(m_position.Ticket(),sl,tp);
+   else
+      result=m_trade.PositionModify(m_symbol.Name(),sl,tp);
+//---
+   return(result);
   }
 //+------------------------------------------------------------------+
 //| Check for trailing long limit/stop order                         |
@@ -1025,9 +1130,9 @@ bool CExpert::CheckTrailingOrderShort(void)
 bool CExpert::TrailingOrderLong(double delta)
   {
    ulong  ticket=m_order.Ticket();
-   double price =m_order.PriceOpen()-delta;
-   double sl    =m_order.StopLoss()-delta;
-   double tp    =m_order.TakeProfit()-delta;
+   double price =m_symbol.NormalizePrice(m_order.PriceOpen()-delta);
+   double sl    =m_symbol.NormalizePrice(m_order.StopLoss()-delta);
+   double tp    =m_symbol.NormalizePrice(m_order.TakeProfit()-delta);
 //--- modifying the long order
    return(m_trade.OrderModify(ticket,price,sl,tp,m_order.TypeTime(),m_order.TimeExpiration()));
   }
@@ -1037,9 +1142,9 @@ bool CExpert::TrailingOrderLong(double delta)
 bool CExpert::TrailingOrderShort(double delta)
   {
    ulong  ticket=m_order.Ticket();
-   double price =m_order.PriceOpen()-delta;
-   double sl    =m_order.StopLoss()-delta;
-   double tp    =m_order.TakeProfit()-delta;
+   double price =m_symbol.NormalizePrice(m_order.PriceOpen()-delta);
+   double sl    =m_symbol.NormalizePrice(m_order.StopLoss()-delta);
+   double tp    =m_symbol.NormalizePrice(m_order.TakeProfit()-delta);
 //--- modifying the short order
    return(m_trade.OrderModify(ticket,price,sl,tp,m_order.TypeTime(),m_order.TimeExpiration()));
   }
@@ -1178,6 +1283,15 @@ double CExpert::LotOpenShort(double price,double sl)
 double CExpert::LotReverse(double sl)
   {
    return(m_money.CheckReverse(GetPointer(m_position),sl));
+  }
+//+------------------------------------------------------------------+
+//| Check volume before OrderSend to avoid "not enough money" error  |
+//+------------------------------------------------------------------+
+double CExpert::LotCheck(double volume,double price,ENUM_ORDER_TYPE order_type)
+  {
+   if(m_check_volume)
+      return(m_trade.CheckVolume(m_symbol.Name(),volume,price,order_type));
+   return(volume);
   }
 //+------------------------------------------------------------------+
 //| Method of setting the start date for the history.                |

@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                            TrailingFixedPips.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Expert\ExpertTrailing.mqh>
@@ -95,7 +95,8 @@ bool CTrailingFixedPips::CheckTrailingStopLong(CPositionInfo *position,double &s
    if(price-base>delta)
      {
       sl=price-delta;
-      if(m_profit_level!=0) tp=price+m_profit_level*m_adjusted_point;
+      if(m_profit_level!=0)
+         tp=price+m_profit_level*m_adjusted_point;
      }
 //---
    return(sl!=EMPTY_VALUE);
@@ -122,7 +123,8 @@ bool CTrailingFixedPips::CheckTrailingStopShort(CPositionInfo *position,double &
    if(base-price>delta)
      {
       sl=price+delta;
-      if(m_profit_level!=0) tp=price-m_profit_level*m_adjusted_point;
+      if(m_profit_level!=0)
+         tp=price-m_profit_level*m_adjusted_point;
      }
 //---
    return(sl!=EMPTY_VALUE);

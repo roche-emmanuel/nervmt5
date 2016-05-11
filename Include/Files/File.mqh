@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                         File.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2016, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Object.mqh>
@@ -36,8 +36,8 @@ public:
    bool              IsEnding(void);
    bool              IsLineEnding(void);
    //--- general methods for working with files
-   void              Delete(const string file_name);
-   bool              IsExist(const string file_name);
+   void              Delete(const string file_name,const int common_flag=0);
+   bool              IsExist(const string file_name,const int common_flag=0);
    bool              Copy(const string src_name,const int common_flag,const string dst_name,const int mode_flags);
    bool              Move(const string src_name,const int common_flag,const string dst_name,const int mode_flags);
    //--- general methods of working with folders
@@ -141,9 +141,11 @@ void CFile::Delete(void)
    if(m_handle!=INVALID_HANDLE)
      {
       string file_name=m_name;
+      int    common_flag=m_flags&FILE_COMMON;
+      //--- close before deleting
       Close();
       //--- delete
-      FileDelete(file_name,m_flags);
+      FileDelete(file_name,common_flag);
      }
   }
 //+------------------------------------------------------------------+
@@ -212,20 +214,24 @@ bool CFile::IsLineEnding(void)
 //+------------------------------------------------------------------+
 //| Deleting a file                                                  |
 //+------------------------------------------------------------------+
-void CFile::Delete(const string file_name)
+void CFile::Delete(const string file_name,const int common_flag)
   {
 //--- checking
    if(file_name==m_name)
-      Close();
+     {
+      int flag=m_flags&FILE_COMMON;
+      if(flag==common_flag)
+         Close();
+     }
 //--- delete
-   FileDelete(file_name,m_flags);
+   FileDelete(file_name,common_flag);
   }
 //+------------------------------------------------------------------+
 //| Check if file exists                                             |
 //+------------------------------------------------------------------+
-bool CFile::IsExist(const string file_name)
+bool CFile::IsExist(const string file_name,const int common_flag)
   {
-   return(FileIsExist(file_name,m_flags));
+   return(FileIsExist(file_name,common_flag));
   }
 //+------------------------------------------------------------------+
 //| Copying file                                                     |
