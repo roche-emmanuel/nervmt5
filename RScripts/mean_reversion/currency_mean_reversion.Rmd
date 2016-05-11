@@ -1,0 +1,231 @@
+---
+title: "Analysis of simple Forex currency mean reversion"
+author: "Emmanuel ROCHE"
+date: "13/03/2016"
+output: html_document
+---
+
+# Synopsis
+
+In this report, we analyze the mean reversion property of a pre-fabricated Forex currency pair, namely, we focus here on **USDCAD**, analyzing the daily close prices, from July 22, 2007 to March 28, 2012. The input data was retriever with  **TickDownloader**. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**.
+
+
+# Data preprocessing
+
+We start with loading the appropriate dataset. (Daily data was generated from tick data by the TickDownloader software itself)
+
+```{r cache=TRUE}
+data <- read.csv("USDCAD_D1_2007_07_2012_03.csv")
+
+# assign appropriate names to this dataset columns:
+names(data) <- c("date","time","open","high","low","close","volume")
+
+# print some of the data:
+head(data)
+```
+
+
+We have `r dim(data)[1]` observations available, but note that, this dataset we are only interested in the close prices for the time being, so we keep only that column:
+
+```{r}
+prices <- data$close
+
+# let's now plot the data:
+
+nob <- length(prices)
+plot(1:nob,prices, type="l", col="blue", xlab="Time", ylab="Excahgne rate", main="USDCAD exchange rate")
+
+```
+
+We see from this plot that we have roughtly the same shape as in the original study, but it also seems that we have more data points (we only have about 1200 points in the source paper).
+
+# Results
+
+## ADF test
+
+Now we can perform the ADF test, for this we will use the tseries package, containing the **adf.test** function.
+
+```{r}
+library(tseries)
+
+# With the default number of lag coefficients:
+tres1 <- adf.test(prices)
+tres1
+
+# Now with only 1 lag coefficient:
+tres2 <- adf.test(prices,"s",k=1)
+tres2
+```
+
+In both test cases the p.values are quite high (respectively `r sprintf("%.3f",tres1$p.value)` and `r sprintf("%.3f",tres2$p.value)`) so we cannot reject the null hypothesis, and this currency is not stationary (which is of course expected).
+
+As a validation step we can recompute the ADF test result using the **fUnitRoots** package:
+
+```{r message=F, warning=F}
+library(fUnitRoots)
+
+adfTest(prices, type="ct")
+```
+
+
+The results computed with the fUnitRoots package with type="ct" correspond to what we computed in the tseries package. Yet, we don't want to consider the time trend in the regression, so we should recompute the Dickey-Fuller statistic with only the constant component (eg. type = "c"):
+
+```{r}
+ares1 <- adfTest(prices, type="c")
+ares1
+```
+
+We note here that we still cannot reject the null hypothesis, since our p-value is of about `r sprintf("%.4f",ares1@test$p.value)`.
+
+## Hust exponent computation
+
+We use the **pracma** package to compute the Hurst exponent. Note that we compute the Hurst exponent for the **log prices** serie.
+
+```{r message=F, warning=F}
+library(pracma)
+hres1 <- hurstexp(log(prices))
+```
+
+The most "interesting value" in the previous list is the **Theoretical Hurst exponent** : `r sprintf("%.4f",hres1$Ht)`. Given this value is would seem that the currency pair analyzed in this period exibited a small trending tendancy.
+
+
+## Variance ratio test
+
+To check the statistical significance of this Hurst exponent value, we perform a **variance ratio** test. We will use the **vrtest** package to acheive this:
+
+```{r}
+library(vrtest)
+nob <- length(prices)
+lret <- log(prices[2:nob]) - log(prices[1:(nob-1)])
+lres1 <- Lo.Mac(lret, kvec = 2)
+lres1
+```
+
+The previous statistics indicate that we have `r sprintf("%.2f%%",-lres1$Stats[1]*100)` chances that the return values follow a random walk (??? Not really sure what those numbers mean in fact), so we cannot discard this hypothesis.
+
+As described from [this page](http://stackoverflow.com/questions/14186547/vrtest-package-extended-text-answers) we can compute the p-value of this statistic usign the Boot.test function:
+
+```{r}
+Boot.test(lret, kvec=c(2,5), nboot=500,wild="Normal")
+```
+
+Right now, I cannot make any sense of those results unfortunately.
+
+## Half-life of mean reversion
+
+
+To determine the half-life $\lambda$ of our time serie we run a regression fit with $y(t) - y(t-1)$ as the dependent variable and $y(t-1)$ as the independent variable.
+
+```{r}
+nob <- length(prices)
+xval <- prices[1:(nob-1)] 
+dy <- prices[2:nob] - prices[1:(nob-1)]
+reg <- lm(dy ~ xval)
+
+#print(reg)
+
+plot(xval, dy, col='blue')
+abline(reg,col='red')
+
+# Now we can generate the value of the half-life:
+lambda <- reg$coefficients[[2]]
+halflife = -log(2)/lambda
+```
+
+So we find a $\lambda$ = `r sprintf("%.8f", lambda)` and the corresponding halflife is, HL = `r sprintf("%.0f days",halflife)`. This result is not exactly the same as what was mentioned in the original study (eg. 115 days) but we already noticed that we had more data points in our input anyway so this could explain the differences we have.
+
+## Simple linear Mean-Reverting strategy
+
+Using the previous halflife value we compute the moving standard deviation of the price:
+
+```{r}
+# build an helper function to perform moving computations:
+mov_apply <- function(x, n, callback){
+    k = length(x);
+    result = rep(NA, k);
+    for(i in 1 : (k - n + 1)){
+        result[i+n-1] <- callback(x[i :  (i + n - 1)]);
+    }    
+    return(result);
+}
+
+lag <- function(x,k)
+{
+  return(c(rep(NA,k),x[1:length(x)-k]))
+}
+
+movingAvg <- function(x,n)
+{
+  return (mov_apply(x,n,mean))
+}
+
+movingStd <- function(x,n)
+{
+  return (mov_apply(x,n,sd))
+}
+
+# Setting lookback to the halflife value:
+lb <- halflife
+
+# Compute the market value we should hold:
+mktVal <- -(prices - movingAvg(prices, lb)) / movingStd(prices,lb);
+
+# Compute the daily profit and loss value:
+# pnl <- lag(mktVal, 1) * (prices - lag(prices,1)) / lag(prices,1)
+pnl <- lag(mktVal, 1) * (prices - lag(prices,1))
+
+# head(pnl,200)
+```
+
+Now we can plot the cummulative profit and loss:
+
+```{r}
+
+# Remove the NA values and replace them with 0:
+pnl[is.na(pnl)] <- 0
+
+cumpnl <- cumsum(pnl)
+nvals <- length(cumpnl)
+
+plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cumulative Profit and Loss")
+```
+
+
+The results observed here are highly similar to those presented in the original paper. Except that here we do not end with a positive profit value. Also note that we do not normalize the prices when computing the P&L
+
+One additional step that we can take here is to integrate the transaction costs in this computation. We will use here a typical transaction cost value of $\delta =$ 0.0001 (This is to be considered as a very optimistic cost value). We will thus apply the formula: 
+
+$$ PL_t = mktVal_{t-1} * (price_t - price_{t-1}) - |mktVal_t-mktVal_{t-1}| * \delta$$
+
+
+
+```{r}
+
+tcost = 0.0001
+
+# recompute the profit and loss taking the transaction cost into account:
+pnl2 <- lag(mktVal, 1) * (prices - lag(prices,1)) - abs(mktVal - lag(mktVal,1)) * tcost
+
+pnl2[is.na(pnl2)] <- 0
+
+cumpnl <- cumsum(pnl2)
+nvals <- length(cumpnl)
+
+plot(1:nvals, cumpnl, type='l', col='blue', xlab="Days", ylab="Cumulative P&L", main="Cumulative Profit and Loss\nwith transaction costs")
+```
+
+There is no visual change in the previous plot, does this means that the transaction costs will have negligeable effect ?
+
+Let's first draw the transaction cost only:
+
+```{r}
+
+costs <- abs(mktVal - lag(mktVal,1)) * tcost
+costs[is.na(costs)] <- 0
+
+nvals <- length(costs)
+
+plot(1:nvals, costs, type='l', col='blue', xlab="Days", ylab="Transaction costs", main="Transaction costs")
+```
+
+So it seems the transaction costs are correct, but they are very small, so this could indeed be negligeable here.

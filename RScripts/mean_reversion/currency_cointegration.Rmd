@@ -1,0 +1,117 @@
+---
+title: "Analysis of time series cointegration"
+author: "Emmanuel ROCHE"
+date: "14/03/2016"
+output: html_document
+---
+
+# Synopsis
+
+In this report, we analyze the mean reversion of cointegrated time series. This analysis is based on the original study provided in **Ernest P.Chan - Algoritmic trading winning strategies and their rationales**. 
+
+
+# Data preprocessing
+
+We retrieve the input datasets using the **quantmod** package. Here we are interested in the EWA and EWC Exchange Traded Funds (ETFs).
+
+```{r fig.align='center'}
+library(quantmod)
+
+options("getSymbols.warning4.0"=FALSE)
+
+## Lets get first data  for EWA and EWC from yahoo finance and extract adjusted close prices
+getSymbols(c("EWA","EWC"))
+ewaAdj <- unclass(EWA$EWA.Adjusted)
+ewcAdj <- unclass(EWC$EWC.Adjusted)
+
+# let's plot those close prices:
+nob <- length(ewaAdj)
+plot(1:nob, ewaAdj, type="l", col="blue", ylim=c(5, 40), xlab="Time", ylab="ETF value", main="EWA and EWC exchange rates")
+lines(1:nob, ewcAdj, type="l", col="red")
+```
+
+We have here `r length(ewaAdj)` samples for EWA and `r length(ewcAdj)` samples for EWC. For sake of completion, let's also display the candle chart for one for those symbols:
+
+```{r fig.align='center'}
+candleChart(EWA)
+```
+
+According to the previous graph, the input data covers a period from 03/01/2007 to the current date.
+
+# Results
+
+To visually check the cointegration we can display a scatter plot of EWC against EWA:
+
+```{r fig.align='center'}
+plot(ewaAdj, ewcAdj,col="steelblue", xlab="EWA value", ylab="EWC value", main="Scatter plot of EWC vs EWA")
+```
+
+Now to perform the cointegration of the 2 series we first prepare an helper function, this implementation is inspired from [Deniz's Notes](http://denizstij.blogspot.fr/2013/11/cointegration-tests-adf-and-johansen.html). This method will take as input the 2 series we are trying to co-integrate and return the statistic value, the p-value and the hedge ratio extracted from the regression.
+
+Also note that we use the **fUnitRoots** package to compute the ADF test value.
+
+
+```{r message=F, warning=F}
+library(fUnitRoots)
+```
+
+```{r}
+CADF <-function(aAdj, bAdj, type="nc") {
+  lenA <- length(aAdj)
+  lenB <- length(bAdj)
+  
+  # We expect both time series to have the same length:
+  if(lenA != lenB) 
+  {
+    stop(paste("Mismatch in input series lengths:",lenA,"!=",lenB))
+  }
+  
+  regA <-lm(aAdj~bAdj+0)
+   
+  print(regA)
+  regB <- lm(bAdj~aAdj+0)
+  print(regB)
+   
+  coA <- adfTest(regA$residuals, type=type)
+  coB <- adfTest(regB$residuals, type=type)   
+   
+  # Lets choice most negative
+  if (coA@test$statistic < coB@test$statistic){
+    cat("\nSerie A is dependent on serie B")
+    p <- coA@test$p.value
+    s <- coA@test$statistic
+    coeff <- regA$coefficients[[1]]
+  }else {
+    cat("\nSerie B is dependent on serie A")
+    p <- coB@test$p.value
+    s <- coB@test$statistic    
+    coeff <- regB$coefficients[[1]]
+  }   
+  
+  cat("\n p-value",p," statistics:",s," hedgeRatio:",coeff)     
+  return(c(s,p,coeff))
+}
+```
+
+Now compute the cointegration of EWA anc EWC (note: not sure why we should use type="nc" here and not type="c" ?)
+
+```{r}
+res <- CADF(ewaAdj,ewcAdj, type="nc")
+res
+```
+
+From the previous result is seems we can reject the null hypothesis with a propability of `r sprintf("%.2f%%",1.0 - res[2])`. We now plot the residual EWC - hedgeRatio*EWA to see if the result is stationary:
+
+```{r fig.align='center'}
+
+residual <- ewcAdj - res[3]*ewaAdj
+mval <- mean(residual)
+
+plot(residual,type="l",col="blue", main="Stationarity of residuals\nfrom linear regression between EWC and EWA")
+abline(h=mval,col="red")
+```
+
+We can confirm here that the first part of this plot is similar to what is provided in the original study.
+
+
+
