@@ -19,7 +19,19 @@ public:
   nvRNNTrader()
   {
     logDEBUG("Creating new RNN Trader")
+
     nvRNNSecurityTrader* trader = addTrader("EURUSD",0.5);
+
+    //nvSecurityTrader* trader = addTrader("EURUSD",0.3);
+    trader.addPredictor("eval_results_v36.csv");
+    trader.addPredictor("eval_results_v36b.csv");
+    trader.addPredictor("eval_results_v36c.csv");
+    // trader.addPredictor("eval_results_v38.csv");
+    // trader.addPredictor("eval_results_v38b.csv");
+    // trader.addPredictor("eval_results_v38c.csv");
+    trader.addPredictor("eval_results_v39.csv");
+    trader.addPredictor("eval_results_v39b.csv");
+    trader.addPredictor("eval_results_v39c.csv");
     
     // input symbols should be specified before adding the predictors:
     string inputs[] = {"AUDUSD","GBPUSD","NZDUSD","USDCAD","USDCHF","USDJPY"};

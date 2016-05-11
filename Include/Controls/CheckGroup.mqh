@@ -370,7 +370,7 @@ bool CCheckGroup::OnChangeItem(const int row_index)
          Value(m_value&(~m_values.At(row_index+m_offset)));
      }
 //--- send notification
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CHANGE,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_CHANGE,m_id,0.0,m_name);
 //--- handled
    return(true);
   }

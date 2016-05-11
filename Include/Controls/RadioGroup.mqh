@@ -354,7 +354,7 @@ bool CRadioGroup::OnChangeItem(const int row_index)
 //--- select "row"
    Select(row_index+m_offset);
 //--- send notification
-   EventChartCustom(CONTROLS_SELF_MESSAGE,ON_CHANGE,m_id,0.0,m_name);
+   EventChartCustom(m_chart_id,ON_CHANGE,m_id,0.0,m_name);
 //--- handled
    return(true);
   }

@@ -39,9 +39,6 @@ public:
    //--- method of access to the array
    char              At(const int index) const;
    char operator[](const int index) const { return(At(index)); }
-   //--- methods of searching for minimum and maximum
-   int               Minimum(const int start,const int count) const { return(Minimum(m_data,start,count)); }
-   int               Maximum(const int start,const int count) const { return(Maximum(m_data,start,count)); }
    //--- methods of changing
    bool              Update(const int index,const char element);
    bool              Shift(const int index,const int shift);
@@ -103,17 +100,13 @@ int CArrayChar::MemMove(const int dest,const int src,const int count)
       return(dest);
 //--- copy
    if(dest<src)
-     {
       //--- copy from left to right
       for(i=0;i<count;i++)
          m_data[dest+i]=m_data[src+i];
-     }
    else
-     {
       //--- copy from right to left
       for(i=count-1;i>=0;i--)
          m_data[dest+i]=m_data[src+i];
-     }
 //--- successful
    return(dest);
   }
@@ -462,7 +455,7 @@ bool CArrayChar::CompareArray(const CArrayChar *array) const
 void CArrayChar::QuickSort(int beg,int end,const int mode)
   {
    int   i,j;
-   char  p_char;
+   uchar p_char;
    char  t_char;
 //--- check
    if(beg<0 || end<0)
@@ -476,14 +469,14 @@ void CArrayChar::QuickSort(int beg,int end,const int mode)
       p_char=m_data[(beg+end)>>1];
       while(i<j)
         {
-         while(m_data[i]<p_char)
+         while((uchar)m_data[i]<p_char)
            {
             //--- control the output of the array bounds
             if(i==m_data_total-1)
                break;
             i++;
            }
-         while(m_data[j]>p_char)
+         while((uchar)m_data[j]>p_char)
            {
             //--- control the output of the array bounds
             if(j==0)
@@ -557,7 +550,7 @@ int CArrayChar::SearchLinear(const char element) const
 int CArrayChar::QuickSearch(const char element) const
   {
    int   i,j,m=-1;
-   char  t_char;
+   uchar t_char;
 //--- search
    i=0;
    j=m_data_total-1;
@@ -568,9 +561,9 @@ int CArrayChar::QuickSearch(const char element) const
       if(m<0 || m>=m_data_total)
          break;
       t_char=m_data[m];
-      if(t_char==element)
+      if(t_char==(uchar)element)
          break;
-      if(t_char>element)
+      if(t_char>(uchar)element)
          j=m-1;
       else
          i=m+1;
@@ -606,7 +599,7 @@ int CArrayChar::SearchGreat(const char element) const
       return(-1);
 //--- search
    pos=QuickSearch(element);
-   while(m_data[pos]<=element)
+   while((uchar)m_data[pos]<=(uchar)element)
       if(++pos==m_data_total)
          return(-1);
 //--- position
@@ -624,7 +617,7 @@ int CArrayChar::SearchLess(const char element) const
       return(-1);
 //--- search
    pos=QuickSearch(element);
-   while(m_data[pos]>=element)
+   while((uchar)m_data[pos]>=(uchar)element)
       if(pos--==0)
          return(-1);
 //--- position
@@ -636,13 +629,17 @@ int CArrayChar::SearchLess(const char element) const
 //+------------------------------------------------------------------+
 int CArrayChar::SearchGreatOrEqual(const char element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos<m_data_total;pos++)
-      if(m_data[pos]>=element)
-         return(pos);
+   if((pos=SearchGreat(element))!=-1)
+     {
+      if(pos!=0 && m_data[pos-1]==element)
+         return(pos-1);
+      return(pos);
+     }
 //--- not found
    return(-1);
   }
@@ -652,13 +649,17 @@ int CArrayChar::SearchGreatOrEqual(const char element) const
 //+------------------------------------------------------------------+
 int CArrayChar::SearchLessOrEqual(const char element) const
   {
+   int pos;
 //--- check
    if(m_data_total==0 || !IsSorted())
       return(-1);
 //--- search
-   for(int pos=QuickSearch(element);pos>=0;pos--)
-      if(m_data[pos]<=element)
-         return(pos);
+   if((pos=SearchLess(element))!=-1)
+     {
+      if(pos!=m_data_total-1 && m_data[pos+1]==element)
+         return(pos+1);
+      return(pos);
+     }
 //--- not found
    return(-1);
   }
