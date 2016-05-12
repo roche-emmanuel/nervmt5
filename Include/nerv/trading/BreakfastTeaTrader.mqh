@@ -17,6 +17,8 @@ protected:
   double _startPrice;
 
   double _deltaThreshold;
+  double _stopLoss;
+  double _takeProfit;
 
 public:
   /*
@@ -36,6 +38,8 @@ public:
 
     _startPrice = 0.0;
     _deltaThreshold = 0.0;
+    _stopLoss = 0.0;
+    _takeProfit = 0.0;
   }
 
   /*
@@ -44,6 +48,16 @@ public:
   ~nvBreakfastTeaTrader()
   {
     logDEBUG("Deleting RandomTrader")
+  }
+
+  void setStopLossPoints(double sl)
+  {
+    _stopLoss = sl;
+  }
+
+  void setTakeProfitPoints(double tp)
+  {
+    _takeProfit = tp;
   }
 
   virtual void handleBar()
@@ -73,17 +87,17 @@ public:
       // Reset the start price:
       _startPrice = 0.0;
 
-      double sl = 300.0*_psize;
-      double tp = 300.0*_psize;
-      double nlots = evaluateLotSize(300.0, 1.0);
+      double sl = _stopLoss*_psize;
+      double tp = _takeProfit*_psize;
+      double nlots = evaluateLotSize(_stopLoss, 1.0);
 
       if(delta>_deltaThreshold)
       {
-        openPosition(ORDER_TYPE_BUY,nlots,sl,tp);
+        openPosition(ORDER_TYPE_SELL,nlots,sl,tp);
       }
       else if(delta < _deltaThreshold)
       {
-        openPosition(ORDER_TYPE_SELL,nlots,sl,tp);
+        openPosition(ORDER_TYPE_BUY,nlots,sl,tp);
       }
     }
 

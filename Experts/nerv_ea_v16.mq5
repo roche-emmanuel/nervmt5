@@ -28,8 +28,10 @@ respectively.
 #include <nerv/trading/BreakfastTeaTrader.mqh>
 
 
-input int gStartTime = 4*60 + 15; // Start time in minutes
-input int gEvalTime = 8*60 + 30; // Eval time in minutes
+input int StartTime = 4*60; // Start time in minutes
+input int EvalTime = 8*60 + 45; // Eval time in minutes
+input int StopLoss = 130; // StopLoss in num points
+input int TakeProfit = 350; // Takeprofit in num points
 
 
 nvBreakfastTeaTrader* btrader = NULL;
@@ -44,7 +46,9 @@ int OnInit()
   nvFileLogger* logger = new nvFileLogger(fname);
   lm.addSink(logger);
 
-  btrader = new nvBreakfastTeaTrader(Symbol(), gStartTime, gEvalTime);
+  btrader = new nvBreakfastTeaTrader(Symbol(), StartTime, EvalTime);
+  btrader.setStopLossPoints(StopLoss);
+  btrader.setTakeProfitPoints(TakeProfit);
 
   return 0;
 }
